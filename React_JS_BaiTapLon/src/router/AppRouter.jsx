@@ -15,7 +15,7 @@ import Our_Deal from "../pages/Our_Deal/Our_Deal"
 import Profile from "../pages/Profile/Profile"
 import Card from "../pages/Card/Card"
 import Layout from "../pages/Layout/Layout";
-
+import ShoppingCard_CheckOut from "../pages/ShoppingCard/ShoppingCard_CheckOut";
 const AppRouter = () => {
   return (
     <BrowserRouter>
@@ -32,6 +32,7 @@ const AppRouter = () => {
           <Route path="/repair" element={<Repair />}></Route>
           <Route path="/our_deal" element={<Our_Deal />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
+          <Route path="/shopping_card_checkout" element={<ShoppingCard_CheckOut />}></Route>
       
           <Route path="/card" element={<Card />}></Route>
         </Route>

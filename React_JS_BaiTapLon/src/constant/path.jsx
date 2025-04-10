@@ -11,7 +11,7 @@ const path = {
     repair:"/repair",
     our_deal: "/our_deal",
     profile:"/profile",
-    card:"/card"
+    shopping_card_checkout:"/shopping_card_checkout"
 }
 
 export default path;
