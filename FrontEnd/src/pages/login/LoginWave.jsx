@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaGooglePlusG, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { UserContext } from "../../context/UserContext";
+import axiosInstance from "../../custom/axios";
 
 export default function LoginWave() {
   return (
@@ -51,43 +54,178 @@ export default function LoginWave() {
 // Auth Card Component
 function AuthCard() {
   const [isActive, setIsActive] = useState(false);
+  const { login } = useContext(UserContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Form state
+  const [signUpForm, setSignUpForm] = useState({
+    fullName: '',
+    email: '',
+    password: ''
+  });
+  
+  const [signInForm, setSignInForm] = useState({
+    email: '',
+    password: ''
+  });
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Handle input changes for signup form
+  const handleSignUpChange = (e) => {
+    const { name, value } = e.target;
+    setSignUpForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle input changes for signin form
+  const handleSignInChange = (e) => {
+    const { name, value } = e.target;
+    setSignInForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle signup submission
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Call register API
+      const response = await axiosInstance.post('/register', {
+        fullName: signUpForm.fullName,
+        email: signUpForm.email,
+        password: signUpForm.password
+      });
+      
+      if (response.status === 201) {
+        // On success, switch to login view
+        setIsActive(true);
+        setSignInForm({
+          email: signUpForm.email,
+          password: ''
+        });
+      } else {
+        throw new Error('Đăng ký thất bại');
+      }
+      
+    } catch (err) {
+      setError(err.response?.data?.message || 'Đăng ký thất bại');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle signin submission
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Call the login function from UserContext
+      await login({
+        email: signInForm.email,
+        password: signInForm.password
+      });
+      
+      // Redirect to dashboard or home page after successful login
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
+      
+    } catch (err) {
+      setError(err.message || 'Email hoặc mật khẩu không chính xác');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="relative w-[900px] max-w-full min-h-[580px] shadow-lg rounded-4xl overflow-hidden transition-all duration-500 ease-in-out text-black">
+      {error && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded z-10">
+          {error}
+        </div>
+      )}
+      
       <div className="absolute top-0 left-0 w-full h-full flex bg-[rgba(255,255,255,0.4)] rounded-4xl">
         {/* Form Sign Up */}
         <div className={`rounded-xl w-1/2 flex items-center bg-[rgba(255,255,255,0.4)]justify-center transition-transform duration-500 ease-in-out ${isActive ? "-translate-x-full opacity-0" : "translate-x-0 opacity-100"}`}>
-          <form className="flex flex-col items-center justify-center h-full px-20 text-center rounded-l">
-            <h1 className="text-3xl font-bold">Create Account</h1>
+          <form onSubmit={handleSignUp} className="flex flex-col items-center justify-center h-full px-20 text-center rounded-l">
+            <h1 className="text-3xl font-bold">Tạo Tài Khoản</h1>
             <div className="flex gap-3 my-4">
               <SocialIcon icon={<FaGooglePlusG />} />
               <SocialIcon icon={<FaFacebookF />} />
               <SocialIcon icon={<FaGithub />} />
               <SocialIcon icon={<FaLinkedinIn />} />
             </div>
-            <span className="text-sm">or use your email for registration</span>
-            <Input placeholder="Name" />
-            <Input type="email" placeholder="Email" />
-            <Input type="password" placeholder="Password" />
-            <Button text="Sign Up" onClick={() => setIsActive(true)} />
+            <span className="text-sm">hoặc sử dụng email của bạn</span>
+            <Input 
+              name="fullName"
+              placeholder="Họ và tên" 
+              value={signUpForm.fullName}
+              onChange={handleSignUpChange}
+            />
+            <Input 
+              name="email"
+              type="email" 
+              placeholder="Email" 
+              value={signUpForm.email}
+              onChange={handleSignUpChange}
+            />
+            <Input 
+              name="password"
+              type="password" 
+              placeholder="Mật khẩu" 
+              value={signUpForm.password}
+              onChange={handleSignUpChange}
+            />
+            <FormButton 
+              text={loading ? "Đang xử lý..." : "Đăng Ký"} 
+              type="submit"
+              disabled={loading}
+            />
           </form>
         </div>
 
         {/* Form Sign In */}
         <div className={`w-1/2 flex items-center justify-center transition-transform duration-500 ease-in-out ${isActive ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}`}>
-          <form className="flex flex-col items-center justify-center h-full w-100 px-15">
-            <h1 className="text-2xl font-bold">Sign In</h1>
+          <form onSubmit={handleSignIn} className="flex flex-col items-center justify-center h-full w-100 px-15">
+            <h1 className="text-2xl font-bold">Đăng Nhập</h1>
             <div className="flex gap-3 my-4">
               <SocialIcon icon={<FaGooglePlusG />} />
               <SocialIcon icon={<FaFacebookF />} />
               <SocialIcon icon={<FaGithub />} />
               <SocialIcon icon={<FaLinkedinIn />} />
             </div>
-            <span className="text-sm">or use your email password</span>
-            <Input type="email" placeholder="Email" />
-            <Input type="password" placeholder="Password" />
-            <a href="#" className="text-xs text-gray-600 mt-2">Forgot Your Password?</a>
-            <Button text="Sign In" onClick={() => setIsActive(false)} />
+            <span className="text-sm">hoặc sử dụng email và mật khẩu</span>
+            <Input 
+              name="email"
+              type="email" 
+              placeholder="Email" 
+              value={signInForm.email}
+              onChange={handleSignInChange}
+            />
+            <Input 
+              name="password"
+              type="password" 
+              placeholder="Mật khẩu" 
+              value={signInForm.password}
+              onChange={handleSignInChange}
+            />
+            <a href="#" className="text-xs text-gray-600 mt-2">Quên Mật Khẩu?</a>
+            <FormButton 
+              text={loading ? "Đang xử lý..." : "Đăng Nhập"} 
+              type="submit"
+              disabled={loading}
+            />
           </form>
         </div>
       </div>
@@ -95,9 +233,9 @@ function AuthCard() {
       {/* Background Panel */}
       <div className={`absolute top-0 left-1/2 w-1/2 h-full bg-gradient-to-r from-indigo-500 to-purple-700 text-white flex flex-col items-center justify-center transition-all duration-500 ease-in-out ${isActive ? "-translate-x-full rounded-r-[100px] rounded-l-none" : "translate-x-0 rounded-l-[100px] rounded-r-none"}`}>
         {isActive ? (
-          <Panel text="Welcome Back!" desc="Enter your details to sign in." btnText="Sign Up" onClick={() => setIsActive(false)} />
+          <Panel text="Chào Mừng Trở Lại!" desc="Nhập thông tin để đăng nhập." btnText="Đăng Ký" onClick={() => setIsActive(false)} />
         ) : (
-          <Panel text="Hello, Friend!" desc="Register to get started." btnText="Sign In" onClick={() => setIsActive(true)} />
+          <Panel text="Xin Chào, Bạn!" desc="Đăng ký để bắt đầu." btnText="Đăng Nhập" onClick={() => setIsActive(true)} />
         )}
       </div>
     </div>
@@ -110,12 +248,24 @@ const SocialIcon = ({ icon }) => (
   </a>
 );
 
-const Input = ({ type = "text", placeholder }) => (
-  <input type={type} placeholder={placeholder} className="bg-gray-100 p-3 rounded-2xl w-full my-2 text-sm" />
+const Input = ({ type = "text", placeholder, name, value, onChange }) => (
+  <input 
+    type={type} 
+    name={name}
+    placeholder={placeholder} 
+    value={value}
+    onChange={onChange}
+    className="bg-gray-100 p-3 rounded-2xl w-full my-2 text-sm" 
+  />
 );
 
-const Button = ({ text, onClick }) => (
-  <button onClick={onClick} className="bg-indigo-700 text-white px-6 py-2 rounded-3xl uppercase font-bold mt-3 text-sm">
+const FormButton = ({ text, onClick, type = "button", disabled }) => (
+  <button 
+    onClick={onClick} 
+    type={type}
+    disabled={disabled}
+    className="bg-indigo-700 text-white px-6 py-2 rounded-3xl uppercase font-bold mt-3 text-sm disabled:bg-gray-400"
+  >
     {text}
   </button>
 );
