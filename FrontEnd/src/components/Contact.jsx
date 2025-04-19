@@ -1,7 +1,13 @@
-import React from 'react';
+import React from "react";
+import TeamProifles from "../components/product/ContactTeam/TeamProfiles";
 
 const Contact = () => {
-  return <h1>Contact Us</h1>;
+  return (
+    <>
+      {" "}
+      <TeamProifles />
+    </>
+  );
 };
 
 export default Contact;

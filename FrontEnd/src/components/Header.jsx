@@ -13,11 +13,9 @@ const Header = () => {
     setShowDropdown(true);
   };
 
-
   const handleMouseLeave = () => {
     setTimeout(() => {
-
-      if (dropdownRef.current && !dropdownRef.current.matches(':hover')) {
+      if (dropdownRef.current && !dropdownRef.current.matches(":hover")) {
         setShowDropdown(false);
       }
     }, 100);
@@ -30,9 +28,9 @@ const Header = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
   const handleMenuItemClick = (action) => {
@@ -51,10 +49,30 @@ const Header = () => {
     return () => clearInterval(timer);
   }, []);
 
-
   const getFormattedDate = () => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
 
     const day = days[currentDateTime.getDay()];
     const date = currentDateTime.getDate();
@@ -66,9 +84,9 @@ const Header = () => {
 
   const formatTime = () => {
     let hours = currentDateTime.getHours();
-    const minutes = currentDateTime.getMinutes().toString().padStart(2, '0');
-    const seconds = currentDateTime.getSeconds().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const minutes = currentDateTime.getMinutes().toString().padStart(2, "0");
+    const seconds = currentDateTime.getSeconds().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
     hours = hours ? hours : 12;
     return `${hours}:${minutes}:${seconds} ${ampm}`;
@@ -82,7 +100,8 @@ const Header = () => {
           <span>{formatTime()}</span>
         </div>
         <div>
-          Visit our Shop at 123 Hung Vuong street, Tuy Hoa City, Phu Yen, Group01{" "}
+          Visit our Shop at 123 Hung Vuong street, Tuy Hoa City, Phu Yen,
+          Group01{" "}
           <Link
             to="/contact"
             className="underline cursor-pointer text-gray-300 hover:text-white"
@@ -105,14 +124,37 @@ const Header = () => {
         {/* Navigation Links */}
         <nav>
           <ul className="flex gap-6 text-sm font-medium">
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.home}> Home</Link></li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.laptops}> Laptops</Link></li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.desktops}>Desktop PCs</Link> </li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.networking_devices}>Networking Devices</Link> </li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.printer_scanner}>Printers & Scanners</Link> </li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.pc_parts}>PC Parts</Link> </li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.all_products}>All Other Products</Link> </li>
-            <li className="hover:text-blue-600 cursor-pointer"><Link to={path.repair}> Repairs</Link></li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.home}> Home</Link>
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.laptops}> Laptops</Link>
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.desktops}>Desktop PCs</Link>{" "}
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.networking_devices}>Networking Devices</Link>{" "}
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.printer_scanner}>Printers & Scanners</Link>{" "}
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.pc_parts}>PC Parts</Link>{" "}
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.all_products}>All Other Products</Link>{" "}
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.repair}> Repairs</Link>
+            </li>
+
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.productDetail}> ProductDetail</Link>
+            </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+              <Link to={path.productSpeccs}> ProductSpeccs</Link>
+            </li>
           </ul>
         </nav>
 
@@ -125,9 +167,7 @@ const Header = () => {
             Our Deals
           </Link>
           <FaSearch className="cursor-pointer text-gray-600 hover:text-black" />
-          <Link to={path.shopping_card_checkout}>
-            <FaShoppingCart className="cursor-pointer text-gray-600 hover:text-black" />
-          </Link>
+          <FaShoppingCart className="cursor-pointer text-gray-600 hover:text-black" />
           <div
             className="relative"
             ref={dropdownRef}
@@ -142,32 +182,40 @@ const Header = () => {
             {showDropdown && (
               <div className="absolute right-0 w-48 mt-2 bg-white border rounded shadow-lg z-10">
                 <div className="p-3 border-b">
-                  <p className="text-sm text-gray-500">Xin chào, vui lòng đăng nhập</p>
+                  <p className="text-sm text-gray-500">
+                    Xin chào, vui lòng đăng nhập
+                  </p>
                 </div>
                 <ul className="py-1">
                   <li
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleMenuItemClick('login')}
+                    onClick={() => handleMenuItemClick("login")}
                   >
-                    Đăng nhập
+                    <Link
+                      to="/login"
+                      onClick={() =>
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }
+                    >
+                      Đăng nhập/Đăng Kí
+                    </Link>
                   </li>
 
                   <li
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleMenuItemClick('account')}
+                    onClick={() => handleMenuItemClick("account")}
                   >
-                    <Link to={path.profile}>Tài khoản của tôi</Link>
-
+                    Tài khoản của tôi
                   </li>
                   <li
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleMenuItemClick('orders')}
+                    onClick={() => handleMenuItemClick("orders")}
                   >
                     Đơn hàng
                   </li>
                   <li
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleMenuItemClick('help')}
+                    onClick={() => handleMenuItemClick("help")}
                   >
                     Trợ giúp
                   </li>
@@ -175,7 +223,6 @@ const Header = () => {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </header>
