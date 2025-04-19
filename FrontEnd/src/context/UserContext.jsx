@@ -15,27 +15,34 @@ const UserProvider = ({ children }) => {
   // Login function
   const login = async (credentials) => {
     try {
+      console.log('Đang gửi yêu cầu đăng nhập với email:', credentials.email);
+      
       const response = await axiosInstance.post("/login", credentials);
-
-      if (response.data?.success && response.data?.token) {
-        const { token, user: userData } = response.data;
-        
-        // Store user info and token
-        localStorage.setItem("user", JSON.stringify(userData));
+      console.log('Phản hồi đăng nhập:', response.data);
+  
+      const { success, token, user } = response.data || {};
+  
+      if (success && token && user) {
+        localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("authToken", token);
-        
-        // Update state
-        setUser(userData);
-        return userData;
+        setUser(user);
+        return user;
       } else {
+        console.error('Phản hồi không hợp lệ:', response.data);
         throw new Error(response.data?.message || "Đăng nhập thất bại");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      throw new Error(err.response?.data?.message || "Đăng nhập thất bại");
+      console.error("Lỗi đăng nhập:", err);
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      } else if (err.message) {
+        throw new Error(err.message);
+      } else {
+        throw new Error("Đăng nhập thất bại, vui lòng thử lại sau");
+      }
     }
   };
-
+  
   // Logout function
   const logout = async () => {
     try {

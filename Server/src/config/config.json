@@ -1,10 +1,10 @@
 {
   "development": {
     "username": "root",
-    "password": "tung",
-    "database": "phattriengiaodien",
+    "password": "22102004",
+    "database": "reactproject",
     "host": "127.0.0.1",
-    "port": 3388,
+    "port": 3309,
     "dialect": "mariadb",
     "logging": false,
     "define":{
