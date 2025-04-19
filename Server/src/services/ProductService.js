@@ -1,0 +1,44 @@
+import { ProductModel } from "../model/BaseModel.js";
+import db from "../config/db.js"; // Đảm bảo bạn đã import db từ file config/db.js
+
+// Get all products
+const getAllProducts = async () => {
+  try {
+    const products = await ProductModel.getAll();
+    return {
+      EC: 1,
+      EM: "Lấy danh sách sản phẩm thành công.",
+      DT: products,
+    };
+  } catch (err) {
+    console.error("Error in productService: ", err);
+    return {
+      EC: -1,
+      EM: "Lỗi khi lấy danh sách sản phẩm.",
+      DT: [],
+    };
+  }
+};
+
+const getAllProductsWithDetails = async () => {
+  try {
+    const [rows] = await db.query(`
+      select *, p2.categoryName from products p join productcategories p2 on p.categoryID = p2.categoryID
+    `);
+
+    return {
+      EM: "Lấy sản phẩm với tên loại thành công",
+      EC: 1,
+      DT: rows,
+    };
+  } catch (err) {
+    console.error("Error in productService: ", err);
+    return {
+      EC: -1,
+      EM: "Lỗi khi lấy danh sách sản phẩm.",
+      DT: [],
+    };
+  }
+};
+
+export { getAllProducts, getAllProductsWithDetails };
