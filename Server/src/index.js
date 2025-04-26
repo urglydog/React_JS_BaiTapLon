@@ -3,6 +3,7 @@ import cors from "cors";
 import { connection } from './config/connectDB.js';
 import initApiRoutes from './routers/Router.js'; // chỉ import 1 lần thôi
 import authRoutes from './routers/authRoutes.js';
+import adminRoutes from './routes/AdminRoutes.js';
 const app = express();
 
 // Middleware
@@ -10,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/', authRoutes); // Nếu bạn muốn gọi API trực tiếp như /login
+app.use('/api/admin', adminRoutes);
 // Kết nối DB
 connection();
 

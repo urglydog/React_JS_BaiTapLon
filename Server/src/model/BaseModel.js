@@ -83,7 +83,7 @@ export const SupplierModel = new BaseModel("Suppliers");
 export const CategoryModel = new BaseModel("ProductCategories");
 export const ProductModel = new BaseModel("Products");
 export const AttributeModel = new BaseModel("ProductAttributes");
-export const AttributeValueModel = new BaseModel("ProductAttributeValues");
+
 export const VoucherModel = new BaseModel("Vouchers");
 export const OrderModel = new BaseModel("Orders");
 export const OrderDetailModel = new BaseModel("OrderDetails");
