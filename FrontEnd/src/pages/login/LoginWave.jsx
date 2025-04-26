@@ -54,10 +54,25 @@ export default function LoginWave() {
 // Auth Card Component
 function AuthCard() {
   const [isActive, setIsActive] = useState(false);
-  const { login, user } = useContext(UserContext);
+  const { login, user ,getUserRole} = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
-  
+  useEffect(() => {
+    if (user) {
+      const userRole = getUserRole();
+      const from = location.state?.from?.pathname || "/";
+      
+      // Redirect based on role
+      if (userRole === 'manager') {
+        navigate('/admin', { replace: true });
+      } else if (userRole === 'employee') {
+        navigate('/employee', { replace: true });
+      } else {
+        // For customers, either go to the page they were trying to access or home
+        navigate(from, { replace: true });
+      }
+    }
+  }, [user, getUserRole, navigate, location]);
   // Form state
   const [signUpForm, setSignUpForm] = useState({
     fullName: '',
@@ -77,7 +92,7 @@ function AuthCard() {
   
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [loading, setLoading] = useState(false);
-
+  
   // Redirect if already logged in
   useEffect(() => {
     if (user) {

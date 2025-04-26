@@ -1,7 +1,7 @@
+// Enhanced UserContext.js
 import React, { createContext, useState, useEffect } from "react";
 import axiosInstance from "../custom/axios";
 
-// Create UserContext
 const UserContext = createContext(null);
 
 const UserProvider = ({ children }) => {
@@ -15,11 +15,8 @@ const UserProvider = ({ children }) => {
   // Login function
   const login = async (credentials) => {
     try {
-      console.log('Đang gửi yêu cầu đăng nhập với email:', credentials.email);
-      
       const response = await axiosInstance.post("/login", credentials);
-      console.log('Phản hồi đăng nhập:', response.data);
-  
+      
       const { success, token, user } = response.data || {};
   
       if (success && token && user) {
@@ -28,11 +25,9 @@ const UserProvider = ({ children }) => {
         setUser(user);
         return user;
       } else {
-        console.error('Phản hồi không hợp lệ:', response.data);
         throw new Error(response.data?.message || "Đăng nhập thất bại");
       }
     } catch (err) {
-      console.error("Lỗi đăng nhập:", err);
       if (err.response?.data?.message) {
         throw new Error(err.response.data.message);
       } else if (err.message) {
@@ -42,6 +37,36 @@ const UserProvider = ({ children }) => {
       }
     }
   };
+  
+  // Get user role
+  const getUserRole = () => {
+    if (!user) return null;
+    
+    console.log("User object in getUserRole:", user);
+    
+    // Try different properties that might contain the role
+    let roleValue = user?.position || user?.role || user?.userRole;
+    console.log("Raw role value:", roleValue);
+    
+    // Convert to string and lowercase for consistent comparison
+    if (roleValue) {
+      roleValue = String(roleValue).toLowerCase();
+      
+      // Map Vietnamese roles to standardized English roles
+      if (roleValue === "quản lý cửa hàng" || roleValue.includes("quản lý")) {
+        return "manager";
+      } else if (roleValue.includes("nhân viên")) {
+        return "employee";
+      }
+    }
+    
+    // If no specific employee role is found, assume customer
+    return "customer";
+  };
+
+  const isManager = () => getUserRole() === "manager";
+  const isEmployee = () => getUserRole() === "employee";
+  const isCustomer = () => getUserRole() === "customer";
   
   // Logout function
   const logout = async () => {
@@ -93,7 +118,16 @@ const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, login, logout, loading }}>
+    <UserContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      loading,
+      getUserRole,
+      isManager,
+      isEmployee,
+      isCustomer 
+    }}>
       {children}
     </UserContext.Provider>
   );
