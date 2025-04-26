@@ -94,12 +94,12 @@ function AuthCard() {
   const [loading, setLoading] = useState(false);
   
   // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
-    }
-  }, [user, navigate, location]);
+  // useEffect(() => {
+  //   if (user) {
+  //     const from = location.state?.from?.pathname || "/";
+  //     navigate(from, { replace: true });
+  //   }
+  // }, [user, navigate, location]);
 
   // Handle input changes for signup form
   const handleSignUpChange = (e) => {
