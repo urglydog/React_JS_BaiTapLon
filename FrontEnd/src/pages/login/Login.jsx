@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   faGooglePlusG,
@@ -13,16 +13,22 @@ import Header from "../../components/Header";
 import path from "../../constant/path";
 
 const Login = () => {
-  const { loginContext } = useContext(UserContext);
+  const { user,loginContext,logoutContext } = useContext(UserContext);
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
-
+  // useEffect(() => {
+  //   // Kiểm tra nếu đã có người dùng trong context khi vào trang login
+  //   logoutContext(); // Xóa thông tin người dùng cũ
+  // }, [logoutContext]);
   const handleSignIn = () => {
     const email = document.querySelector(".sign-in input[type='email']").value;
     const password = document.querySelector(
       ".sign-in input[type='password']"
     ).value;
 
+    
+    console.log(email,password);
+    
     axiosInstance
       .post("/api/customer/login", { email, password })
       .then((response) => {
