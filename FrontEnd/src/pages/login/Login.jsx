@@ -10,8 +10,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axiosInstance from "../../custom/axios";
 import { UserContext } from "../../context/UserContext";
 import Header from "../../components/Header";
+import path from "../../constant/path";
 
-const App = () => {
+const Login = () => {
   const { loginContext } = useContext(UserContext);
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
@@ -23,12 +24,12 @@ const App = () => {
     ).value;
 
     axiosInstance
-      .post("/api/getUserByEmailAndPassword", { email, password })
+      .post("/api/customer/login", { email, password })
       .then((response) => {
         const user = response.data.DT;
         if (user) {
           loginContext(user);
-          navigate("/home");
+          navigate(path.home, { replace: true });
         } else {
           alert("Login failed. Check your email and password.");
         }
@@ -182,4 +183,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Login;

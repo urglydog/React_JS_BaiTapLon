@@ -1,8 +1,12 @@
 import Support from "../../components/Support/Support";
 import { Link, useLocation } from 'react-router-dom';
 import path from "../../constant/path";
+import {UserContext} from '../../context/UserContext'
+import { useContext } from "react";
+
 function Profile() {
     const location = useLocation();
+    const{user} = useContext(UserContext);
     return (
         <div className="bg-gray-100 min-h-screen font-sans">
             <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -17,11 +21,10 @@ function Profile() {
                     My Dashboard
                 </h1>
 
-
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Sidebar */}
                     <div className="bg-white rounded-md shadow-md p-4">
-                        <h2 className="text-lg font-semibold text-gray-700 mb-4"></h2>
+                        <h2 className="text-lg font-semibold text-gray-700 mb-4">Account Management</h2>
                         <ul className="space-y-2">
                             <li>
                                 <Link
@@ -34,7 +37,7 @@ function Profile() {
                             </li>
                             <li>
                                 <Link
-                                    to={`${path.profile}/account-information`} // Example sub-route
+                                    to={`${path.profile}/account-information`}
                                     className={`block text-gray-700 hover:text-gray-900 ${location.pathname === `${path.profile}/account-information` ? 'font-bold' : ''
                                         }`}
                                 >
@@ -43,14 +46,13 @@ function Profile() {
                             </li>
                             <li>
                                 <Link
-                                    to={`${path.profile}/address-book`} // Example sub-route
+                                    to={`${path.profile}/address-book`}
                                     className={`block text-gray-700 hover:text-gray-900 ${location.pathname === `${path.profile}/address-book` ? 'font-bold' : ''
                                         }`}
                                 >
                                     Address Book
                                 </Link>
                             </li>
-                            {/* Add other sidebar links similarly */}
                             <li>
                                 <Link
                                     to={`${path.profile}/my-orders`}
@@ -109,6 +111,7 @@ function Profile() {
                             </li>
                         </ul>
 
+                        {/* Other sections */}
                         <div className="mt-6 bg-gray-100 rounded-md p-4">
                             <h3 className="text-sm font-semibold text-gray-600 mb-2">Compare Products</h3>
                             <p className="text-gray-500 text-sm">You have no items to compare.</p>
@@ -157,7 +160,7 @@ function Profile() {
                         <div className="mb-6 border-b pb-4">
                             <h3 className="text-lg font-semibold text-gray-700 mb-2">Address Book</h3>
                             <Link
-                                to={`${path.profile}/manage-addresses`} // Example sub-route
+                                to={`${path.profile}/manage-addresses`}
                                 className="text-blue-500 hover:text-blue-700 text-sm font-medium"
                             >
                                 Manage Addresses
@@ -169,7 +172,7 @@ function Profile() {
                                     <h4 className="text-md font-semibold text-gray-700 mb-2">Default Billing Address</h4>
                                     <p className="text-gray-600 text-sm">You have not set a default billing address.</p>
                                     <Link
-                                        to={`${path.profile}/edit-billing-address`} // Example sub-route
+                                        to={`${path.profile}/edit-billing-address`}
                                         className="text-blue-500 hover:text-blue-700 text-sm font-medium mt-2"
                                     >
                                         Edit Address
@@ -181,7 +184,7 @@ function Profile() {
                                     <h4 className="text-md font-semibold text-gray-700 mb-2">Default Shipping Address</h4>
                                     <p className="text-gray-600 text-sm">You have not set a default shipping address.</p>
                                     <Link
-                                        to={`${path.profile}/edit-shipping-address`} // Example sub-route
+                                        to={`${path.profile}/edit-shipping-address`}
                                         className="text-blue-500 hover:text-blue-700 text-sm font-medium mt-2"
                                     >
                                         Edit Address
@@ -192,10 +195,11 @@ function Profile() {
                     </div>
                 </div>
             </div>
-            <Support></Support>
+
+            {/* Support Section */}
+            <Support />
         </div>
     );
-
 }
 
 export default Profile;

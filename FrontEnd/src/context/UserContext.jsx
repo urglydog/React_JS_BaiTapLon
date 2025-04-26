@@ -26,7 +26,7 @@ const UserProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
-      console.log(`Người dùng đã đăng nhập: ${user.name}`);
+      console.log(`Người dùng đã đăng nhập: ${user.fullName}`);
     } else {
       console.log("Người dùng đã đăng xuất hoặc chưa được set.");
     }

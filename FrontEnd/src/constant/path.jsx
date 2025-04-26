@@ -1,18 +1,21 @@
 const path = {
-    home: "/",
-    contact: "/contact",
     login: "/login",
-    laptops: "/laptops",
-    desktops: "/desktops",
-    networking_devices:"/networking_devices",
-    printer_scanner: "/printer_scanner",
-    pc_parts:"/pc_parts",
-    all_products:"/all_products",
-    repair:"/repair",
-    our_deal: "/our_deal",
-    profile:"/profile",
-    shopping_card_checkout:"/shopping_card_checkout",
-    shopping_card_item: "/shopping_card_item"
-}
-
-export default path;
+    home: "/home", // đổi từ "/" thành "/home"
+    contact: "/home/contact",
+    laptops: "/home/laptops",
+    desktops: "/home/desktops",
+    networking_devices: "/home/networking_devices",
+    printer_scanner: "/home/printer_scanner",
+    pc_parts: "/home/pc_parts",
+    all_products: "/home/all_products",
+    repair: "/home/repair",
+    our_deal: "/home/our_deal",
+    profile: "/home/profile",
+    shopping_card_checkout: "/home/shopping_card_checkout",
+    shopping_card_item: "/home/shopping_card_item",
+    catalog: "/home/laptops/catalog",
+    faq: "/home/faq",
+  };
+  
+  export default path;
+  

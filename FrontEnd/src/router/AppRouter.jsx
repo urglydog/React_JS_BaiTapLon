@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link, BrowserRouter } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, BrowserRouter , Navigate} from "react-router-dom";
 import About from "../components/About";
 import Contact from "../components/Contact";
 import Login from "../pages/login/Login";
@@ -19,31 +19,34 @@ import Catalog from "../pages/Laptops/Catalog";
 import FAQ from "../pages/faq/FAQ";
 import ShoppingCartItem from "../pages/ShoppingCard/ShoppingCardItem";
 import ShoppingCard_CheckOut from "../pages/ShoppingCard/ShoppingCard_CheckOut";
+import path from "../constant/path";
 
 const AppRouter = () => {
   return (
-    <BrowserRouter>
+<BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout/>}>
-          <Route index element={<Content />}></Route>
-          <Route path="/contact" element={<Contact />}></Route>
-          <Route path="/laptops" element={<Laptop />}></Route>
+        {/* Redirect root sang login */}
+        <Route path="/" element={<Navigate to={path.login} />} />
+        <Route path={path.login} element={<Login />} />
 
-          <Route path="/laptops/catalog" element={<Catalog />}></Route>
-          <Route path="/faq" element={<FAQ />}></Route>
-          
-          <Route path="/desktops" element={<Desktop />}></Route>
-          <Route path="/networking_devices" element={<NetWorking />}></Route>
-          <Route path="/printer_scanner" element={<Printer_Scanner />}></Route>
-          <Route path="/pc_parts" element={<PC_Part />}></Route>
-          <Route path="/all_products" element={<All_Product />}></Route>
-          <Route path="/repair" element={<Repair />}></Route>
-          <Route path="/our_deal" element={<Our_Deal />}></Route>
-          <Route path="/profile" element={<Profile />}></Route>
-          <Route path="/card" element={<Card />}></Route>
-
-          <Route path="/shopping_card_checkout" element={<ShoppingCard_CheckOut />}></Route>
-          <Route path="/shopping_card_item" element={<ShoppingCartItem />}></Route>
+        {/* Tất cả trang bên trong layout */}
+        <Route path={path.home} element={<Layout />}>
+          <Route index element={<Content />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="laptops" element={<Laptop />} />
+          <Route path="laptops/catalog" element={<Catalog />} />
+          <Route path="faq" element={<FAQ />} />
+          <Route path="desktops" element={<Desktop />} />
+          <Route path="networking_devices" element={<NetWorking />} />
+          <Route path="printer_scanner" element={<Printer_Scanner />} />
+          <Route path="pc_parts" element={<PC_Part />} />
+          <Route path="all_products" element={<All_Product />} />
+          <Route path="repair" element={<Repair />} />
+          <Route path="our_deal" element={<Our_Deal />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="card" element={<Card />} />
+          <Route path="shopping_card_checkout" element={<ShoppingCard_CheckOut />} />
+          <Route path="shopping_card_item" element={<ShoppingCartItem />} />
         </Route>
       </Routes>
     </BrowserRouter>

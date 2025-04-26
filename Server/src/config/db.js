@@ -6,8 +6,8 @@ import mysql from "mysql2";
 const db = mysql.createPool({
   host: "localhost",  // Máy chủ cơ sở dữ liệu
   user: "root",       // Tên người dùng
-  port: 3388,         // Cổng kết nối
-  password: "tung",   // Mật khẩu
+  port: 3306,         // Cổng kết nối
+  password: "root",   // Mật khẩu
   database: "phattriengiaodien",  // Tên cơ sở dữ liệu
 }).promise();  // Sử dụng .promise() để truy vấn trả về Promise
 
