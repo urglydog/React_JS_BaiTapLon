@@ -7,7 +7,7 @@ export default function ProductCardList({ product }) {
       <div className="w-1/3">
         <img
           src={product.image}
-          alt={product.name}
+          alt={product.productName}
           className="w-full h-auto object-contain"
         />
       </div>
@@ -16,21 +16,21 @@ export default function ProductCardList({ product }) {
       <div className="flex-1 flex flex-col justify-between">
         {/* Tên và SKU */}
         <div>
-          <p className="text-xs text-gray-400 mb-1">SKU {product.sku}</p>
+          <p className="text-xs text-gray-400 mb-1">SKU {product?.sku}</p>
           <h2 className="font-semibold text-sm text-gray-800 mb-2">
-            {product.name}
+            {product.productName}
           </h2>
         </div>
 
         {/* Giá */}
         <div className="mb-2">
-          {product.oldPrice !== product.price && (
+          {product?.oldPrice !== product.price && (
             <span className="line-through text-sm text-gray-400 mr-2">
-              ${product.oldPrice.toFixed(2)}
+              ${parseFloat(product?.price).toFixed(2)}
             </span>
           )}
           <span className="text-lg font-bold text-black">
-            ${product.price.toFixed(2)}
+            ${parseFloat(product?.price).toFixed(2)}
           </span>
         </div>
 

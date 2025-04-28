@@ -6,7 +6,7 @@ const SeriesNav = ({
   const [activeIndex, setActiveIndex] = useState(0); // State để lưu index item đang active
 
   return (
-    <nav className="py-4 px-6 shadow-sm bg-gray-50">
+    <nav className="py-4 px-6 shadow-sm bg-gray-50 rounded-md">
       <div className="max-w-6xl mx-auto">
         <ul className="flex flex-wrap gap-4 md:gap-8 justify-center md:justify-start">
           {series.map((item, index) => (

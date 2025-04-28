@@ -29,6 +29,8 @@ import ShoppingCard_CheckOut from "../pages/ShoppingCard/ShoppingCard_CheckOut";
 import LoginWave from "../pages/login/LoginWave";
 import ProductDetail from "../components/product/ProductDetail";
 import ProductSpeccs from "../components/product/ProductSpecss";
+import ProductAbout from "../components/product/ProductAbout";
+import Product from "../components/product/Product";
 
 const AppRouter = () => {
   return (
@@ -61,9 +63,13 @@ const AppRouter = () => {
             element={<ShoppingCartItem />}
           ></Route>
 
-          <Route path="/login" element={<LoginWave />}></Route>
-          <Route path="/productDetail" element={<ProductDetail />}></Route>
-          <Route path="/productSpeccs" element={<ProductSpeccs />}></Route>
+          <Route path="/product" element={<Product />}>
+            <Route path="productAbout" element={<ProductAbout />}></Route>
+            <Route path="productDetail" element={<ProductDetail />}></Route>
+            <Route path="productSpeccs" element={<ProductSpeccs />}></Route>
+            <Route index element={<ProductAbout />}></Route>
+          </Route>
+          <Route path="/about" element={<About />}></Route>
         </Route>
       </Routes>
     </BrowserRouter>

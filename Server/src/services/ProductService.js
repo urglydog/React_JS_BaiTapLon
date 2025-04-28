@@ -23,7 +23,8 @@ const getAllProducts = async () => {
 const getAllProductsWithDetails = async () => {
   try {
     const [rows] = await db.query(`
-      select *, p2.categoryName from products p join productcategories p2 on p.categoryID = p2.categoryID
+      select *, p2.categoryName, p2.brandName  from products p 
+join productcategories p2 on p.categoryID = p2.categoryID  
     `);
 
     return {
