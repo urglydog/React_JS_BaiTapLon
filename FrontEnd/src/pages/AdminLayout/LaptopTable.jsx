@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { Loader2, AlertCircle, ImageOff, Search } from 'lucide-react';
+import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-react';
+import { FaBan } from 'react-icons/fa';
 
 // Wrap component with React.memo to prevent unnecessary re-renders
 const LaptopTable = memo(({ activeMenu, computers = [], theme = 'dark' }) => {
@@ -32,8 +33,11 @@ const LaptopTable = memo(({ activeMenu, computers = [], theme = 'dark' }) => {
       tableHeader: 'bg-gray-900 text-gray-300',
       tableRow: 'hover:bg-gray-700 text-gray-200',
       secondaryText: 'text-gray-400',
-      input: 'bg-gray-800 border-gray-600 text-gray-200',
+      input: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
       emptyState: 'text-gray-400',
+      buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
+      buttonDanger: 'bg-red-600 hover:bg-red-700 text-white shadow-md',
+      buttonIcon: 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600 p-2 rounded-full shadow-sm',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -41,26 +45,54 @@ const LaptopTable = memo(({ activeMenu, computers = [], theme = 'dark' }) => {
       tableHeader: 'bg-gray-200 text-gray-700',
       tableRow: 'hover:bg-gray-200 text-gray-800',
       secondaryText: 'text-gray-600',
-      input: 'bg-white border-gray-300 text-gray-900',
+      input: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
       emptyState: 'text-gray-500',
+      buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
+      buttonDanger: 'bg-red-500 hover:bg-red-600 text-white shadow-md',
+      buttonIcon: 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow-sm',
     },
   };
 
   const currentTheme = themeClasses[theme] || themeClasses.dark;
 
+  // Placeholder handlers for buttons
+  const handleAdd = () => {
+    console.log('Add new laptop');
+    // Add your logic here (e.g., open a modal to add a new laptop)
+  };
+
+  const handleDeactivate = (computer) => {
+    console.log(`Deactivate action for ${computer.productName}`, computer);
+    // Add your logic here (e.g., mark the item as inactive via API)
+  };
+
+  const handleEdit = (computer) => {
+    console.log(`Edit action for ${computer.productName}`, computer);
+    // Add your logic here (e.g., open a modal to edit the laptop details)
+  };
+
   return (
     <div className={`p-6 ${currentTheme.container}`}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-center">Danh sách máy tính</h2>
-        <div className="relative w-64">
-          <input
-            type="text"
-            placeholder="Tìm kiếm máy tính..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.input}`}
-          />
-          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${currentTheme.secondaryText}`} size={20} />
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleAdd}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${currentTheme.buttonPrimary}`}
+          >
+            <Plus size={18} />
+            <span>Thêm</span>
+          </button>
+          <div className="relative w-64">
+            <input
+              type="text"
+              placeholder="Tìm kiếm máy tính..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 ${currentTheme.input}`}
+            />
+            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${currentTheme.secondaryText}`} size={20} />
+          </div>
         </div>
       </div>
 
@@ -88,6 +120,7 @@ const LaptopTable = memo(({ activeMenu, computers = [], theme = 'dark' }) => {
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mô tả</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Giá</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tồn kho</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hành động</th>
               </tr>
             </thead>
             <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
@@ -113,6 +146,24 @@ const LaptopTable = memo(({ activeMenu, computers = [], theme = 'dark' }) => {
                   <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>{formatPrice(computer.price)}</td>
                   <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
                     {computer.stockQuantity !== undefined ? computer.stockQuantity : 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(computer)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeactivate(computer)}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentTheme.buttonDanger}`}
+                      >
+                        <FaBan size={14} />
+                        {/* <span></span> */}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
