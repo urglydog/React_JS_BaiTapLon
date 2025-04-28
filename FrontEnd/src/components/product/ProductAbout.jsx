@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AiOutlineHeart,
   AiOutlineShareAlt,
@@ -16,8 +16,37 @@ import a6 from "../../assets/images/ProductDetail/a6.png";
 import a7 from "../../assets/images/ProductDetail/a7.png";
 import zip from "../../assets/images/ProductDetail/zip.png";
 import { FaPaypal } from "react-icons/fa";
+import axiosInstance from "../../custom/axios";
+import { useParams } from "react-router-dom";
 export default function ProductDetail() {
   const [expanded, setExpanded] = useState(false);
+  const { id } = useParams();
+  const [product, setProduct] = useState({});
+  console.log(id);
+  //   Lấy sản phẩm từ API
+  async function fetchProduct(id) {
+    try {
+      const res = await axiosInstance.get(
+        `/api/product/getProductByIdWithDetails/${id}`
+      );
+      if (res.data && res.data.DT && res.data.DT.length > 0) {
+        setProduct(res.data.DT[0]);
+      } else {
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    console.log("ID hiện tại:", id);
+    fetchProduct(id);
+  }, [id]);
+
+  useEffect(() => {
+    console.log("Product sau khi set:", product);
+  }, [product]);
 
   return (
     <div className="bg-gray-50">
@@ -27,21 +56,19 @@ export default function ProductDetail() {
           {/* Left Section: Product Info */}
           <div className="md:w-1/2 mb-8 md:mb-0 bg-gray-100 p-6 rounded-lg">
             <div className="text-sm mb-4">
-              <span className="text-gray-600">Home / Laptops / </span>
-              <span className="text-gray-400">MSI MPG Series</span>
+              <span className="text-gray-600">
+                Home / {product.categoryName} /{" "}
+              </span>
+              <span className="text-gray-400">{product.seriesName}</span>
             </div>
 
-            <h1 className="text-2xl font-bold mb-2">MSI MPG Trident 3</h1>
+            <h1 className="text-2xl font-bold mb-2">{product.productName}</h1>
             <p className="text-blue-500 text-sm mb-6">
               Be the first to review this product
             </p>
 
             <div className="space-y-1 text-sm">
-              <p className="mb-4">
-                MSI MPG Trident 3 10SC-005AU Intel i7 10700F, 2060 SUPER, 16GB
-                RAM, 512GB SSD, 2TB HDD, Windows 10 Home, Gaming Keyboard and
-                Mouse, 3 Years Warranty Gaming Desktop
-              </p>
+              <p className="mb-4">{product.description}</p>
               <div className="flex">
                 <div className="w-6 h-6 rounded-full bg-blue-900 border-2 border-blue-500 mr-2"></div>
                 <div className="w-6 h-6 rounded-full bg-gray-100 mr-2"></div>

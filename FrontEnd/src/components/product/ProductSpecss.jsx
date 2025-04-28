@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AiOutlineHeart,
   AiOutlineShareAlt,
@@ -16,8 +16,37 @@ import a6 from "../../assets/images/ProductDetail/a6.png";
 import a7 from "../../assets/images/ProductDetail/a7.png";
 import zip from "../../assets/images/ProductDetail/zip.png";
 import { FaPaypal } from "react-icons/fa";
+import { useParams } from "react-router-dom";
+import axiosInstance from "../../custom/axios";
 export default function ProductSpeccs() {
   const [expanded, setExpanded] = useState(false);
+  const { id } = useParams();
+  const [product, setProduct] = useState({});
+  console.log(id);
+  //   Lấy sản phẩm từ API
+  async function fetchProduct(id) {
+    try {
+      const res = await axiosInstance.get(
+        `/api/product/getProductByIdWithDetails/${id}`
+      );
+      if (res.data && res.data.DT && res.data.DT.length > 0) {
+        setProduct(res.data.DT[0]);
+      } else {
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    console.log("ID hiện tại:", id);
+    fetchProduct(id);
+  }, [id]);
+
+  useEffect(() => {
+    console.log("Product sau khi set:", product);
+  }, [product]);
 
   return (
     <div className="bg-gray-50">
@@ -30,11 +59,12 @@ export default function ProductSpeccs() {
             {" "}
             {/* Thêm padding phải để tách biệt */}
             <div className="text-sm mb-4">
-              <span className="text-gray-600">Home / Laptops / </span>
-              {/* Màu chữ trong ảnh nhạt hơn */}
-              <span className="text-gray-500">MSI MPG Series</span>
+              <span className="text-gray-600">
+                Home / {product.categoryName} /{" "}
+              </span>
+              <span className="text-gray-400">{product.seriesName}</span>
             </div>
-            <h1 className="text-2xl font-bold mb-2">MSI MPG Trident 3</h1>
+            <h1 className="text-2xl font-bold mb-2">{product.productName}</h1>
             <p className="text-blue-500 text-sm mb-6 hover:underline cursor-pointer">
               Be the first to review this product
             </p>

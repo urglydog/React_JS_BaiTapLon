@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AiOutlineHeart,
   AiOutlineShareAlt,
@@ -16,64 +16,53 @@ import a6 from "../../assets/images/ProductDetail/a6.png";
 import a7 from "../../assets/images/ProductDetail/a7.png";
 import zip from "../../assets/images/ProductDetail/zip.png";
 import { FaPaypal } from "react-icons/fa";
+import axiosInstance from "../../custom/axios";
+import { useParams } from "react-router-dom";
 export default function ProductDetail() {
   const [expanded, setExpanded] = useState(false);
+  const { id } = useParams();
+  const [product, setProduct] = useState({});
+  console.log(id);
+  //   Lấy sản phẩm từ API
+  async function fetchProduct(id) {
+    try {
+      const res = await axiosInstance.get(
+        `/api/product/getProductByIdWithDetails/${id}`
+      );
+      if (res.data && res.data.DT && res.data.DT.length > 0) {
+        setProduct(res.data.DT[0]);
+      } else {
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    console.log("ID hiện tại:", id);
+    fetchProduct(id);
+  }, [id]);
+
+  useEffect(() => {
+    console.log("Product sau khi set:", product);
+  }, [product]);
 
   return (
     <div className="bg-gray-50">
-      {/* Product Detail Section */}
-      {/* <div className="border border-gray-400 rounded-lg p-4 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-6 text-sm">
-            <button className="py-1 px-2 text-gray-600">About Product</button>
-            <button className="py-1 px-2 text-gray-800 border-b-2 border-gray-800 font-medium">
-              Details
-            </button>
-            <button className="py-1 px-2 text-gray-600">Specs</button>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <span className="text-sm">On Sale from $3,299.00</span>
-
-              <div className="flex items-center border border-gray-300 rounded ml-4">
-                <input
-                  type="text"
-                  value="1"
-                  className="w-8 text-center"
-                  readOnly
-                />
-                <div className="flex flex-col border-l border-gray-300">
-                  <button className="px-2 border-b border-gray-300 text-xs">
-                    +
-                  </button>
-                  <button className="px-2 text-xs">−</button>
-                </div>
-              </div>
-            </div>
-
-            <button className="bg-blue-600 text-white py-1 px-4 rounded hover:bg-blue-700 text-sm">
-              Add to Cart
-            </button>
-            <button className="bg-yellow-400 text-yellow-800 py-1 px-4 rounded hover:bg-yellow-500 flex items-center justify-center text-sm">
-              <FaPaypal className="mr-1 text-blue-700" />
-              PayPal
-            </button>
-          </div>
-        </div>
-      </div> */}
-
       {/* Main Content Area */}
       <div className="border border-gray-400 rounded-lg p-4">
         <div className="flex flex-col md:flex-row">
           {/* Left Section: Product Info */}
           <div className="md:w-1/2 mb-8 md:mb-0 bg-gray-100 p-6 rounded-lg">
             <div className="text-sm mb-4">
-              <span className="text-gray-600">Home / Laptops / </span>
-              <span className="text-gray-400">MSI MPG Series</span>
+              <span className="text-gray-600">
+                Home / {product.categoryName} /{" "}
+              </span>
+              <span className="text-gray-400">{product.seriesName}</span>
             </div>
 
-            <h1 className="text-2xl font-bold mb-2">MSI MPG Trident 3</h1>
+            <h1 className="text-2xl font-bold mb-2">{product.productName}</h1>
             <p className="text-blue-500 text-sm mb-6">
               Be the first to review this product
             </p>

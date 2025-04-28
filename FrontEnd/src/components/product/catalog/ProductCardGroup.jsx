@@ -1,6 +1,17 @@
+import { useNavigate } from "react-router-dom";
+
 export default function ProductCard({ product }) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/product/${product.productID}/productDetail`);
+  };
+
   return (
-    <div className="border-none rounded-none p-4 hover:shadow-lg transition cursor-pointer">
+    <div
+      className="border-none rounded-none p-4 hover:shadow-lg transition cursor-pointer"
+      onClick={handleClick}
+    >
       <img
         src={product.image}
         alt={product.productName}

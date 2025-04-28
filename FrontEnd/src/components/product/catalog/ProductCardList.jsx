@@ -1,8 +1,31 @@
 import logo_add_cart from "../../../assets/svg/btn_add_to_cart.svg";
+import { useDispatch } from "react-redux";
+import { addItem } from "../../../utils/redux/cartSlice";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductCardList({ product }) {
+  const dispatch = useDispatch();
+  const handleAddToCart = () => {
+    // Dispatch action to add product to cart
+    dispatch(addItem({ ...product, quantity: 1 }));
+    console.log("Product added to cart:", product);
+    toast.success("Product added to cart successfully!");
+  };
+
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/product/${product.productID}/productDetail`);
+  };
+
   return (
-    <div className="border-none rounded-lg p-4 shadow-sm hover:shadow-lg transition bg-white flex gap-4">
+    <div
+      className="border-none rounded-lg p-4 shadow-sm hover:shadow-lg transition bg-white flex gap-4"
+      onClick={handleClick}
+    >
+      {" "}
+      {/* Added onClick here */}
       {/* Hình ảnh */}
       <div className="w-1/3">
         <img
@@ -11,7 +34,6 @@ export default function ProductCardList({ product }) {
           className="w-full h-auto object-contain"
         />
       </div>
-
       {/* Thông tin chi tiết */}
       <div className="flex-1 flex flex-col justify-between">
         {/* Tên và SKU */}
@@ -69,7 +91,10 @@ export default function ProductCardList({ product }) {
 
         {/* Nút và hành động */}
         <div className="flex items-center justify-between">
-          <button className="bg-white text-[#0156FF] border-[#0156FF] border-2 px-4 py-2 text-sm rounded-4xl hover:font-bold transition">
+          <button
+            className="bg-white text-[#0156FF] border-[#0156FF] border-2 px-4 py-2 text-sm rounded-4xl hover:font-bold transition"
+            onClick={handleAddToCart}
+          >
             <img
               src={logo_add_cart}
               alt="Add to cart"

@@ -63,7 +63,7 @@ const AppRouter = () => {
             element={<ShoppingCartItem />}
           ></Route>
 
-          <Route path="/product" element={<Product />}>
+          <Route path="/product/:id" element={<Product />}>
             <Route path="productAbout" element={<ProductAbout />}></Route>
             <Route path="productDetail" element={<ProductDetail />}></Route>
             <Route path="productSpeccs" element={<ProductSpeccs />}></Route>

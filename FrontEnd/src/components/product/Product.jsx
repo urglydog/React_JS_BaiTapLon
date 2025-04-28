@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AiOutlineHeart,
   AiOutlineShareAlt,
@@ -11,7 +11,7 @@ import {
   FaPercentage,
   FaPaypal,
 } from "react-icons/fa";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 
 import a1 from "../../assets/images/ProductDetail/a1.png";
 import a2 from "../../assets/images/ProductDetail/a2.png";
@@ -21,24 +21,85 @@ import a5 from "../../assets/images/ProductDetail/a5.png";
 import a6 from "../../assets/images/ProductDetail/a6.png";
 import a7 from "../../assets/images/ProductDetail/a7.png";
 import zip from "../../assets/images/ProductDetail/zip.png";
+import axiosInstance from "../../custom/axios";
+import { useDispatch } from "react-redux";
+import { addItem } from "../../utils/redux/cartSlice";
+import { toast } from "react-toastify";
 
 export default function Product() {
   const [expanded, setExpanded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const location = useLocation();
+  const { id } = useParams();
+  const [product, setProduct] = useState({});
+  console.log(id);
+  //   Lấy sản phẩm từ API
+  async function fetchProduct(id) {
+    try {
+      const res = await axiosInstance.get(
+        `/api/product/getProductByIdWithDetails/${id}`
+      );
+      if (res.data && res.data.DT && res.data.DT.length > 0) {
+        setProduct({ ...res.data.DT[0], quantity: 1 });
+      } else {
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    console.log("ID hiện tại:", id);
+    fetchProduct(id);
+  }, [id]);
+
+  useEffect(() => {
+    console.log("Product sau khi set:", product);
+  }, [product]);
+
+  const dispatch = useDispatch();
+
+  const handleClickAddToCart = (product) => {
+    // Thêm hàm xử lý sự kiện khi nhấn nút
+    toast.success("Thêm sản phẩm vào giỏ hàng thành công!");
+    console.log("Thêm sản phẩm vào giỏ hàng:", product);
+    dispatch(addItem(product));
+  };
+
+  //   Hàm tăng giảm số lượng sản phẩm
+  const handleIncrease = () => {
+    const newQuantity = quantity + 1;
+    setQuantity(newQuantity);
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      quantity: newQuantity,
+    }));
+  };
+
+  const handleDecrease = () => {
+    if (quantity > 1) {
+      // Không cho giảm dưới 1
+      const newQuantity = quantity - 1;
+      setQuantity(newQuantity);
+      setProduct((prevProduct) => ({
+        ...prevProduct,
+        quantity: newQuantity,
+      }));
+    }
+  };
 
   return (
     <div className="bg-gray-50">
-      <h1>Trang chi tiết sản phẩm</h1>
-
       {/* Product Detail Section */}
       <div className="border border-gray-400 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between">
           {/* Navigation Tabs */}
           <div className="flex space-x-6 text-sm">
             <Link
-              to="/product/productAbout"
+              to={`/product/${id}/productAbout`}
               className={`py-1 px-2 ${
-                location.pathname === "/product/productAbout"
+                location.pathname === `/product/${id}/productAbout`
                   ? "text-gray-800 border-b-2 border-gray-800 font-medium"
                   : "text-gray-600"
               }`}
@@ -46,9 +107,9 @@ export default function Product() {
               About Product
             </Link>
             <Link
-              to="/product/productDetail"
+              to={`/product/${id}/productDetail`}
               className={`py-1 px-2 ${
-                location.pathname === "/product/productDetail"
+                location.pathname === `/product/${id}/productDetail`
                   ? "text-gray-800 border-b-2 border-gray-800 font-medium"
                   : "text-gray-600"
               }`}
@@ -56,9 +117,9 @@ export default function Product() {
               Details
             </Link>
             <Link
-              to="/product/productSpeccs"
+              to={`/product/${id}/productSpeccs`}
               className={`py-1 px-2 ${
-                location.pathname === "/product/productSpeccs"
+                location.pathname === `/product/${id}/productSpeccs`
                   ? "text-gray-800 border-b-2 border-gray-800 font-medium"
                   : "text-gray-600"
               }`}
@@ -70,25 +131,43 @@ export default function Product() {
           {/* Cart Area */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
-              <span className="text-sm">On Sale from $3,299.00</span>
+              <span className="text-sm">
+                On Sale from{" "}
+                {parseFloat(
+                  product?.price?.replace(/[₫,]/g, "") * product?.quantity || 0
+                ).toLocaleString("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                })}
+              </span>
 
               <div className="flex items-center border border-gray-300 rounded ml-4">
                 <input
                   type="text"
-                  value="1"
+                  value={quantity}
                   className="w-8 text-center"
                   readOnly
                 />
                 <div className="flex flex-col border-l border-gray-300">
-                  <button className="px-2 border-b border-gray-300 text-xs">
+                  <button
+                    className="px-2 border-b border-gray-300 text-xs"
+                    onClick={handleIncrease}
+                  >
                     +
                   </button>
-                  <button className="px-2 text-xs">−</button>
+                  <button className="px-2 text-xs" onClick={handleDecrease}>
+                    −
+                  </button>
                 </div>
               </div>
             </div>
 
-            <button className="bg-blue-600 text-white py-1 px-4 rounded hover:bg-blue-700 text-sm">
+            <button
+              className="bg-blue-600 text-white py-1 px-4 rounded hover:bg-blue-700 text-sm"
+              onClick={() => {
+                handleClickAddToCart(product);
+              }} // Thêm hàm xử lý sự kiện khi nhấn nút
+            >
               Add to Cart
             </button>
             <button className="bg-yellow-400 text-yellow-800 py-1 px-4 rounded hover:bg-yellow-500 flex items-center justify-center text-sm">
