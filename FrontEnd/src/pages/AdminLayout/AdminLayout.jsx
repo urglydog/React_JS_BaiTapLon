@@ -304,14 +304,14 @@ export default function ComputerStoreAdminLayout() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className={`flex items-center rounded-full px-3 py-1 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+            {/* <div className={`flex items-center rounded-full px-3 py-1 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
               <FaSearch className="text-gray-500 mr-2" size={14} />
               <input
                 type="text"
                 placeholder="Search..."
                 className={`bg-transparent border-none focus:outline-none text-sm w-32 ${textColor}`}
               />
-            </div>
+            </div> */}
             <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20">
               {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
             </button>
@@ -698,7 +698,7 @@ export default function ComputerStoreAdminLayout() {
             <div className="p-6">
               {/* <h2 className="text-2xl font-semibold mb-4">Computers</h2> */}
             
-              <LaptopTable activeMenu={activeMenu} computers={computers} />
+             
               {/* Thêm logic để hiển thị danh sách máy tính, ví dụ: gọi API và hiển thị bảng */}
             </div>
           )}
@@ -725,8 +725,9 @@ export default function ComputerStoreAdminLayout() {
           )}
           {activeMenu === 'Laptops' && (
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Laptops</h2>
-              <p>Đây là danh sách các laptop.</p>
+             
+            
+             <LaptopTable activeMenu="Laptops" computers={computers} theme={darkMode ? 'dark' : 'light'} />
               {/* Thêm logic để hiển thị danh sách laptop */}
             </div>
           )}
