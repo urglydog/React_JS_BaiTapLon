@@ -340,8 +340,8 @@ export default function ComputerStoreAdminLayout() {
               </button>
               <div className="text-sm breadcrumbs">
                 <span>Dashboard</span>
-                <span className="mx-2">/</span>
-                <span>Overview</span>
+                {/* <span className="mx-2">/</span>
+                <span>Overview</span> */}
               </div>
             </div>
           </div>
@@ -450,8 +450,8 @@ export default function ComputerStoreAdminLayout() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex space-x-4">
                 <button className="text-blue-500 border-b-2 border-blue-500 pb-2">Sales Performance</button>
-                <button className={`${secondaryTextColor} pb-2`}>Inventory Levels</button>
-                <button className={`${secondaryTextColor} pb-2`}>Revenue Forecast</button>
+                {/* <button className={`${secondaryTextColor} pb-2`}>Inventory Levels</button>
+                <button className={`${secondaryTextColor} pb-2`}>Revenue Forecast</button> */}
               </div>
               <div className="flex items-center">
                 <select 
