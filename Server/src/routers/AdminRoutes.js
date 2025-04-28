@@ -22,6 +22,7 @@ router.get('/dashboard/recent-orders', (req, res) => adminController.getRecentOr
 
 // Product management routes
 router.get('/products', (req, res) => adminController.getAllProducts(req, res));
+router.get('/products/laptop', (req, res) => adminController.getAllLaptop(req, res));
 router.post('/products', (req, res) => adminController.createProduct(req, res));
 router.get('/products/:id', (req, res) => adminController.getProductById(req, res));
 router.put('/products/:id', (req, res) => adminController.updateProduct(req, res));

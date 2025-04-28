@@ -33,7 +33,15 @@ class BaseModel {
       conn.release();
     }
   }
-
+  async getAllLaptop() {
+    const conn = await pool.getConnection();
+    try {
+      const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (45, 46, 47, 48, 49, 50, 51)`);
+      return result;
+    } finally {
+      conn.release();
+    }
+}
   async getById(idField, id) {
     const conn = await pool.getConnection();
     try {

@@ -80,7 +80,16 @@ export class AdminPageController {
       res.status(500).json({ error: 'Failed to fetch products' });
     }
   }
-  
+   // Product management methods
+   getAllLaptop = async (req, res) => {
+    try {
+      const laptops = await this.adminService.getAllLaptop();
+      res.json(laptops);
+    } catch (error) {
+      console.error('Error in getAllLaptop:', error);
+      res.status(500).json({ error: 'Failed to fetch laptop' });
+    }
+  }
   getProductById = async (req, res) => {
     try {
       const product = await this.adminService.getProductById(req.params.id);

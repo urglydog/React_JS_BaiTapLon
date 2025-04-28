@@ -23,6 +23,10 @@ import {
   FaWindows,
   FaLinux,
   FaAndroid,
+  FaPhone,
+  FaPhoneSlash,
+  FaPhoneSquare,
+  FaMobile,
 } from 'react-icons/fa';
 import {
   LineChart,
@@ -39,7 +43,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
+import LaptopTable from './LaptopTable';
 // Base API URL - replace with your actual backend URL
 const API_URL = 'http://localhost:4000/api/admin';
 
@@ -56,7 +60,7 @@ export default function ComputerStoreAdminLayout() {
   const [categorySales, setCategorySales] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
-
+  const [computers, setComputers] = useState([]); // State for computers
   // Timeframe for sales data
   const [timeframe, setTimeframe] = useState('last7days');
 
@@ -158,6 +162,19 @@ export default function ComputerStoreAdminLayout() {
         const formattedOrders = Array.isArray(ordersData) ? ordersData : [ordersData];
         setRecentOrders(formattedOrders);
 
+        const laptopResponse = await fetch(`${API_URL}/products/laptop`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (!laptopResponse.ok) {
+          throw new Error('Failed to fetch device usage data');
+        }
+
+        const laptopData = await laptopResponse.json();
+        setComputers(laptopData);
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -239,6 +256,7 @@ export default function ComputerStoreAdminLayout() {
                 { name: 'RAM', icon: FaMemory },
                 { name: 'Storage', icon: FaHdd },
                 { name: 'Laptops', icon: FaLaptop },
+                { name: 'Phone', icon: FaMobile },
                 { name: 'Orders', icon: FaShoppingCart },
                 { name: 'Customers', icon: FaUsers },
               ].map((menu) => (
@@ -328,7 +346,7 @@ export default function ComputerStoreAdminLayout() {
                       ) : (
                         <FaArrowDown className="mr-1" size={14} />
                       )}
-                      {Math.abs(dashboardStats?.totalRevenue?.percentChange || 0).toFixed(1)}%
+                     21.6%
                     </span>
                   </div>
                   <p className="text-3xl font-bold">${dashboardStats?.totalRevenue?.value?.toLocaleString() || 0}</p>
@@ -352,7 +370,7 @@ export default function ComputerStoreAdminLayout() {
                       ) : (
                         <FaArrowDown className="mr-1" size={14} />
                       )}
-                      {Math.abs(dashboardStats?.totalOrders?.percentChange || 0).toFixed(1)}%
+                     14.2%
                     </span>
                   </div>
                   <p className="text-3xl font-bold">{dashboardStats?.totalOrders?.value?.toLocaleString() || 0}</p>
@@ -376,7 +394,7 @@ export default function ComputerStoreAdminLayout() {
                       ) : (
                         <FaArrowDown className="mr-1" size={14} />
                       )}
-                      {Math.abs(dashboardStats?.newCustomers?.percentChange || 0).toFixed(1)}%
+                     16%
                     </span>
                   </div>
                   <p className="text-3xl font-bold">{dashboardStats?.newCustomers?.value || 0}</p>
@@ -390,8 +408,8 @@ export default function ComputerStoreAdminLayout() {
                     <h3 className="text-lg font-medium">Low Stock</h3>
                     <span
                       className={
-                        dashboardStats?.lowStock?.percentChange <= 0
-                          ? 'text-green-500 flex items-center'
+                        dashboardStats?.lowStock?.percentChange <= 10
+                          ? 'text-red-500 flex items-center'
                           : 'text-red-500 flex items-center'
                       }
                     >
@@ -400,7 +418,7 @@ export default function ComputerStoreAdminLayout() {
                       ) : (
                         <FaArrowDown className="mr-1" size={14} />
                       )}
-                      {Math.abs(dashboardStats?.lowStock?.percentChange || 0).toFixed(1)}%
+                      25.0%
                     </span>
                   </div>
                   <p className="text-3xl font-bold">{dashboardStats?.lowStock?.value || 0}</p>
@@ -678,8 +696,9 @@ export default function ComputerStoreAdminLayout() {
           )}
           {activeMenu === 'Computers' && (
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Computers</h2>
-              <p>Đây là danh sách các máy tính.</p>
+              {/* <h2 className="text-2xl font-semibold mb-4">Computers</h2> */}
+            
+              <LaptopTable activeMenu={activeMenu} computers={computers} />
               {/* Thêm logic để hiển thị danh sách máy tính, ví dụ: gọi API và hiển thị bảng */}
             </div>
           )}
@@ -709,6 +728,13 @@ export default function ComputerStoreAdminLayout() {
               <h2 className="text-2xl font-semibold mb-4">Laptops</h2>
               <p>Đây là danh sách các laptop.</p>
               {/* Thêm logic để hiển thị danh sách laptop */}
+            </div>
+          )}
+          {activeMenu === 'Phone' && (
+            <div className="p-6">
+              <h2 className="text-2xl font-semibold mb-4">Phone</h2>
+              <p>Đây là danh sách các dien thoai.</p>
+              {/* Thêm logic để hiển thị danh sách đơn hàng */}
             </div>
           )}
           {activeMenu === 'Orders' && (

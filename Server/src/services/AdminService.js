@@ -787,7 +787,14 @@ LIMIT 3;
       throw error;
     }
   };
-
+  getAllLaptop = async () => {
+    try {
+      return await ProductModel.getAllLaptop();
+    } catch (error) {
+      console.error("Error in AdminService.getAllLaptop:", error);
+      throw error;
+    }
+  };
   getProductById = async (id) => {
     try {
       return await ProductModel.getById("productId", id);
