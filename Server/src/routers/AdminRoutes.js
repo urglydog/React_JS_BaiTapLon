@@ -1,10 +1,10 @@
 import express from 'express';
 import { AdminPageController } from '../controller/AdminPageController.js';
-
+import {verifyToken} from "../middleware/authMiddleware.js"
 const router = express.Router();
 const adminController = new AdminPageController();
 
-// Test route - doesn't require authentication for testing
+
 router.get('/test', (req, res) => {
   res.json({ message: 'Admin routes working!' });
 });

@@ -1,6 +1,11 @@
 // AdminService.js
-import { pool } from '../config/connectDB.js';
-import { ProductModel, OrderModel, CustomerModel, OrderDetailModel } from '../model/BaseModel.js';
+import { pool } from "../config/connectDB.js";
+import {
+  ProductModel,
+  OrderModel,
+  CustomerModel,
+  OrderDetailModel,
+} from "../model/BaseModel.js";
 
 class AdminService {
   // Dashboard services
@@ -22,7 +27,7 @@ class AdminService {
         WHERE MONTH(o.orderDate) = 4
         AND YEAR(o.orderDate) = 2025
       `;
-      
+
       const ordersQuery = `
         SELECT 
           COUNT(*) as totalOrders,
@@ -33,7 +38,7 @@ class AdminService {
         WHERE MONTH(orderDate) = 4
         AND YEAR(orderDate) = 2025
       `;
-      
+
       const customersQuery = `
         SELECT 
           COUNT(*) as newCustomers,
@@ -44,7 +49,7 @@ class AdminService {
         WHERE MONTH(registrationDate) = 4
         AND YEAR(registrationDate) = 2025
       `;
-      
+
       // Fixed the low stock query that had a logic error
       const lowStockQuery = `
         SELECT 
@@ -54,67 +59,88 @@ class AdminService {
         FROM Products
         WHERE stockQuantity < 10
       `;
-      
+
       const [revenueResults] = await conn.query(revenueQuery);
       const [orderResults] = await conn.query(ordersQuery);
       const [customerResults] = await conn.query(customersQuery);
       const [lowStockResults] = await conn.query(lowStockQuery);
-      
+
       // Calculate percentage changes with protection against division by zero
       let revenueChange = 0;
-      if (revenueResults[0]?.lastMonthRevenue && revenueResults[0].lastMonthRevenue > 0) {
-        const revenueDiff = revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
-        revenueChange = (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
+      if (
+        revenueResults[0]?.lastMonthRevenue &&
+        revenueResults[0].lastMonthRevenue > 0
+      ) {
+        const revenueDiff =
+          revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
+        revenueChange =
+          (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
       }
-      
+
       let ordersChange = 0;
-      if (orderResults[0]?.lastMonthOrders && orderResults[0].lastMonthOrders > 0) {
-        const ordersDiff = orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
+      if (
+        orderResults[0]?.lastMonthOrders &&
+        orderResults[0].lastMonthOrders > 0
+      ) {
+        const ordersDiff =
+          orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
         ordersChange = (ordersDiff / orderResults[0].lastMonthOrders) * 100;
       }
-      
+
       let customersChange = 0;
-      if (customerResults[0]?.lastMonthCustomers && customerResults[0].lastMonthCustomers > 0) {
-        const customersDiff = customerResults[0].newCustomers - customerResults[0].lastMonthCustomers;
-        customersChange = (customersDiff / customerResults[0].lastMonthCustomers) * 100;
+      if (
+        customerResults[0]?.lastMonthCustomers &&
+        customerResults[0].lastMonthCustomers > 0
+      ) {
+        const customersDiff =
+          customerResults[0].newCustomers -
+          customerResults[0].lastMonthCustomers;
+        customersChange =
+          (customersDiff / customerResults[0].lastMonthCustomers) * 100;
       }
-      
+
       let lowStockChange = 0;
-      if (lowStockResults[0]?.lastMonthLowStock && lowStockResults[0].lastMonthLowStock > 0) {
-        const lowStockDiff = lowStockResults[0].lowStockItems - lowStockResults[0].lastMonthLowStock;
-        lowStockChange = (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
+      if (
+        lowStockResults[0]?.lastMonthLowStock &&
+        lowStockResults[0].lastMonthLowStock > 0
+      ) {
+        const lowStockDiff =
+          lowStockResults[0].lowStockItems -
+          lowStockResults[0].lastMonthLowStock;
+        lowStockChange =
+          (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
       }
-      
+
       return {
         totalRevenue: {
           value: revenueResults[0]?.totalRevenue || 0,
           previousValue: revenueResults[0]?.lastMonthRevenue || 0,
-          percentChange: parseFloat(revenueChange.toFixed(2)) || 0
+          percentChange: parseFloat(revenueChange.toFixed(2)) || 0,
         },
         totalOrders: {
           value: orderResults[0]?.totalOrders || 0,
           previousValue: orderResults[0]?.lastMonthOrders || 0,
-          percentChange: parseFloat(ordersChange.toFixed(2)) || 0
+          percentChange: parseFloat(ordersChange.toFixed(2)) || 0,
         },
         newCustomers: {
           value: customerResults[0]?.newCustomers || 0,
           previousValue: customerResults[0]?.lastMonthCustomers || 0,
-          percentChange: parseFloat(customersChange.toFixed(2)) || 0
+          percentChange: parseFloat(customersChange.toFixed(2)) || 0,
         },
         lowStock: {
           value: lowStockResults[0]?.lowStockItems || 0,
           previousValue: lowStockResults[0]?.lastMonthLowStock || 0,
-          percentChange: parseFloat(lowStockChange.toFixed(2)) || 0
-        }
+          percentChange: parseFloat(lowStockChange.toFixed(2)) || 0,
+        },
       };
     } catch (error) {
-      console.error('Error in AdminService.getDashboardStats:', error);
+      console.error("Error in AdminService.getDashboardStats:", error);
       throw error;
     } finally {
       conn.release();
     }
   };
-  
+
   getDashboardStats = async () => {
     const conn = await pool.getConnection();
     try {
@@ -132,7 +158,7 @@ class AdminService {
         WHERE MONTH(o.orderDate) = 4
         AND YEAR(o.orderDate) = 2025
       `;
-      
+
       const ordersQuery = `
         SELECT 
           COUNT(*) as totalOrders,
@@ -143,7 +169,7 @@ class AdminService {
         WHERE MONTH(orderDate) = 4
         AND YEAR(orderDate) = 2025
       `;
-      
+
       const customersQuery = `
         SELECT 
           COUNT(*) as newCustomers,
@@ -154,7 +180,7 @@ class AdminService {
         WHERE MONTH(registrationDate) = 4
         AND YEAR(registrationDate) = 2025
       `;
-      
+
       // Fixed the low stock query that had a logic error
       const lowStockQuery = `
         SELECT 
@@ -164,170 +190,208 @@ class AdminService {
         FROM Products
         WHERE stockQuantity < 10
       `;
-      
+
       const [revenueResults] = await conn.query(revenueQuery);
-      console.log('Revenue Results:', revenueResults);
+      console.log("Revenue Results:", revenueResults);
       const [orderResults] = await conn.query(ordersQuery);
-      console.log('Order Results:', orderResults);
+      console.log("Order Results:", orderResults);
       const [customerResults] = await conn.query(customersQuery);
-      console.log('Customer Results:', customerResults);
+      console.log("Customer Results:", customerResults);
       const [lowStockResults] = await conn.query(lowStockQuery);
-      console.log('Low Stock Results:', lowStockResults);
-      
+      console.log("Low Stock Results:", lowStockResults);
+
       // Calculate percentage changes with protection against division by zero
       let revenueChange = 0;
-      if (revenueResults[0]?.lastMonthRevenue && revenueResults[0].lastMonthRevenue > 0) {
-        const revenueDiff = revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
-        revenueChange = (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
+      if (
+        revenueResults[0]?.lastMonthRevenue &&
+        revenueResults[0].lastMonthRevenue > 0
+      ) {
+        const revenueDiff =
+          revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
+        revenueChange =
+          (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
       }
-      
+
       let ordersChange = 0;
-      if (orderResults[0]?.lastMonthOrders && orderResults[0].lastMonthOrders > 0) {
-        const ordersDiff = orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
+      if (
+        orderResults[0]?.lastMonthOrders &&
+        orderResults[0].lastMonthOrders > 0
+      ) {
+        const ordersDiff =
+          orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
         ordersChange = (ordersDiff / orderResults[0].lastMonthOrders) * 100;
       }
-      
+
       let customersChange = 0;
-      if (customerResults[0]?.lastMonthCustomers && customerResults[0].lastMonthCustomers > 0) {
-        const customersDiff = customerResults[0].newCustomers - customerResults[0].lastMonthCustomers;
-        customersChange = (customersDiff / customerResults[0].lastMonthCustomers) * 100;
+      if (
+        customerResults[0]?.lastMonthCustomers &&
+        customerResults[0].lastMonthCustomers > 0
+      ) {
+        const customersDiff =
+          customerResults[0].newCustomers -
+          customerResults[0].lastMonthCustomers;
+        customersChange =
+          (customersDiff / customerResults[0].lastMonthCustomers) * 100;
       }
-      
+
       let lowStockChange = 0;
-      if (lowStockResults[0]?.lastMonthLowStock && lowStockResults[0].lastMonthLowStock > 0) {
-        const lowStockDiff = lowStockResults[0].lowStockItems - lowStockResults[0].lastMonthLowStock;
-        lowStockChange = (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
+      if (
+        lowStockResults[0]?.lastMonthLowStock &&
+        lowStockResults[0].lastMonthLowStock > 0
+      ) {
+        const lowStockDiff =
+          lowStockResults[0].lowStockItems -
+          lowStockResults[0].lastMonthLowStock;
+        lowStockChange =
+          (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
       }
-      
+
       return {
         totalRevenue: {
           value: Number(revenueResults.totalRevenue) || 0,
           previousValue: Number(revenueResults.lastMonthRevenue) || 0,
-          percentChange: parseFloat(revenueChange.toFixed(2)) || 0
+          percentChange: parseFloat(revenueChange.toFixed(2)) || 0,
         },
         totalOrders: {
           value: Number(orderResults.totalOrders) || 0,
           previousValue: Number(orderResults.lastMonthOrders) || 0,
-          percentChange: parseFloat(ordersChange.toFixed(2)) || 0
+          percentChange: parseFloat(ordersChange.toFixed(2)) || 0,
         },
         newCustomers: {
           value: Number(customerResults.newCustomers) || 0,
           previousValue: Number(customerResults.lastMonthCustomers) || 0,
-          percentChange: parseFloat(customersChange.toFixed(2)) || 0
+          percentChange: parseFloat(customersChange.toFixed(2)) || 0,
         },
         lowStock: {
           value: Number(lowStockResults.lowStockItems) || 0,
           previousValue: Number(lowStockResults.lastMonthLowStock) || 0,
-          percentChange: parseFloat(lowStockChange.toFixed(2)) || 0
-        }
+          percentChange: parseFloat(lowStockChange.toFixed(2)) || 0,
+        },
       };
     } catch (error) {
-      console.error('Error in AdminService.getDashboardStats:', error);
+      console.error("Error in AdminService.getDashboardStats:", error);
       throw error;
     } finally {
       conn.release();
     }
   };
-  
-  getSalesPerformance = async (timeframe = 'last7days') => {
+
+  getSalesPerformance = async (timeframe = "last7days") => {
     const conn = await pool.getConnection();
     try {
-      const validTimeframes = ['last7days', 'last30days', 'lastQuarter', 'lastYear'];
+      const validTimeframes = [
+        "last7days",
+        "last30days",
+        "lastQuarter",
+        "lastYear",
+      ];
       if (!validTimeframes.includes(timeframe)) {
-        throw new Error('Invalid timeframe parameter');
+        throw new Error("Invalid timeframe parameter");
       }
-  
+
       // Check if we have any orders - handle MariaDB specific response format
-      const [orderCheck] = await conn.query('SELECT COUNT(*) FROM Orders');
-      
+      const [orderCheck] = await conn.query("SELECT COUNT(*) FROM Orders");
+
       // For MariaDB, the result might be in { 'COUNT(*)': 13n } format
-      const orderCount = orderCheck && orderCheck['COUNT(*)'] ? 
-                          Number(orderCheck['COUNT(*)']) : 
-                          (orderCheck && Object.values(orderCheck)[0] ? 
-                            Number(Object.values(orderCheck)[0]) : 0);
-      
-      console.log('Total orders in database:', orderCount);
-      
+      const orderCount =
+        orderCheck && orderCheck["COUNT(*)"]
+          ? Number(orderCheck["COUNT(*)"])
+          : orderCheck && Object.values(orderCheck)[0]
+          ? Number(Object.values(orderCheck)[0])
+          : 0;
+
+      console.log("Total orders in database:", orderCount);
+
       if (orderCount === 0) {
-        console.log('No orders in the database');
+        console.log("No orders in the database");
         return [];
       }
-  
+
       // Check if we have any order details - use the same approach for MariaDB
-      const [detailCheck] = await conn.query('SELECT COUNT(*) FROM OrderDetails');
-      
-      const detailCount = detailCheck && detailCheck['COUNT(*)'] ? 
-                           Number(detailCheck['COUNT(*)']) : 
-                           (detailCheck && Object.values(detailCheck)[0] ? 
-                             Number(Object.values(detailCheck)[0]) : 0);
-      
-      console.log('Total order details in database:', detailCount);
-      
+      const [detailCheck] = await conn.query(
+        "SELECT COUNT(*) FROM OrderDetails"
+      );
+
+      const detailCount =
+        detailCheck && detailCheck["COUNT(*)"]
+          ? Number(detailCheck["COUNT(*)"])
+          : detailCheck && Object.values(detailCheck)[0]
+          ? Number(Object.values(detailCheck)[0])
+          : 0;
+
+      console.log("Total order details in database:", detailCount);
+
       if (detailCount === 0) {
-        console.log('No order details in the database');
+        console.log("No order details in the database");
         return [];
       }
-  
+
       // Get the latest order date
-      const [dateResult] = await conn.query('SELECT MAX(orderDate) AS latestDate FROM Orders');
-      
+      const [dateResult] = await conn.query(
+        "SELECT MAX(orderDate) AS latestDate FROM Orders"
+      );
+
       // Handle various ways the date might be returned
       let referenceDate;
       if (dateResult && dateResult.latestDate) {
         referenceDate = dateResult.latestDate;
-      } else if (dateResult && dateResult['MAX(orderDate)']) {
-        referenceDate = dateResult['MAX(orderDate)'];
+      } else if (dateResult && dateResult["MAX(orderDate)"]) {
+        referenceDate = dateResult["MAX(orderDate)"];
       } else if (dateResult && Object.values(dateResult)[0]) {
         referenceDate = Object.values(dateResult)[0];
       } else {
-        console.log('No valid latest order date found');
+        console.log("No valid latest order date found");
         return [];
       }
-      
-      console.log('Reference Date:', referenceDate);
-      
+
+      console.log("Reference Date:", referenceDate);
+
       // Check if we have any orders in the timeframe
-      let timeframeSQL = '';
-      
-      if (timeframe === 'last7days') {
-        timeframeSQL = 'DATE_SUB(?, INTERVAL 7 DAY)';
-      } else if (timeframe === 'last30days') {
-        timeframeSQL = 'DATE_SUB(?, INTERVAL 30 DAY)';
-      } else if (timeframe === 'lastQuarter') {
-        timeframeSQL = 'DATE_SUB(?, INTERVAL 3 MONTH)';
-      } else if (timeframe === 'lastYear') {
-        timeframeSQL = 'DATE_SUB(?, INTERVAL 1 YEAR)';
+      let timeframeSQL = "";
+
+      if (timeframe === "last7days") {
+        timeframeSQL = "DATE_SUB(?, INTERVAL 7 DAY)";
+      } else if (timeframe === "last30days") {
+        timeframeSQL = "DATE_SUB(?, INTERVAL 30 DAY)";
+      } else if (timeframe === "lastQuarter") {
+        timeframeSQL = "DATE_SUB(?, INTERVAL 3 MONTH)";
+      } else if (timeframe === "lastYear") {
+        timeframeSQL = "DATE_SUB(?, INTERVAL 1 YEAR)";
       }
-      
+
       // Use a different query approach for timeframe check
       const timeframeQuery = `
         SELECT COUNT(*) FROM Orders 
         WHERE orderDate >= ${timeframeSQL}
       `;
-      
+
       try {
-        const [timeframeResults] = await conn.query(timeframeQuery, [referenceDate]);
-        
+        const [timeframeResults] = await conn.query(timeframeQuery, [
+          referenceDate,
+        ]);
+
         // Extract count from MariaDB result format
-        const timeframeCount = timeframeResults && timeframeResults['COUNT(*)'] ? 
-                              Number(timeframeResults['COUNT(*)']) : 
-                              (timeframeResults && Object.values(timeframeResults)[0] ? 
-                                Number(Object.values(timeframeResults)[0]) : 0);
-        
+        const timeframeCount =
+          timeframeResults && timeframeResults["COUNT(*)"]
+            ? Number(timeframeResults["COUNT(*)"])
+            : timeframeResults && Object.values(timeframeResults)[0]
+            ? Number(Object.values(timeframeResults)[0])
+            : 0;
+
         console.log(`Orders in ${timeframe} timeframe:`, timeframeCount);
-        
+
         if (timeframeCount === 0) {
           console.log(`No orders found in the ${timeframe} timeframe`);
           return [];
         }
       } catch (queryError) {
-        console.error('Error executing timeframe query:', queryError);
+        console.error("Error executing timeframe query:", queryError);
         return [];
       }
-  
+
       // Main query to get sales performance data
       let query;
-      if (timeframe === 'last7days') {
+      if (timeframe === "last7days") {
         query = `
           SELECT 
             DATE(o.orderDate) AS date,
@@ -339,7 +403,7 @@ class AdminService {
           GROUP BY DATE(o.orderDate)
           ORDER BY date
         `;
-      } else if (timeframe === 'last30days') {
+      } else if (timeframe === "last30days") {
         query = `
           SELECT 
             DATE(o.orderDate) AS date,
@@ -351,7 +415,7 @@ class AdminService {
           GROUP BY DATE(o.orderDate)
           ORDER BY date
         `;
-      } else if (timeframe === 'lastQuarter') {
+      } else if (timeframe === "lastQuarter") {
         query = `
           SELECT 
             CONCAT(YEAR(o.orderDate), '-', LPAD(MONTH(o.orderDate), 2, '0')) AS yearMonth,
@@ -365,7 +429,7 @@ class AdminService {
           GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), MONTHNAME(o.orderDate)
           ORDER BY yearMonth
         `;
-      } else if (timeframe === 'lastYear') {
+      } else if (timeframe === "lastYear") {
         query = `
           SELECT 
             CONCAT(YEAR(o.orderDate), '-', LPAD(MONTH(o.orderDate), 2, '0')) AS yearMonth,
@@ -380,54 +444,54 @@ class AdminService {
           ORDER BY yearMonth
         `;
       }
-  
-      console.log('Executing query with reference date:', referenceDate);
-      
+
+      console.log("Executing query with reference date:", referenceDate);
+
       try {
         const [results] = await conn.query(query, [referenceDate]);
-        console.log('Raw Results:', results);
-        
+        console.log("Raw Results:", results);
+
         // IMPORTANT: MariaDB might return a single object instead of an array for a single result
         // Convert to array if necessary
         let resultArray = results;
-        
+
         if (results && !Array.isArray(results)) {
-          console.log('Single result detected, converting to array');
+          console.log("Single result detected, converting to array");
           resultArray = [results];
         } else if (!results) {
-          console.log('No results returned from query');
+          console.log("No results returned from query");
           return [];
         }
-        
-        console.log('Results after array conversion:', resultArray);
-        
+
+        console.log("Results after array conversion:", resultArray);
+
         if (resultArray.length === 0) {
-          console.log('Empty results array');
+          console.log("Empty results array");
           return [];
         }
-    
-        const formattedResults = resultArray.map(item => ({
+
+        const formattedResults = resultArray.map((item) => ({
           ...item,
           revenue: parseFloat(item.revenue) || 0,
-          orderCount: parseInt(item.orderCount) || 0
+          orderCount: parseInt(item.orderCount) || 0,
         }));
-        
-        console.log('Formatted results:', formattedResults);
-    
+
+        console.log("Formatted results:", formattedResults);
+
         return formattedResults;
       } catch (finalQueryError) {
-        console.error('Error executing final query:', finalQueryError);
+        console.error("Error executing final query:", finalQueryError);
         return [];
       }
     } catch (error) {
-      console.error('Error in AdminService.getSalesPerformance:', error);
+      console.error("Error in AdminService.getSalesPerformance:", error);
       throw error;
     } finally {
       if (conn) conn.release();
     }
   };
 
-  getCategorySales =  async () => {
+  getCategorySales = async () => {
     const conn = await pool.getConnection();
     try {
       const query = `
@@ -442,16 +506,16 @@ class AdminService {
         GROUP BY pc.categoryId, pc.categoryName
         ORDER BY revenue DESC
       `;
-      
+
       const [results] = await conn.query(query);
       return results;
     } catch (error) {
-      console.error('Error in AdminService.getCategorySales:', error);
+      console.error("Error in AdminService.getCategorySales:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
+  };
   getPaymentMethodDistribution = async () => {
     const conn = await pool.getConnection();
     try {
@@ -465,18 +529,21 @@ class AdminService {
         GROUP BY pm.methodName
         ORDER BY count DESC
       `;
-      
+
       const [results] = await conn.query(query);
-      
+
       return results || [];
     } catch (error) {
-      console.error('Error in AdminService.getPaymentMethodDistribution:', error);
+      console.error(
+        "Error in AdminService.getPaymentMethodDistribution:",
+        error
+      );
       throw error;
     } finally {
       conn.release();
     }
-  }
-  
+  };
+
   getProductCategoryDistribution = async () => {
     const conn = await pool.getConnection();
     try {
@@ -490,24 +557,27 @@ class AdminService {
         GROUP BY pc.categoryName
         ORDER BY productCount DESC
       `;
-      
+
       const [results] = await conn.query(query);
-      
+
       return results || [];
     } catch (error) {
-      console.error('Error in AdminService.getProductCategoryDistribution:', error);
+      console.error(
+        "Error in AdminService.getProductCategoryDistribution:",
+        error
+      );
       throw error;
     } finally {
       conn.release();
     }
-  }
-  getDeviceUsage = async (analysisType = 'all') => {
+  };
+  getDeviceUsage = async (analysisType = "all") => {
     const conn = await pool.getConnection();
     try {
       let results = {};
-      
+
       // Category analytics
-      if (analysisType === 'all' || analysisType === 'category') {
+      if (analysisType === "all" || analysisType === "category") {
         // Đảm bảo nhận kết quả là mảng bằng cách thêm GROUP BY
         const categoryQuery = `
           SELECT pc.categoryName, 
@@ -522,28 +592,33 @@ class AdminService {
           WHERE o.status = 'Completed'
           GROUP BY pc.categoryName
           ORDER BY totalRevenue DESC`;
-        
-        console.log('Executing category query...');
+
+        console.log("Executing category query...");
         const [categoryResults] = await conn.query(categoryQuery);
-        console.log('Category query result type:', Array.isArray(categoryResults) ? 'array' : typeof categoryResults);
-        
+        console.log(
+          "Category query result type:",
+          Array.isArray(categoryResults) ? "array" : typeof categoryResults
+        );
+
         // Chuyển đổi đối tượng đơn lẻ thành mảng nếu cần
-        const categoryArray = Array.isArray(categoryResults) ? categoryResults : [categoryResults];
-        
+        const categoryArray = Array.isArray(categoryResults)
+          ? categoryResults
+          : [categoryResults];
+
         // Lọc bỏ giá trị undefined hoặc null
         results.categories = categoryArray
-          .filter(item => item && item.categoryName) // Đảm bảo item tồn tại và có categoryName
-          .map(item => ({
+          .filter((item) => item && item.categoryName) // Đảm bảo item tồn tại và có categoryName
+          .map((item) => ({
             category: item.categoryName,
             orderCount: parseInt(item.orderCount || 0),
             quantitySold: parseInt(item.totalQuantitySold || 0),
             revenue: parseFloat(item.totalRevenue || 0),
-            percentage: parseFloat(item.percentage || 0)
+            percentage: parseFloat(item.percentage || 0),
           }));
       }
-      
+
       // Brand analytics
-      if (analysisType === 'all' || analysisType === 'brand') {
+      if (analysisType === "all" || analysisType === "brand") {
         const brandQuery = `
           SELECT pc.brandName, 
             COUNT(od.orderDetailID) as orderCount,
@@ -557,28 +632,30 @@ class AdminService {
           WHERE o.status = 'Completed'
           GROUP BY pc.brandName
           ORDER BY totalRevenue DESC`;
-        
-        console.log('Executing brand query...');
+
+        console.log("Executing brand query...");
         const [brandResults] = await conn.query(brandQuery);
-        console.log('Brand query result type:', Array.isArray(brandResults) ? 'array' : typeof brandResults);
-        
-       
-        const brandArray = Array.isArray(brandResults) ? brandResults : [brandResults];
-        
-       
+        console.log(
+          "Brand query result type:",
+          Array.isArray(brandResults) ? "array" : typeof brandResults
+        );
+
+        const brandArray = Array.isArray(brandResults)
+          ? brandResults
+          : [brandResults];
+
         results.brands = brandArray
-          .filter(item => item && item.brandName) 
-          .map(item => ({
+          .filter((item) => item && item.brandName)
+          .map((item) => ({
             brand: item.brandName,
             orderCount: parseInt(item.orderCount || 0),
             quantitySold: parseInt(item.totalQuantitySold || 0),
             revenue: parseFloat(item.totalRevenue || 0),
-            percentage: parseFloat(item.percentage || 0)
+            percentage: parseFloat(item.percentage || 0),
           }));
       }
-      
-    
-      if (analysisType === 'all' || analysisType === 'distribution') {
+
+      if (analysisType === "all" || analysisType === "distribution") {
         const distributionQuery = `
           SELECT categoryName, 
             COUNT(*) as productCount,
@@ -586,73 +663,92 @@ class AdminService {
           FROM ProductCategories
           GROUP BY categoryName
           ORDER BY productCount DESC`;
-        
-        console.log('Executing distribution query...');
+
+        console.log("Executing distribution query...");
         const [distributionResults] = await conn.query(distributionQuery);
-        console.log('Distribution query result type:', Array.isArray(distributionResults) ? 'array' : typeof distributionResults);
-        
+        console.log(
+          "Distribution query result type:",
+          Array.isArray(distributionResults)
+            ? "array"
+            : typeof distributionResults
+        );
+
         // Chuyển đổi đối tượng đơn lẻ thành mảng nếu cần
-        const distributionArray = Array.isArray(distributionResults) ? distributionResults : [distributionResults];
-        
-      
+        const distributionArray = Array.isArray(distributionResults)
+          ? distributionResults
+          : [distributionResults];
+
         results.distribution = distributionArray
-          .filter(item => item && item.categoryName) 
-          .map(item => ({
+          .filter((item) => item && item.categoryName)
+          .map((item) => ({
             category: item.categoryName,
             count: parseInt(item.productCount || 0),
-            percentage: parseFloat(item.percentage || 0)
+            percentage: parseFloat(item.percentage || 0),
           }));
       }
-      
+
       return results;
     } catch (error) {
-      console.error('Error in AdminService.getDeviceUsage:', error);
+      console.error("Error in AdminService.getDeviceUsage:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
-  
+  };
+
   getTrendingProducts = async () => {
     const conn = await pool.getConnection();
     try {
       const query = `
-        SELECT 
-          p.productId,
-          p.productName,
-          pc.categoryName,
-          SUM(od.quantity) as totalSold,
-          ROUND((SUM(od.quantity) - 
-            COALESCE((SELECT SUM(od2.quantity) 
+       SELECT 
+  p.productId,
+  p.productName,
+  pc.categoryName,
+  SUM(od.quantity) as totalSold,
+  ROUND(
+    CASE 
+      WHEN COALESCE((SELECT SUM(od2.quantity) 
                      FROM OrderDetails od2 
                      JOIN Orders o2 ON od2.orderId = o2.orderId 
                      WHERE od2.productId = p.productId 
-                     AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)), 0)) / 
-            NULLIF(COALESCE((SELECT SUM(od2.quantity) 
-                          FROM OrderDetails od2 
-                          JOIN Orders o2 ON od2.orderId = o2.orderId 
-                          WHERE od2.productId = p.productId 
-                          AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)), 0), 0) * 100, 1) as percentChange
-        FROM OrderDetails od
-        JOIN Products p ON od.productId = p.productId
-        JOIN Orders o ON od.orderId = o.orderId
-        JOIN ProductCategories pc ON p.categoryId = pc.categoryId
-        WHERE MONTH(o.orderDate) = MONTH(CURRENT_DATE)
-        GROUP BY p.productId, p.productName, pc.categoryName
-        ORDER BY totalSold DESC
-        LIMIT 3
+                     AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                    ), 0) = 0
+      THEN 25  -- Thay vì 100%, mặc định là 25% nếu tháng trước không có doanh số bán
+      ELSE (SUM(od.quantity) - 
+            COALESCE((SELECT SUM(od2.quantity) 
+                      FROM OrderDetails od2 
+                      JOIN Orders o2 ON od2.orderId = o2.orderId 
+                      WHERE od2.productId = p.productId 
+                      AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)), 0)
+           ) / 
+           COALESCE((SELECT SUM(od2.quantity) 
+                     FROM OrderDetails od2 
+                     JOIN Orders o2 ON od2.orderId = o2.orderId 
+                     WHERE od2.productId = p.productId 
+                     AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
+                    ), 1) * 100
+    END
+  , 1) AS percentChange
+FROM OrderDetails od
+JOIN Products p ON od.productId = p.productId
+JOIN Orders o ON od.orderId = o.orderId
+JOIN ProductCategories pc ON p.categoryId = pc.categoryId
+WHERE MONTH(o.orderDate) = MONTH(CURRENT_DATE)
+GROUP BY p.productId, p.productName, pc.categoryName
+ORDER BY totalSold DESC
+LIMIT 3;
       `;
-      
+
       const [results] = await conn.query(query);
       return results;
     } catch (error) {
-      console.error('Error in AdminService.getTrendingProducts:', error);
+      console.error("Error in AdminService.getTrendingProducts:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
-  
+  };
+
   getRecentOrders = async () => {
     const conn = await pool.getConnection();
     try {
@@ -671,74 +767,74 @@ class AdminService {
         ORDER BY o.orderDate DESC
         LIMIT 5
       `;
-      
+
       const [results] = await conn.query(query);
       return results;
     } catch (error) {
-      console.error('Error in AdminService.getRecentOrders:', error);
+      console.error("Error in AdminService.getRecentOrders:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
-  
+  };
+
   // Product management services
   getAllProducts = async () => {
     try {
       return await ProductModel.getAll();
     } catch (error) {
-      console.error('Error in AdminService.getAllProducts:', error);
+      console.error("Error in AdminService.getAllProducts:", error);
       throw error;
     }
-  }
-  
+  };
+
   getProductById = async (id) => {
     try {
-      return await ProductModel.getById('productId', id);
+      return await ProductModel.getById("productId", id);
     } catch (error) {
-      console.error('Error in AdminService.getProductById:', error);
+      console.error("Error in AdminService.getProductById:", error);
       throw error;
     }
-  }
-  
+  };
+
   createProduct = async (productData) => {
     try {
       const productId = await ProductModel.create(productData);
       return { productId, ...productData };
     } catch (error) {
-      console.error('Error in AdminService.createProduct:', error);
+      console.error("Error in AdminService.createProduct:", error);
       throw error;
     }
-  }
-  
+  };
+
   updateProduct = async (id, productData) => {
     try {
-      return await ProductModel.update('productId', id, productData);
+      return await ProductModel.update("productId", id, productData);
     } catch (error) {
-      console.error('Error in AdminService.updateProduct:', error);
+      console.error("Error in AdminService.updateProduct:", error);
       throw error;
     }
-  }
-  
+  };
+
   deleteProduct = async (id) => {
     try {
-      return await ProductModel.delete('productId', id);
+      return await ProductModel.delete("productId", id);
     } catch (error) {
-      console.error('Error in AdminService.deleteProduct:', error);
+      console.error("Error in AdminService.deleteProduct:", error);
       throw error;
     }
-  }
-  
+  };
+
   // Order management services
   getAllOrders = async () => {
     try {
       return await OrderModel.getAll();
     } catch (error) {
-      console.error('Error in AdminService.getAllOrders:', error);
+      console.error("Error in AdminService.getAllOrders:", error);
       throw error;
     }
-  }
-  
+  };
+
   getOrderById = async (id) => {
     const conn = await pool.getConnection();
     try {
@@ -753,13 +849,13 @@ class AdminService {
         JOIN Customers c ON o.customerId = c.customerId
         WHERE o.orderId = ?
       `;
-      
+
       const [orderResult] = await conn.query(query, [id]);
-      
+
       if (!orderResult || orderResult.length === 0) {
         return null;
       }
-      
+
       const orderDetailsQuery = `
         SELECT 
           od.*,
@@ -770,53 +866,53 @@ class AdminService {
         JOIN Products p ON od.productId = p.productId
         WHERE od.orderId = ?
       `;
-      
+
       const [orderDetailsResult] = await conn.query(orderDetailsQuery, [id]);
-      
+
       return {
         order: orderResult[0],
-        orderDetails: orderDetailsResult
+        orderDetails: orderDetailsResult,
       };
     } catch (error) {
-      console.error('Error in AdminService.getOrderById:', error);
+      console.error("Error in AdminService.getOrderById:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
-  
+  };
+
   updateOrderStatus = async (id, status) => {
     try {
-      return await OrderModel.update('orderId', id, { status });
+      return await OrderModel.update("orderId", id, { status });
     } catch (error) {
-      console.error('Error in AdminService.updateOrderStatus:', error);
+      console.error("Error in AdminService.updateOrderStatus:", error);
       throw error;
     }
-  }
-  
+  };
+
   // Customer management services
   getAllCustomers = async () => {
     try {
       return await CustomerModel.getAll();
     } catch (error) {
-      console.error('Error in AdminService.getAllCustomers:', error);
+      console.error("Error in AdminService.getAllCustomers:", error);
       throw error;
     }
-  }
-  
+  };
+
   getCustomerById = async (id) => {
     const conn = await pool.getConnection();
     try {
       const customerQuery = `
         SELECT * FROM Customers WHERE customerId = ?
       `;
-      
+
       const [customerResult] = await conn.query(customerQuery, [id]);
-      
+
       if (!customerResult || customerResult.length === 0) {
         return null;
       }
-      
+
       const orderQuery = `
         SELECT 
           o.orderId,
@@ -827,21 +923,21 @@ class AdminService {
         WHERE o.customerId = ?
         ORDER BY o.orderDate DESC
       `;
-      
+
       const [orderResult] = await conn.query(orderQuery, [id]);
-      
+
       return {
         customer: customerResult[0],
-        orders: orderResult
+        orders: orderResult,
       };
     } catch (error) {
-      console.error('Error in AdminService.getCustomerById:', error);
+      console.error("Error in AdminService.getCustomerById:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
-  
+  };
+
   // Inventory management services
   getLowStockItems = async () => {
     const conn = await pool.getConnection();
@@ -858,16 +954,16 @@ class AdminService {
         WHERE p.stockQuantity < 10
         ORDER BY p.stockQuantity ASC
       `;
-      
+
       const [results] = await conn.query(query);
       return results;
     } catch (error) {
-      console.error('Error in AdminService.getLowStockItems:', error);
+      console.error("Error in AdminService.getLowStockItems:", error);
       throw error;
     } finally {
       conn.release();
     }
-  }
+  };
 }
 
 export default AdminService;

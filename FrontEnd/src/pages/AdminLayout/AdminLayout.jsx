@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect} from 'react';
+
 import { 
   FaChartPie, 
   FaDesktop, 
@@ -30,7 +31,21 @@ import {
   FaAndroid,
   FaUserCircle
 } from 'react-icons/fa';
-import { Line, Bar, Pie, PieChart, Cell, CartesianGrid, XAxis, YAxis, Tooltip, Legend, BarChart } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  CartesianGrid, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 
 // Base API URL - replace with your actual backend URL
 const API_URL = 'http://localhost:4000/api/admin';
@@ -54,7 +69,7 @@ export default function ComputerStoreAdminLayout() {
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
-  console.log('deviceUsage:', deviceUsage)
+  // console.log('deviceUsage:', deviceUsage)
   // Fetch all dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -101,6 +116,7 @@ export default function ComputerStoreAdminLayout() {
         
         const deviceData = await deviceResponse.json();
         setDeviceUsage(deviceData);
+        // console.log("tak"+deviceData);
         
         // Fetch category sales data
         const categoryResponse = await fetch(`${API_URL}/dashboard/category-sales`, {
@@ -112,8 +128,12 @@ export default function ComputerStoreAdminLayout() {
         if (!categoryResponse.ok) {
           throw new Error('Failed to fetch category sales data');
         }
+        //  console.log(categoryResponse);
+   
+        
         
         const categoryData = await categoryResponse.json();
+        // console.log(categoryData);
         setCategorySales(categoryData);
         
         // Fetch trending products
@@ -126,9 +146,13 @@ export default function ComputerStoreAdminLayout() {
         if (!trendingResponse.ok) {
           throw new Error('Failed to fetch trending products data');
         }
-        
+      
         const trendingData = await trendingResponse.json();
-        setTrendingProducts(trendingData);
+        console.log('Trending',trendingData);
+        const formattedTrending = Array.isArray(trendingData) ? trendingData : [trendingData];
+        console.log('Trending',formattedTrending);
+        setTrendingProducts(formattedTrending);
+        
         
         // Fetch recent orders
         const ordersResponse = await fetch(`${API_URL}/dashboard/recent-orders`, {
@@ -142,7 +166,12 @@ export default function ComputerStoreAdminLayout() {
         }
         
         const ordersData = await ordersResponse.json();
-        setRecentOrders(ordersData);
+        console.log(ordersData);
+        
+        const formattedorders = Array.isArray(ordersData) ? ordersData : [ordersData];
+        console.log(formattedorders);
+        
+        setRecentOrders(formattedorders);
         
         setLoading(false);
       } catch (err) {
@@ -468,7 +497,6 @@ export default function ComputerStoreAdminLayout() {
               </div>
               
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-              
                 {Array.isArray(deviceUsage) && deviceUsage.map((device, index) => {
                   let icon;
                   switch (device.platform) {
@@ -614,71 +642,76 @@ export default function ComputerStoreAdminLayout() {
           
           {/* Recent Orders Table */}
           <div className={`p-6 rounded-lg ${cardBg} border ${borderColor}`}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-medium text-blue-500">Recent Orders</h3>
-              <button className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm">View All</button>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className={`border-b ${borderColor}`}>
-                    <th className="pb-3 text-left">Order ID</th>
-                    <th className="pb-3 text-left">Customer</th>
-                    <th className="pb-3 text-left">Product</th>
-                    <th className="pb-3 text-left">Date</th>
-                    <th className="pb-3 text-left">Amount</th>
-                    <th className="pb-3 text-left">Status</th>
-                    <th className="pb-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(recentOrders) && recentOrders.map((order) => {
-                    // Define status colors
-                    let statusColor;
-                    switch (order.status.toLowerCase()) {
-                      case 'processing':
-                        statusColor = 'blue';
-                        break;
-                      case 'shipped':
-                        statusColor = 'green';
-                        break;
-                      case 'delivered':
-                        statusColor = 'purple';
-                        break;
-                      case 'canceled':
-                        statusColor = 'red';
-                        break;
-                      default:
-                        statusColor = 'gray';
-                    }
-                    
-                    return (
-                      <tr key={order.orderId} className={`border-b ${borderColor}`}>
-                        <td className="py-3">#{order.orderId}</td>
-                        <td className="py-3">{order.customerName}</td>
-                        <td className="py-3">{order.mainProduct}</td>
-                        <td className="py-3">{order.orderDate}</td>
-                        <td className="py-3">${order.totalAmount?.toFixed(2)}</td>
-                        <td className="py-3">
-                          <span className={`inline-block px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-800`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="py-3">
-                          <div className="flex space-x-2">
-                            <button className="text-blue-500 hover:text-blue-700">
-                              <FaEllipsisH size={14} />
-                            </button>
-                          </div>
-                       </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+  <div className="flex justify-between items-center mb-6">
+    <h3 className="text-lg font-medium text-blue-500">Recent Orders</h3>
+    <button className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm">View All</button>
+  </div>
+  
+  <div className="overflow-x-auto">
+    <table className="w-full">
+      <thead>
+        <tr className={`border-b ${borderColor}`}>
+          <th className="pb-3 text-left">Order ID</th>
+          <th className="pb-3 text-left">Customer</th>
+          <th className="pb-3 text-left">Product</th>
+          <th className="pb-3 text-left">Date</th>
+          <th className="pb-3 text-left">Amount</th>
+          <th className="pb-3 text-left">Status</th>
+          <th className="pb-3 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {/* Check if recentOrders is a valid array */}
+        {recentOrders && Array.isArray(recentOrders) && recentOrders.map((order) => {
+          // Define status colors
+          let statusColor;
+          switch (order.status.toLowerCase()) {
+            case 'processing':
+              statusColor = 'blue';
+              break;
+            case 'shipped':
+              statusColor = 'green';
+              break;
+            case 'delivered':
+              statusColor = 'purple';
+              break;
+            case 'canceled':
+              statusColor = 'red';
+              break;
+            default:
+              statusColor = 'gray';
+          }
+
+          return (
+            <tr key={order.orderId} className={`border-b ${borderColor}`}>
+              <td className="py-3">#{order.orderId}</td>
+              <td className="py-3">{order.customerName}</td>
+              <td className="py-3">{order.mainProduct}</td>
+              <td className="py-3">{order.orderDate}</td>
+              <td className="py-3">
+                {order.totalAmount != null
+                  ? Number(order.totalAmount).toFixed(2)
+                  : "0.00"}
+              </td>
+              <td className="py-3">
+                <span className={`inline-block px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-800`}>
+                  {order.status}
+                </span>
+              </td>
+              <td className="py-3">
+                <div className="flex space-x-2">
+                  <button className="text-blue-500 hover:text-blue-700">
+                    <FaEllipsisH size={14} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+</div>
         </div>
       </div>
     </div>
@@ -687,21 +720,18 @@ export default function ComputerStoreAdminLayout() {
 
 // Sales Chart Component
 function SalesChart({ data, timeframe, darkMode }) {
+  if (!data || data.length === 0) return <div>No data available</div>;
+
   const chartData = data.map(item => ({
     name: timeframe === 'last7days' || timeframe === 'last30days' ? item.date : `Tháng ${item.month}`,
     revenue: Number(item.revenue)
   }));
   
-  const lineColor = darkMode ? "#3b82f6" : "#2563eb"; // Blue colors
+  const lineColor = darkMode ? "#3b82f6" : "#2563eb";
   
   return (
-    <div className="w-full h-full">
-      <Line 
-        data={chartData}
-        width={800}
-        height={256}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-      >
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#e5e7eb"} />
         <XAxis 
           dataKey="name" 
@@ -731,23 +761,46 @@ function SalesChart({ data, timeframe, darkMode }) {
           dot={{ fill: lineColor, strokeWidth: 1, r: 4 }}
           activeDot={{ r: 6 }}
         />
-      </Line>
-    </div>
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
-
+// Device Usage Chart Component
 // Device Usage Chart Component
 function DeviceUsageChart({ data, darkMode }) {
-  const chartData = data || [];
+  // Transform data to be compatible with the chart component
+  let formattedData = [];
   
-  // Define colors for the pie chart
+  if (data) {
+    // Extract and combine data from all sources
+    const distributionData = Array.isArray(data.distribution) ? data.distribution.map(item => ({
+      platform: item.category,
+      percentage: item.percentage
+    })) : [];
+    
+    const brandData = Array.isArray(data.brands) ? data.brands.map(item => ({
+      platform: item.brand,
+      percentage: item.percentage
+    })) : [];
+    
+    const categoryData = Array.isArray(data.categories) ? data.categories.map(item => ({
+      platform: item.category,
+      percentage: item.percentage
+    })) : [];
+    
+    // Combine all data sources
+    formattedData = [...distributionData, ...brandData, ...categoryData];
+  }
+  
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280'];
+  
+  if (!formattedData.length) return <div>No device usage data available</div>;
   
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <PieChart width={400} height={180}>
+      <PieChart width={500} height={250}>
         <Pie
-          data={chartData}
+          data={formattedData}
           cx="50%"
           cy="50%"
           outerRadius={80}
@@ -758,12 +811,12 @@ function DeviceUsageChart({ data, darkMode }) {
           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
           labelLine={false}
         >
-          {Array.isArray(chartData) && chartData.map((entry, index) => (
+          {formattedData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip 
-          formatter={(value) => [`${value}%`, "Tỉ lệ sử dụng"]}
+          formatter={(value) => [`${value}%`, "Usage Rate"]}
           contentStyle={{ 
             backgroundColor: darkMode ? "#1f2937" : "#ffffff",
             borderColor: darkMode ? "#374151" : "#e5e7eb",
@@ -783,22 +836,33 @@ function DeviceUsageChart({ data, darkMode }) {
 
 // Category Sales Chart Component
 function CategorySalesChart({ data, darkMode }) {
-  const chartData = data || [];
+ 
   
-  // Define colors for the bar chart
+  const normalizedData = Array.isArray(data) ? data : [data];
+
+  const chartData = normalizedData.map(item => ({
+    name: item.categoryName,
+    percentage: item.percentage,
+    revenue: item.revenue,
+  }));
+     
+      
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-  
+
+  if (!chartData.length) return <div>No product category sales data available</div>;
+
   return (
     <div className="w-full h-full">
       <BarChart
-        width={500}
-        height={180}
+        width={700}
+        height={200}
         data={chartData}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+        
       >
         <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#e5e7eb"} />
         <XAxis 
-          dataKey="categoryName" 
+          dataKey="name" 
           tick={{ fill: darkMode ? "#9ca3af" : "#4b5563" }}
           axisLine={{ stroke: darkMode ? "#4b5563" : "#d1d5db" }}
         />
@@ -808,7 +872,11 @@ function CategorySalesChart({ data, darkMode }) {
           tickFormatter={(value) => `${value}%`}
         />
         <Tooltip 
-          formatter={(value) => [`${value}%`, "Tỉ lệ doanh thu"]}
+          formatter={(value, name) => {
+            if (name === "percentage") return [`${value}%`, "Tỉ lệ doanh thu"];
+            if (name === "revenue") return [value, "Doanh thu"];
+            return [value, name];
+          }}
           contentStyle={{ 
             backgroundColor: darkMode ? "#1f2937" : "#ffffff",
             borderColor: darkMode ? "#374151" : "#e5e7eb",
@@ -816,7 +884,7 @@ function CategorySalesChart({ data, darkMode }) {
           }}
         />
         <Bar dataKey="percentage" name="Tỉ lệ doanh thu">
-          {Array.isArray(chartData) && chartData.map((entry, index) => (
+          {chartData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Bar>
