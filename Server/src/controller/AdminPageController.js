@@ -1,5 +1,5 @@
 // AdminPageController.js
-import AdminService from '../service/AdminService.js';
+import AdminService from '../services/AdminService.js';
 
 export class AdminPageController {
   constructor() {
@@ -7,7 +7,7 @@ export class AdminPageController {
   }
   
   // Dashboard statistics
-  async getDashboardStats(req, res) {
+  getDashboardStats = async (req, res) => {
     try {
       const stats = await this.adminService.getDashboardStats();
       res.json(stats);
@@ -18,7 +18,7 @@ export class AdminPageController {
   }
   
   // Monthly sales performance for chart
-  async getSalesPerformance(req, res) {
+  getSalesPerformance = async (req, res) => {
     try {
       const timeframe = req.query.timeframe || 'last7days';
       const data = await this.adminService.getSalesPerformance(timeframe);
@@ -29,17 +29,18 @@ export class AdminPageController {
     }
   }
   
-  async getDeviceUsage(req, res) {
+  getDeviceUsage = async (req, res) => {
     try {
-      const data = await this.adminService.getDeviceUsage();
+      const analysisType = req.query.type || 'all';
+      const data = await this.adminService.getDeviceUsage(analysisType);
       res.json(data);
     } catch (error) {
-      console.error('Error in getDeviceUsage:', error);
-      res.status(500).json({ error: 'Failed to fetch device usage data' });
+      console.error('Error in getDeviceUsage:', error.message, error.stack);
+      res.status(500).json({ error: 'Failed to fetch device usage data', details: error.message });
     }
   }
   
-  async getCategorySales(req, res) {
+  getCategorySales = async (req, res) => {
     try {
       const data = await this.adminService.getCategorySales();
       res.json(data);
@@ -49,7 +50,7 @@ export class AdminPageController {
     }
   }
   
-  async getTrendingProducts(req, res) {
+  getTrendingProducts = async (req, res) => {
     try {
       const data = await this.adminService.getTrendingProducts();
       res.json(data);
@@ -59,7 +60,7 @@ export class AdminPageController {
     }
   }
   
-  async getRecentOrders(req, res) {
+  getRecentOrders = async (req, res) => {
     try {
       const data = await this.adminService.getRecentOrders();
       res.json(data);
@@ -70,7 +71,7 @@ export class AdminPageController {
   }
   
   // Product management methods
-  async getAllProducts(req, res) {
+  getAllProducts = async (req, res) => {
     try {
       const products = await this.adminService.getAllProducts();
       res.json(products);
@@ -80,7 +81,7 @@ export class AdminPageController {
     }
   }
   
-  async getProductById(req, res) {
+  getProductById = async (req, res) => {
     try {
       const product = await this.adminService.getProductById(req.params.id);
       if (!product) {
@@ -93,7 +94,7 @@ export class AdminPageController {
     }
   }
   
-  async createProduct(req, res) {
+  createProduct = async (req, res) => {
     try {
       const product = await this.adminService.createProduct(req.body);
       res.status(201).json(product);
@@ -103,7 +104,7 @@ export class AdminPageController {
     }
   }
   
-  async updateProduct(req, res) {
+  updateProduct = async (req, res) => {
     try {
       const success = await this.adminService.updateProduct(req.params.id, req.body);
       if (!success) {
@@ -116,7 +117,7 @@ export class AdminPageController {
     }
   }
   
-  async deleteProduct(req, res) {
+  deleteProduct = async (req, res) => {
     try {
       const success = await this.adminService.deleteProduct(req.params.id);
       if (!success) {
@@ -130,7 +131,7 @@ export class AdminPageController {
   }
   
   // Order management methods
-  async getAllOrders(req, res) {
+  getAllOrders = async (req, res) => {
     try {
       const orders = await this.adminService.getAllOrders();
       res.json(orders);
@@ -140,7 +141,7 @@ export class AdminPageController {
     }
   }
   
-  async getOrderById(req, res) {
+  getOrderById = async (req, res) => {
     try {
       const orderDetails = await this.adminService.getOrderById(req.params.id);
       if (!orderDetails) {
@@ -153,7 +154,7 @@ export class AdminPageController {
     }
   }
   
-  async updateOrderStatus(req, res) {
+  updateOrderStatus = async (req, res) => {
     try {
       const { status } = req.body;
       if (!status) {
@@ -173,7 +174,7 @@ export class AdminPageController {
   }
   
   // Customer management methods
-  async getAllCustomers(req, res) {
+  getAllCustomers = async (req, res) => {
     try {
       const customers = await this.adminService.getAllCustomers();
       res.json(customers);
@@ -183,7 +184,7 @@ export class AdminPageController {
     }
   }
   
-  async getCustomerById(req, res) {
+  getCustomerById = async (req, res) => {
     try {
       const customerDetails = await this.adminService.getCustomerById(req.params.id);
       if (!customerDetails) {
@@ -197,7 +198,7 @@ export class AdminPageController {
   }
   
   // Inventory management methods
-  async getLowStockItems(req, res) {
+  getLowStockItems = async (req, res) => {
     try {
       const lowStockItems = await this.adminService.getLowStockItems();
       res.json(lowStockItems);

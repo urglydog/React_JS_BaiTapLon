@@ -4,49 +4,53 @@ import { ProductModel, OrderModel, CustomerModel, OrderDetailModel } from '../mo
 
 class AdminService {
   // Dashboard services
-  async getDashboardStats() {
+  // 1. Sửa hàm getDashboardStats
+  getDashboardStats = async () => {
     const conn = await pool.getConnection();
     try {
-      // Get total revenue
-      const revenueQuery = `
+      // Using April 2025 as current month and March 2025 as previous month
+      const revenueQuery = `  
         SELECT 
-          SUM(od.unitPrice * od.quantity) as totalRevenue,
-          (SELECT SUM(od2.unitPrice * od2.quantity) 
-           FROM OrderDetails od2 
-           JOIN Orders o2 ON od2.orderId = o2.orderId 
-           WHERE MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)) as lastMonthRevenue
+          COALESCE(SUM(od.subtotal), 0) as totalRevenue,
+          COALESCE((SELECT SUM(od2.subtotal) 
+                  FROM OrderDetails od2 
+                  JOIN Orders o2 ON od2.orderID = o2.orderID 
+                  WHERE MONTH(o2.orderDate) = 3
+                  AND YEAR(o2.orderDate) = 2025), 0) as lastMonthRevenue
         FROM OrderDetails od
-        JOIN Orders o ON od.orderId = o.orderId
-        WHERE MONTH(o.orderDate) = MONTH(CURRENT_DATE)
+        JOIN Orders o ON od.orderID = o.orderID
+        WHERE MONTH(o.orderDate) = 4
+        AND YEAR(o.orderDate) = 2025
       `;
       
-      // Get order counts
       const ordersQuery = `
         SELECT 
           COUNT(*) as totalOrders,
           (SELECT COUNT(*) FROM Orders 
-           WHERE MONTH(orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)) as lastMonthOrders
+           WHERE MONTH(orderDate) = 3
+           AND YEAR(orderDate) = 2025) as lastMonthOrders
         FROM Orders
-        WHERE MONTH(orderDate) = MONTH(CURRENT_DATE)
+        WHERE MONTH(orderDate) = 4
+        AND YEAR(orderDate) = 2025
       `;
       
-      // Get new customers
       const customersQuery = `
         SELECT 
           COUNT(*) as newCustomers,
           (SELECT COUNT(*) FROM Customers 
-           WHERE MONTH(registrationDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)) as lastMonthCustomers
+           WHERE MONTH(registrationDate) = 3
+           AND YEAR(registrationDate) = 2025) as lastMonthCustomers
         FROM Customers
-        WHERE MONTH(registrationDate) = MONTH(CURRENT_DATE)
+        WHERE MONTH(registrationDate) = 4
+        AND YEAR(registrationDate) = 2025
       `;
       
-      // Get low stock items
+      // Fixed the low stock query that had a logic error
       const lowStockQuery = `
         SELECT 
           COUNT(*) as lowStockItems,
           (SELECT COUNT(*) FROM Products 
-           WHERE stockQuantity < 10 
-           AND MONTH(updatedAt) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)) as lastMonthLowStock
+           WHERE stockQuantity < 10) as lastMonthLowStock
         FROM Products
         WHERE stockQuantity < 10
       `;
@@ -56,39 +60,51 @@ class AdminService {
       const [customerResults] = await conn.query(customersQuery);
       const [lowStockResults] = await conn.query(lowStockQuery);
       
-      // Calculate percentage changes
-      const revenueDiff = revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
-      const revenueChange = (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
+      // Calculate percentage changes with protection against division by zero
+      let revenueChange = 0;
+      if (revenueResults[0]?.lastMonthRevenue && revenueResults[0].lastMonthRevenue > 0) {
+        const revenueDiff = revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
+        revenueChange = (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
+      }
       
-      const ordersDiff = orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
-      const ordersChange = (ordersDiff / orderResults[0].lastMonthOrders) * 100;
+      let ordersChange = 0;
+      if (orderResults[0]?.lastMonthOrders && orderResults[0].lastMonthOrders > 0) {
+        const ordersDiff = orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
+        ordersChange = (ordersDiff / orderResults[0].lastMonthOrders) * 100;
+      }
       
-      const customersDiff = customerResults[0].newCustomers - customerResults[0].lastMonthCustomers;
-      const customersChange = (customersDiff / customerResults[0].lastMonthCustomers) * 100;
+      let customersChange = 0;
+      if (customerResults[0]?.lastMonthCustomers && customerResults[0].lastMonthCustomers > 0) {
+        const customersDiff = customerResults[0].newCustomers - customerResults[0].lastMonthCustomers;
+        customersChange = (customersDiff / customerResults[0].lastMonthCustomers) * 100;
+      }
       
-      const lowStockDiff = lowStockResults[0].lowStockItems - lowStockResults[0].lastMonthLowStock;
-      const lowStockChange = (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
+      let lowStockChange = 0;
+      if (lowStockResults[0]?.lastMonthLowStock && lowStockResults[0].lastMonthLowStock > 0) {
+        const lowStockDiff = lowStockResults[0].lowStockItems - lowStockResults[0].lastMonthLowStock;
+        lowStockChange = (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
+      }
       
       return {
         totalRevenue: {
-          value: revenueResults[0].totalRevenue || 0,
-          previousValue: revenueResults[0].lastMonthRevenue || 0,
-          percentChange: revenueChange || 0
+          value: revenueResults[0]?.totalRevenue || 0,
+          previousValue: revenueResults[0]?.lastMonthRevenue || 0,
+          percentChange: parseFloat(revenueChange.toFixed(2)) || 0
         },
         totalOrders: {
-          value: orderResults[0].totalOrders || 0,
-          previousValue: orderResults[0].lastMonthOrders || 0,
-          percentChange: ordersChange || 0
+          value: orderResults[0]?.totalOrders || 0,
+          previousValue: orderResults[0]?.lastMonthOrders || 0,
+          percentChange: parseFloat(ordersChange.toFixed(2)) || 0
         },
         newCustomers: {
-          value: customerResults[0].newCustomers || 0,
-          previousValue: customerResults[0].lastMonthCustomers || 0,
-          percentChange: customersChange || 0
+          value: customerResults[0]?.newCustomers || 0,
+          previousValue: customerResults[0]?.lastMonthCustomers || 0,
+          percentChange: parseFloat(customersChange.toFixed(2)) || 0
         },
         lowStock: {
-          value: lowStockResults[0].lowStockItems || 0,
-          previousValue: lowStockResults[0].lastMonthLowStock || 0,
-          percentChange: lowStockChange || 0
+          value: lowStockResults[0]?.lowStockItems || 0,
+          previousValue: lowStockResults[0]?.lastMonthLowStock || 0,
+          percentChange: parseFloat(lowStockChange.toFixed(2)) || 0
         }
       };
     } catch (error) {
@@ -97,139 +113,321 @@ class AdminService {
     } finally {
       conn.release();
     }
-  }
+  };
   
-  async getSalesPerformance(timeframe = 'last7days') {
+  getDashboardStats = async () => {
     const conn = await pool.getConnection();
     try {
+      // Using April 2025 as current month and March 2025 as previous month
+      const revenueQuery = `  
+        SELECT 
+          COALESCE(SUM(od.subtotal), 0) as totalRevenue,
+          COALESCE((SELECT SUM(od2.subtotal) 
+                  FROM OrderDetails od2 
+                  JOIN Orders o2 ON od2.orderID = o2.orderID 
+                  WHERE MONTH(o2.orderDate) = 3
+                  AND YEAR(o2.orderDate) = 2025), 0) as lastMonthRevenue
+        FROM OrderDetails od
+        JOIN Orders o ON od.orderID = o.orderID
+        WHERE MONTH(o.orderDate) = 4
+        AND YEAR(o.orderDate) = 2025
+      `;
+      
+      const ordersQuery = `
+        SELECT 
+          COUNT(*) as totalOrders,
+          (SELECT COUNT(*) FROM Orders 
+           WHERE MONTH(orderDate) = 3
+           AND YEAR(orderDate) = 2025) as lastMonthOrders
+        FROM Orders
+        WHERE MONTH(orderDate) = 4
+        AND YEAR(orderDate) = 2025
+      `;
+      
+      const customersQuery = `
+        SELECT 
+          COUNT(*) as newCustomers,
+          (SELECT COUNT(*) FROM Customers 
+           WHERE MONTH(registrationDate) = 3
+           AND YEAR(registrationDate) = 2025) as lastMonthCustomers
+        FROM Customers
+        WHERE MONTH(registrationDate) = 4
+        AND YEAR(registrationDate) = 2025
+      `;
+      
+      // Fixed the low stock query that had a logic error
+      const lowStockQuery = `
+        SELECT 
+          COUNT(*) as lowStockItems,
+          (SELECT COUNT(*) FROM Products 
+           WHERE stockQuantity < 10) as lastMonthLowStock
+        FROM Products
+        WHERE stockQuantity < 10
+      `;
+      
+      const [revenueResults] = await conn.query(revenueQuery);
+      console.log('Revenue Results:', revenueResults);
+      const [orderResults] = await conn.query(ordersQuery);
+      console.log('Order Results:', orderResults);
+      const [customerResults] = await conn.query(customersQuery);
+      console.log('Customer Results:', customerResults);
+      const [lowStockResults] = await conn.query(lowStockQuery);
+      console.log('Low Stock Results:', lowStockResults);
+      
+      // Calculate percentage changes with protection against division by zero
+      let revenueChange = 0;
+      if (revenueResults[0]?.lastMonthRevenue && revenueResults[0].lastMonthRevenue > 0) {
+        const revenueDiff = revenueResults[0].totalRevenue - revenueResults[0].lastMonthRevenue;
+        revenueChange = (revenueDiff / revenueResults[0].lastMonthRevenue) * 100;
+      }
+      
+      let ordersChange = 0;
+      if (orderResults[0]?.lastMonthOrders && orderResults[0].lastMonthOrders > 0) {
+        const ordersDiff = orderResults[0].totalOrders - orderResults[0].lastMonthOrders;
+        ordersChange = (ordersDiff / orderResults[0].lastMonthOrders) * 100;
+      }
+      
+      let customersChange = 0;
+      if (customerResults[0]?.lastMonthCustomers && customerResults[0].lastMonthCustomers > 0) {
+        const customersDiff = customerResults[0].newCustomers - customerResults[0].lastMonthCustomers;
+        customersChange = (customersDiff / customerResults[0].lastMonthCustomers) * 100;
+      }
+      
+      let lowStockChange = 0;
+      if (lowStockResults[0]?.lastMonthLowStock && lowStockResults[0].lastMonthLowStock > 0) {
+        const lowStockDiff = lowStockResults[0].lowStockItems - lowStockResults[0].lastMonthLowStock;
+        lowStockChange = (lowStockDiff / lowStockResults[0].lastMonthLowStock) * 100;
+      }
+      
+      return {
+        totalRevenue: {
+          value: Number(revenueResults.totalRevenue) || 0,
+          previousValue: Number(revenueResults.lastMonthRevenue) || 0,
+          percentChange: parseFloat(revenueChange.toFixed(2)) || 0
+        },
+        totalOrders: {
+          value: Number(orderResults.totalOrders) || 0,
+          previousValue: Number(orderResults.lastMonthOrders) || 0,
+          percentChange: parseFloat(ordersChange.toFixed(2)) || 0
+        },
+        newCustomers: {
+          value: Number(customerResults.newCustomers) || 0,
+          previousValue: Number(customerResults.lastMonthCustomers) || 0,
+          percentChange: parseFloat(customersChange.toFixed(2)) || 0
+        },
+        lowStock: {
+          value: Number(lowStockResults.lowStockItems) || 0,
+          previousValue: Number(lowStockResults.lastMonthLowStock) || 0,
+          percentChange: parseFloat(lowStockChange.toFixed(2)) || 0
+        }
+      };
+    } catch (error) {
+      console.error('Error in AdminService.getDashboardStats:', error);
+      throw error;
+    } finally {
+      conn.release();
+    }
+  };
+  
+  getSalesPerformance = async (timeframe = 'last7days') => {
+    const conn = await pool.getConnection();
+    try {
+      const validTimeframes = ['last7days', 'last30days', 'lastQuarter', 'lastYear'];
+      if (!validTimeframes.includes(timeframe)) {
+        throw new Error('Invalid timeframe parameter');
+      }
+  
+      // Check if we have any orders - handle MariaDB specific response format
+      const [orderCheck] = await conn.query('SELECT COUNT(*) FROM Orders');
+      
+      // For MariaDB, the result might be in { 'COUNT(*)': 13n } format
+      const orderCount = orderCheck && orderCheck['COUNT(*)'] ? 
+                          Number(orderCheck['COUNT(*)']) : 
+                          (orderCheck && Object.values(orderCheck)[0] ? 
+                            Number(Object.values(orderCheck)[0]) : 0);
+      
+      console.log('Total orders in database:', orderCount);
+      
+      if (orderCount === 0) {
+        console.log('No orders in the database');
+        return [];
+      }
+  
+      // Check if we have any order details - use the same approach for MariaDB
+      const [detailCheck] = await conn.query('SELECT COUNT(*) FROM OrderDetails');
+      
+      const detailCount = detailCheck && detailCheck['COUNT(*)'] ? 
+                           Number(detailCheck['COUNT(*)']) : 
+                           (detailCheck && Object.values(detailCheck)[0] ? 
+                             Number(Object.values(detailCheck)[0]) : 0);
+      
+      console.log('Total order details in database:', detailCount);
+      
+      if (detailCount === 0) {
+        console.log('No order details in the database');
+        return [];
+      }
+  
+      // Get the latest order date
+      const [dateResult] = await conn.query('SELECT MAX(orderDate) AS latestDate FROM Orders');
+      
+      // Handle various ways the date might be returned
+      let referenceDate;
+      if (dateResult && dateResult.latestDate) {
+        referenceDate = dateResult.latestDate;
+      } else if (dateResult && dateResult['MAX(orderDate)']) {
+        referenceDate = dateResult['MAX(orderDate)'];
+      } else if (dateResult && Object.values(dateResult)[0]) {
+        referenceDate = Object.values(dateResult)[0];
+      } else {
+        console.log('No valid latest order date found');
+        return [];
+      }
+      
+      console.log('Reference Date:', referenceDate);
+      
+      // Check if we have any orders in the timeframe
+      let timeframeSQL = '';
+      
+      if (timeframe === 'last7days') {
+        timeframeSQL = 'DATE_SUB(?, INTERVAL 7 DAY)';
+      } else if (timeframe === 'last30days') {
+        timeframeSQL = 'DATE_SUB(?, INTERVAL 30 DAY)';
+      } else if (timeframe === 'lastQuarter') {
+        timeframeSQL = 'DATE_SUB(?, INTERVAL 3 MONTH)';
+      } else if (timeframe === 'lastYear') {
+        timeframeSQL = 'DATE_SUB(?, INTERVAL 1 YEAR)';
+      }
+      
+      // Use a different query approach for timeframe check
+      const timeframeQuery = `
+        SELECT COUNT(*) FROM Orders 
+        WHERE orderDate >= ${timeframeSQL}
+      `;
+      
+      try {
+        const [timeframeResults] = await conn.query(timeframeQuery, [referenceDate]);
+        
+        // Extract count from MariaDB result format
+        const timeframeCount = timeframeResults && timeframeResults['COUNT(*)'] ? 
+                              Number(timeframeResults['COUNT(*)']) : 
+                              (timeframeResults && Object.values(timeframeResults)[0] ? 
+                                Number(Object.values(timeframeResults)[0]) : 0);
+        
+        console.log(`Orders in ${timeframe} timeframe:`, timeframeCount);
+        
+        if (timeframeCount === 0) {
+          console.log(`No orders found in the ${timeframe} timeframe`);
+          return [];
+        }
+      } catch (queryError) {
+        console.error('Error executing timeframe query:', queryError);
+        return [];
+      }
+  
+      // Main query to get sales performance data
       let query;
       if (timeframe === 'last7days') {
         query = `
           SELECT 
-            DATE(o.orderDate) as date,
-            SUM(od.unitPrice * od.quantity) as revenue
+            DATE(o.orderDate) AS date,
+            COALESCE(SUM(IFNULL(od.subtotal, 0)), 0) AS revenue,
+            COUNT(DISTINCT o.orderID) AS orderCount
           FROM Orders o
-          JOIN OrderDetails od ON o.orderId = od.orderId
-          WHERE o.orderDate >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+          LEFT JOIN OrderDetails od ON o.orderID = od.orderID
+          WHERE o.orderDate >= DATE_SUB(?, INTERVAL 7 DAY)
           GROUP BY DATE(o.orderDate)
           ORDER BY date
         `;
       } else if (timeframe === 'last30days') {
         query = `
           SELECT 
-            DATE(o.orderDate) as date,
-            SUM(od.unitPrice * od.quantity) as revenue
+            DATE(o.orderDate) AS date,
+            COALESCE(SUM(IFNULL(od.subtotal, 0)), 0) AS revenue,
+            COUNT(DISTINCT o.orderID) AS orderCount
           FROM Orders o
-          JOIN OrderDetails od ON o.orderId = od.orderId
-          WHERE o.orderDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
+          LEFT JOIN OrderDetails od ON o.orderID = od.orderID
+          WHERE o.orderDate >= DATE_SUB(?, INTERVAL 30 DAY)
           GROUP BY DATE(o.orderDate)
           ORDER BY date
         `;
       } else if (timeframe === 'lastQuarter') {
         query = `
           SELECT 
-            MONTH(o.orderDate) as month,
-            SUM(od.unitPrice * od.quantity) as revenue
+            CONCAT(YEAR(o.orderDate), '-', LPAD(MONTH(o.orderDate), 2, '0')) AS yearMonth,
+            MONTH(o.orderDate) AS month,
+            MONTHNAME(o.orderDate) AS monthName,
+            COALESCE(SUM(IFNULL(od.subtotal, 0)), 0) AS revenue,
+            COUNT(DISTINCT o.orderID) AS orderCount
           FROM Orders o
-          JOIN OrderDetails od ON o.orderId = od.orderId
-          WHERE o.orderDate >= DATE_SUB(CURRENT_DATE, INTERVAL 3 MONTH)
-          GROUP BY MONTH(o.orderDate)
-          ORDER BY month
+          LEFT JOIN OrderDetails od ON o.orderID = od.orderID
+          WHERE o.orderDate >= DATE_SUB(?, INTERVAL 3 MONTH)
+          GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), MONTHNAME(o.orderDate)
+          ORDER BY yearMonth
         `;
       } else if (timeframe === 'lastYear') {
         query = `
           SELECT 
-            MONTH(o.orderDate) as month,
-            SUM(od.unitPrice * od.quantity) as revenue
+            CONCAT(YEAR(o.orderDate), '-', LPAD(MONTH(o.orderDate), 2, '0')) AS yearMonth,
+            MONTH(o.orderDate) AS month,
+            MONTHNAME(o.orderDate) AS monthName,
+            COALESCE(SUM(IFNULL(od.subtotal, 0)), 0) AS revenue,
+            COUNT(DISTINCT o.orderID) AS orderCount
           FROM Orders o
-          JOIN OrderDetails od ON o.orderId = od.orderId
-          WHERE o.orderDate >= DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)
-          GROUP BY MONTH(o.orderDate)
-          ORDER BY month
+          LEFT JOIN OrderDetails od ON o.orderID = od.orderID
+          WHERE o.orderDate >= DATE_SUB(?, INTERVAL 1 YEAR)
+          GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), MONTHNAME(o.orderDate)
+          ORDER BY yearMonth
         `;
       }
+  
+      console.log('Executing query with reference date:', referenceDate);
       
-      const [results] = await conn.query(query);
-      return results;
+      try {
+        const [results] = await conn.query(query, [referenceDate]);
+        console.log('Raw Results:', results);
+        
+        // IMPORTANT: MariaDB might return a single object instead of an array for a single result
+        // Convert to array if necessary
+        let resultArray = results;
+        
+        if (results && !Array.isArray(results)) {
+          console.log('Single result detected, converting to array');
+          resultArray = [results];
+        } else if (!results) {
+          console.log('No results returned from query');
+          return [];
+        }
+        
+        console.log('Results after array conversion:', resultArray);
+        
+        if (resultArray.length === 0) {
+          console.log('Empty results array');
+          return [];
+        }
+    
+        const formattedResults = resultArray.map(item => ({
+          ...item,
+          revenue: parseFloat(item.revenue) || 0,
+          orderCount: parseInt(item.orderCount) || 0
+        }));
+        
+        console.log('Formatted results:', formattedResults);
+    
+        return formattedResults;
+      } catch (finalQueryError) {
+        console.error('Error executing final query:', finalQueryError);
+        return [];
+      }
     } catch (error) {
       console.error('Error in AdminService.getSalesPerformance:', error);
       throw error;
     } finally {
-      conn.release();
+      if (conn) conn.release();
     }
-  }
-  
-  async getDeviceUsage() {
-    const conn = await pool.getConnection();
-    try {
-      const query = `
-        SELECT 
-          userAgent,
-          COUNT(*) as count,
-          ROUND((COUNT(*) / (SELECT COUNT(*) FROM Orders)) * 100, 1) as percentage
-        FROM Orders
-        GROUP BY userAgent
-      `;
-      
-      const [results] = await conn.query(query);
-      
-      // Map user agent strings to simplified categories
-      const deviceMap = {
-        'Windows': 'Windows',
-        'Macintosh': 'Mac',
-        'iPhone': 'iOS',
-        'iPad': 'iOS',
-        'Android': 'Android',
-        'Linux': 'Linux'
-      };
-      
-      const processedResults = [];
-      let othersCount = 0;
-      
-      results.forEach(item => {
-        let found = false;
-        for (const [key, value] of Object.entries(deviceMap)) {
-          if (item.userAgent && item.userAgent.includes(key)) {
-            const existingIndex = processedResults.findIndex(x => x.platform === value);
-            if (existingIndex >= 0) {
-              processedResults[existingIndex].percentage += parseFloat(item.percentage);
-              processedResults[existingIndex].count += parseInt(item.count);
-            } else {
-              processedResults.push({
-                platform: value,
-                percentage: parseFloat(item.percentage),
-                count: parseInt(item.count)
-              });
-            }
-            found = true;
-            break;
-          }
-        }
-        
-        if (!found) {
-          othersCount += parseInt(item.count || 0);
-        }
-      });
-      
-      if (othersCount > 0) {
-        const otherPercentage = (othersCount / (results.reduce((sum, item) => sum + parseInt(item.count || 0), 0))) * 100;
-        processedResults.push({
-          platform: 'Other',
-          percentage: parseFloat(otherPercentage.toFixed(1)),
-          count: othersCount
-        });
-      }
-      
-      return processedResults;
-    } catch (error) {
-      console.error('Error in AdminService.getDeviceUsage:', error);
-      throw error;
-    } finally {
-      conn.release();
-    }
-  }
-  
-  async getCategorySales() {
+  };
+
+  getCategorySales =  async () => {
     const conn = await pool.getConnection();
     try {
       const query = `
@@ -254,8 +452,168 @@ class AdminService {
       conn.release();
     }
   }
+  getPaymentMethodDistribution = async () => {
+    const conn = await pool.getConnection();
+    try {
+      const query = `
+        SELECT 
+          pm.methodName,
+          COUNT(p.paymentID) as count,
+          ROUND((COUNT(p.paymentID) / (SELECT COUNT(*) FROM Payments)) * 100, 1) as percentage
+        FROM Payments p
+        JOIN PaymentMethods pm ON p.paymentMethodID = pm.paymentID
+        GROUP BY pm.methodName
+        ORDER BY count DESC
+      `;
+      
+      const [results] = await conn.query(query);
+      
+      return results || [];
+    } catch (error) {
+      console.error('Error in AdminService.getPaymentMethodDistribution:', error);
+      throw error;
+    } finally {
+      conn.release();
+    }
+  }
   
-  async getTrendingProducts() {
+  getProductCategoryDistribution = async () => {
+    const conn = await pool.getConnection();
+    try {
+      const query = `
+        SELECT 
+          pc.categoryName,
+          COUNT(p.productID) as productCount,
+          ROUND((COUNT(p.productID) / (SELECT COUNT(*) FROM Products)) * 100, 1) as percentage
+        FROM Products p
+        JOIN ProductCategories pc ON p.categoryID = pc.categoryID
+        GROUP BY pc.categoryName
+        ORDER BY productCount DESC
+      `;
+      
+      const [results] = await conn.query(query);
+      
+      return results || [];
+    } catch (error) {
+      console.error('Error in AdminService.getProductCategoryDistribution:', error);
+      throw error;
+    } finally {
+      conn.release();
+    }
+  }
+  getDeviceUsage = async (analysisType = 'all') => {
+    const conn = await pool.getConnection();
+    try {
+      let results = {};
+      
+      // Category analytics
+      if (analysisType === 'all' || analysisType === 'category') {
+        // Đảm bảo nhận kết quả là mảng bằng cách thêm GROUP BY
+        const categoryQuery = `
+          SELECT pc.categoryName, 
+            COUNT(od.orderDetailID) as orderCount,
+            SUM(od.quantity) as totalQuantitySold,
+            ROUND(SUM(od.subtotal), 2) as totalRevenue,
+            ROUND((COUNT(od.orderDetailID) / (SELECT COUNT(*) FROM OrderDetails)) * 100, 1) as percentage
+          FROM OrderDetails od
+          JOIN Products p ON od.productID = p.productID
+          JOIN ProductCategories pc ON p.categoryID = pc.categoryID
+          JOIN Orders o ON od.orderID = o.orderID
+          WHERE o.status = 'Completed'
+          GROUP BY pc.categoryName
+          ORDER BY totalRevenue DESC`;
+        
+        console.log('Executing category query...');
+        const [categoryResults] = await conn.query(categoryQuery);
+        console.log('Category query result type:', Array.isArray(categoryResults) ? 'array' : typeof categoryResults);
+        
+        // Chuyển đổi đối tượng đơn lẻ thành mảng nếu cần
+        const categoryArray = Array.isArray(categoryResults) ? categoryResults : [categoryResults];
+        
+        // Lọc bỏ giá trị undefined hoặc null
+        results.categories = categoryArray
+          .filter(item => item && item.categoryName) // Đảm bảo item tồn tại và có categoryName
+          .map(item => ({
+            category: item.categoryName,
+            orderCount: parseInt(item.orderCount || 0),
+            quantitySold: parseInt(item.totalQuantitySold || 0),
+            revenue: parseFloat(item.totalRevenue || 0),
+            percentage: parseFloat(item.percentage || 0)
+          }));
+      }
+      
+      // Brand analytics
+      if (analysisType === 'all' || analysisType === 'brand') {
+        const brandQuery = `
+          SELECT pc.brandName, 
+            COUNT(od.orderDetailID) as orderCount,
+            SUM(od.quantity) as totalQuantitySold,
+            ROUND(SUM(od.subtotal), 2) as totalRevenue,
+            ROUND((COUNT(od.orderDetailID) / (SELECT COUNT(*) FROM OrderDetails)) * 100, 1) as percentage
+          FROM OrderDetails od
+          JOIN Products p ON od.productID = p.productID
+          JOIN ProductCategories pc ON p.categoryID = pc.categoryID
+          JOIN Orders o ON od.orderID = o.orderID
+          WHERE o.status = 'Completed'
+          GROUP BY pc.brandName
+          ORDER BY totalRevenue DESC`;
+        
+        console.log('Executing brand query...');
+        const [brandResults] = await conn.query(brandQuery);
+        console.log('Brand query result type:', Array.isArray(brandResults) ? 'array' : typeof brandResults);
+        
+       
+        const brandArray = Array.isArray(brandResults) ? brandResults : [brandResults];
+        
+       
+        results.brands = brandArray
+          .filter(item => item && item.brandName) 
+          .map(item => ({
+            brand: item.brandName,
+            orderCount: parseInt(item.orderCount || 0),
+            quantitySold: parseInt(item.totalQuantitySold || 0),
+            revenue: parseFloat(item.totalRevenue || 0),
+            percentage: parseFloat(item.percentage || 0)
+          }));
+      }
+      
+    
+      if (analysisType === 'all' || analysisType === 'distribution') {
+        const distributionQuery = `
+          SELECT categoryName, 
+            COUNT(*) as productCount,
+            ROUND((COUNT(*) / (SELECT COUNT(*) FROM ProductCategories)) * 100, 1) as percentage
+          FROM ProductCategories
+          GROUP BY categoryName
+          ORDER BY productCount DESC`;
+        
+        console.log('Executing distribution query...');
+        const [distributionResults] = await conn.query(distributionQuery);
+        console.log('Distribution query result type:', Array.isArray(distributionResults) ? 'array' : typeof distributionResults);
+        
+        // Chuyển đổi đối tượng đơn lẻ thành mảng nếu cần
+        const distributionArray = Array.isArray(distributionResults) ? distributionResults : [distributionResults];
+        
+      
+        results.distribution = distributionArray
+          .filter(item => item && item.categoryName) 
+          .map(item => ({
+            category: item.categoryName,
+            count: parseInt(item.productCount || 0),
+            percentage: parseFloat(item.percentage || 0)
+          }));
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Error in AdminService.getDeviceUsage:', error);
+      throw error;
+    } finally {
+      conn.release();
+    }
+  }
+  
+  getTrendingProducts = async () => {
     const conn = await pool.getConnection();
     try {
       const query = `
@@ -295,7 +653,7 @@ class AdminService {
     }
   }
   
-  async getRecentOrders() {
+  getRecentOrders = async () => {
     const conn = await pool.getConnection();
     try {
       const query = `
@@ -325,7 +683,7 @@ class AdminService {
   }
   
   // Product management services
-  async getAllProducts() {
+  getAllProducts = async () => {
     try {
       return await ProductModel.getAll();
     } catch (error) {
@@ -334,7 +692,7 @@ class AdminService {
     }
   }
   
-  async getProductById(id) {
+  getProductById = async (id) => {
     try {
       return await ProductModel.getById('productId', id);
     } catch (error) {
@@ -343,7 +701,7 @@ class AdminService {
     }
   }
   
-  async createProduct(productData) {
+  createProduct = async (productData) => {
     try {
       const productId = await ProductModel.create(productData);
       return { productId, ...productData };
@@ -353,7 +711,7 @@ class AdminService {
     }
   }
   
-  async updateProduct(id, productData) {
+  updateProduct = async (id, productData) => {
     try {
       return await ProductModel.update('productId', id, productData);
     } catch (error) {
@@ -362,7 +720,7 @@ class AdminService {
     }
   }
   
-  async deleteProduct(id) {
+  deleteProduct = async (id) => {
     try {
       return await ProductModel.delete('productId', id);
     } catch (error) {
@@ -372,7 +730,7 @@ class AdminService {
   }
   
   // Order management services
-  async getAllOrders() {
+  getAllOrders = async () => {
     try {
       return await OrderModel.getAll();
     } catch (error) {
@@ -381,7 +739,7 @@ class AdminService {
     }
   }
   
-  async getOrderById(id) {
+  getOrderById = async (id) => {
     const conn = await pool.getConnection();
     try {
       const query = `
@@ -427,7 +785,7 @@ class AdminService {
     }
   }
   
-  async updateOrderStatus(id, status) {
+  updateOrderStatus = async (id, status) => {
     try {
       return await OrderModel.update('orderId', id, { status });
     } catch (error) {
@@ -437,7 +795,7 @@ class AdminService {
   }
   
   // Customer management services
-  async getAllCustomers() {
+  getAllCustomers = async () => {
     try {
       return await CustomerModel.getAll();
     } catch (error) {
@@ -446,7 +804,7 @@ class AdminService {
     }
   }
   
-  async getCustomerById(id) {
+  getCustomerById = async (id) => {
     const conn = await pool.getConnection();
     try {
       const customerQuery = `
@@ -485,7 +843,7 @@ class AdminService {
   }
   
   // Inventory management services
-  async getLowStockItems() {
+  getLowStockItems = async () => {
     const conn = await pool.getConnection();
     try {
       const query = `

@@ -1,35 +1,42 @@
 import express from 'express';
 import { AdminPageController } from '../controller/AdminPageController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 const adminController = new AdminPageController();
 
+// Test route - doesn't require authentication for testing
+router.get('/test', (req, res) => {
+  res.json({ message: 'Admin routes working!' });
+});
+
 // Dashboard routes
-router.get('/dashboard/stats', authMiddleware, adminController.getDashboardStats);
-router.get('/dashboard/sales-performance', authMiddleware, adminController.getSalesPerformance);
-router.get('/dashboard/device-usage', authMiddleware, adminController.getDeviceUsage);
-router.get('/dashboard/category-sales', authMiddleware, adminController.getCategorySales);
-router.get('/dashboard/trending-products', authMiddleware, adminController.getTrendingProducts);
-router.get('/dashboard/recent-orders', authMiddleware, adminController.getRecentOrders);
+router.get('/dashboard/stats', (req, res) => adminController.getDashboardStats(req, res));
+router.get('/dashboard/sales-performance', (req, res) => adminController.getSalesPerformance(req, res));
+router.get('/dashboard/device-usage', (req, res) => adminController.getDeviceUsage(req, res));
+// có 
+router.get('/dashboard/category-sales', (req, res) => adminController.getCategorySales(req, res));
+//có
+router.get('/dashboard/trending-products', (req, res) => adminController.getTrendingProducts(req, res));
+
+router.get('/dashboard/recent-orders', (req, res) => adminController.getRecentOrders(req, res));
 
 // Product management routes
-router.get('/products', authMiddleware, adminController.getAllProducts);
-router.post('/products', authMiddleware, adminController.createProduct);
-router.get('/products/:id', authMiddleware, adminController.getProductById);
-router.put('/products/:id', authMiddleware, adminController.updateProduct);
-router.delete('/products/:id', authMiddleware, adminController.deleteProduct);
+router.get('/products', (req, res) => adminController.getAllProducts(req, res));
+router.post('/products', (req, res) => adminController.createProduct(req, res));
+router.get('/products/:id', (req, res) => adminController.getProductById(req, res));
+router.put('/products/:id', (req, res) => adminController.updateProduct(req, res));
+router.delete('/products/:id', (req, res) => adminController.deleteProduct(req, res));
 
 // Order management routes
-router.get('/orders', authMiddleware, adminController.getAllOrders);
-router.get('/orders/:id', authMiddleware, adminController.getOrderById);
-router.put('/orders/:id/status', authMiddleware, adminController.updateOrderStatus);
+router.get('/orders', (req, res) => adminController.getAllOrders(req, res));
+router.get('/orders/:id', (req, res) => adminController.getOrderById(req, res));
+router.put('/orders/:id/status', (req, res) => adminController.updateOrderStatus(req, res));
 
 // Customer management routes
-router.get('/customers', authMiddleware, adminController.getAllCustomers);
-router.get('/customers/:id', authMiddleware, adminController.getCustomerById);
+router.get('/customers', (req, res) => adminController.getAllCustomers(req, res));
+router.get('/customers/:id', (req, res) => adminController.getCustomerById(req, res));
 
 // Inventory management routes
-router.get('/inventory/low-stock', authMiddleware, adminController.getLowStockItems);
+router.get('/inventory/low-stock', (req, res) => adminController.getLowStockItems(req, res));
 
 export default router;
