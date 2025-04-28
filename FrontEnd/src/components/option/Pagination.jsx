@@ -33,12 +33,15 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
 
       {pages.map((page, idx) =>
         page === "..." ? (
-          <span key={idx} className="w-10 h-10 flex items-center justify-center text-gray-400">
+          <span
+            key={`ellipsis-${idx}`}
+            className="w-10 h-10 flex items-center justify-center text-gray-400"
+          >
             ...
           </span>
         ) : (
           <button
-            key={page}
+            key={`page-${page}-${idx}`} // ✅ Đảm bảo key luôn khác nhau
             onClick={() => onPageChange(page)}
             className={`w-10 h-10 rounded-full border text-sm ${
               page === currentPage

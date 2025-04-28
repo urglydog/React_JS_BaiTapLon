@@ -1,10 +1,20 @@
 // src/components/ProductCard.jsx
 import React from "react";
 import { FaStar } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/product/${product.productID}/productDetail`);
+  };
+
   return (
-    <div className="w-full max-w-[200px]  bg-white shadow rounded-lg p-3 mx-auto hover:shadow-lg transition">
+    <div
+      className="w-full max-w-[200px]  bg-white shadow rounded-lg p-3 mx-auto hover:shadow-lg transition"
+      onClick={handleClick}
+    >
       {/* Tình trạng */}
       <div className="text-xs font-semibold text-green-600 mb-1">
         {product.inStock ? (
@@ -36,7 +46,9 @@ const ProductCard = ({ product }) => {
 
       {/* Giá */}
       <div className="mt-1">
-        <p className="line-through text-sm text-gray-400">${product.price*0.25}</p>
+        <p className="line-through text-sm text-gray-400">
+          ${product.price * 0.25}
+        </p>
         <p className="text-lg font-bold text-black">${product.price}</p>
       </div>
     </div>
