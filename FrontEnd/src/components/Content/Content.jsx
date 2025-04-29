@@ -26,6 +26,7 @@ import product1 from "../../assets/images/banner.png";
 import product2 from "../../assets/images/banner.png";
 import TestimonialCard from "../info/TestimonialCard";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 function Content() {
   // const { user } = React.useContext(UserContext);
 
@@ -150,9 +151,12 @@ function Content() {
           </div>
         </div>
         <div className="text-right mt-4">
-          <a href="#" className="text-sm text-blue-600 hover:underline">
+          <Link
+            to="/products"
+            className="text-sm text-blue-600 hover:underline"
+          >
             See All New Products
-          </a>
+          </Link>
         </div>
       </div>
       {/* slide */}

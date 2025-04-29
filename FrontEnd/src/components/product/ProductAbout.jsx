@@ -51,10 +51,10 @@ export default function ProductDetail() {
   return (
     <div className="bg-gray-50">
       {/* Main Content Area */}
-      <div className="border border-gray-400 rounded-lg p-4">
+      <div className="p-4">
         <div className="flex flex-col md:flex-row">
           {/* Left Section: Product Info */}
-          <div className="md:w-1/2 mb-8 md:mb-0 bg-gray-100 p-6 rounded-lg">
+          <div className="md:w-1/2 mb-8 md:mb-0 md:pr-6">
             <div className="text-sm mb-4">
               <span className="text-gray-600">
                 Home / {product.categoryName} /{" "}

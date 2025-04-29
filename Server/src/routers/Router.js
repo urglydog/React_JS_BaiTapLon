@@ -2,6 +2,7 @@ import express from "express";
 import {
   handleGetAllProducts,
   handleGetAllProductsWithDetails,
+  handleGetDetailProductById,
   handleGetProductByIdWithDetails,
 } from "../controller/ProductController.js";
 import { handleGetOrdersWithDetails } from "../controller/orderController.js";
@@ -25,6 +26,8 @@ const initApiRoutes = (app) => {
     "/product/getProductByIdWithDetails/:id",
     handleGetProductByIdWithDetails
   );
+  // Lấy chi tiết sản phẩm theo ID
+  router.get("/product/getProductDetailById/:id", handleGetDetailProductById);
 
   // orderController
   router.get("/order/getOrdersWithDetails", handleGetOrdersWithDetails);
