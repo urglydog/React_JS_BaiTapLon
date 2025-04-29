@@ -46,10 +46,17 @@ join productcategories p2 on p.categoryID = p2.categoryID
 const getProductByIdWithDetails = async (productID) => {
   try {
     const [rows] = await db.query(
-      `
-            select *, p2.categoryName, p2.brandName, p2.seriesName from products p 
-      join productcategories p2 on p.categoryID = p2.categoryID  
-      where p.productID = ?
+      `SELECT 
+  p.*, 
+  p2.categoryName, 
+  p2.brandName, 
+  p2.seriesName,
+  GROUP_CONCAT(p3.attributeName SEPARATOR ' | ') AS attributeList
+FROM products p
+JOIN productcategories p2 ON p.categoryID = p2.categoryID
+JOIN productattributes p3 ON p2.categoryID = p3.categoryID
+WHERE p.productID = ?
+GROUP BY p.productID
     `,
       [productID]
     );
@@ -76,4 +83,50 @@ const getProductByIdWithDetails = async (productID) => {
     };
   }
 };
-export { getAllProducts, getAllProductsWithDetails, getProductByIdWithDetails };
+
+// Get product detail by ID
+const getProductDetailById = async (productID) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+  p.*, 
+  p2.categoryName, 
+  p2.brandName, 
+  p2.seriesName,
+  GROUP_CONCAT(p3.attributeName SEPARATOR ' | ') AS attributeList
+FROM products p
+JOIN productcategories p2 ON p.categoryID = p2.categoryID
+JOIN productattributes p3 ON p2.categoryID = p3.categoryID
+WHERE p.productID = ?
+GROUP BY p.productID`,
+      [productID]
+    );
+
+    if (rows.length === 0) {
+      return {
+        EM: "Không tìm thấy sản phẩm.",
+        EC: 0,
+        DT: [],
+      };
+    }
+    return {
+      EM: "Lấy sản phẩm với tên loại thành công",
+      EC: 1,
+      DT: rows,
+    };
+  } catch (err) {
+    console.error("Error in productService: ", err);
+    return {
+      EC: -1,
+      EM: "Lỗi khi tìm kiếm sản phẩm.",
+      DT: [],
+    };
+  }
+};
+
+export {
+  getAllProducts,
+  getAllProductsWithDetails,
+  getProductByIdWithDetails,
+  getProductDetailById,
+};

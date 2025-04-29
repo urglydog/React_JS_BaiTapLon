@@ -51,7 +51,7 @@ export default function ProductSpeccs() {
   return (
     <div className="bg-gray-50">
       {/* Main Content Area */}
-      <div className="border border-gray-400 rounded-lg p-4">
+      <div className="p-4">
         <div className="flex flex-col md:flex-row">
           {/* Left Section: Product Info - SỬA ĐỔI THEO ẢNH */}
           {/* Bỏ class bg-gray-100 */}
@@ -70,18 +70,22 @@ export default function ProductSpeccs() {
             </p>
             {/* Phần Specs đơn giản theo ảnh */}
             <div className="border border-gray-300 rounded mb-6">
-              <div className="flex justify-between p-3 border-b border-gray-300">
-                <span className="font-medium text-sm">CPU</span>
-                <span className="text-sm text-gray-700">N/A</span>
-              </div>
-              <div className="flex justify-between p-3 border-b border-gray-300">
-                <span className="font-medium text-sm">Featured</span>
-                <span className="text-sm text-gray-700">N/A</span>
-              </div>
-              <div className="flex justify-between p-3">
-                <span className="font-medium text-sm">I/O Ports</span>
-                <span className="text-sm text-gray-700">N/A</span>
-              </div>
+              {product.attributeList?.split("|").map((item, index, arr) => {
+                const [key, value] = item.split(":");
+                return (
+                  <div
+                    key={index}
+                    className={`flex justify-between p-3 ${
+                      index !== arr.length - 1 ? "border-b border-gray-300" : ""
+                    }`}
+                  >
+                    <span className="font-medium text-sm">{key?.trim()}</span>
+                    <span className="text-sm text-gray-700">
+                      {value?.trim() || "N/A"}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             {/* Phần Have a Question và SKU giữ nguyên */}
             <div className="mt-6">

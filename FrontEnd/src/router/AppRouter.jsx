@@ -31,10 +31,12 @@ import ProductDetail from "../components/product/ProductDetail";
 import ProductSpeccs from "../components/product/ProductSpecss";
 import ProductAbout from "../components/product/ProductAbout";
 import Product from "../components/product/Product";
+import ScrollToTop from "../components/option/ScrollToTop";
 
 const AppRouter = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Content />}></Route>
@@ -69,6 +71,9 @@ const AppRouter = () => {
             <Route path="productSpeccs" element={<ProductSpeccs />}></Route>
             <Route index element={<ProductAbout />}></Route>
           </Route>
+
+          <Route path="/products" element={<Catalog />}></Route>
+
           <Route path="/about" element={<About />}></Route>
         </Route>
       </Routes>

@@ -92,7 +92,7 @@ export default function Product() {
   return (
     <div className="bg-gray-50">
       {/* Product Detail Section */}
-      <div className="border border-gray-400 rounded-lg p-4 mb-4">
+      <div className="border border-gray-400 p-4 mb-4">
         <div className="flex items-center justify-between">
           {/* Navigation Tabs */}
           <div className="flex space-x-6 text-sm">
@@ -132,45 +132,48 @@ export default function Product() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
               <span className="text-sm">
-                On Sale from{" "}
-                {parseFloat(
-                  product?.price?.replace(/[₫,]/g, "") * product?.quantity || 0
-                ).toLocaleString("vi-VN", {
-                  style: "currency",
-                  currency: "VND",
-                })}
+                <span className="font-light">On Sale from</span>{" "}
+                <span className="font-bold">
+                  {parseFloat(
+                    product?.price?.replace(/[₫,]/g, "") * product?.quantity ||
+                      0
+                  ).toLocaleString("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  })}
+                </span>
               </span>
 
-              <div className="flex items-center border border-gray-300 rounded ml-4">
-                <input
-                  type="text"
-                  value={quantity}
-                  className="w-8 text-center"
-                  readOnly
-                />
-                <div className="flex flex-col border-l border-gray-300">
+              <div className="flex items-center bg-[#f7f8ff] rounded-md px-2 py-1 w-[60px] justify-between">
+                <span className="text-black text-sm font-medium">
+                  {quantity}
+                </span>
+                <div className="flex flex-col items-center">
                   <button
-                    className="px-2 border-b border-gray-300 text-xs"
+                    className="text-gray-400 text-xs leading-none hover:text-black"
                     onClick={handleIncrease}
                   >
-                    +
+                    ▲
                   </button>
-                  <button className="px-2 text-xs" onClick={handleDecrease}>
-                    −
+                  <button
+                    className="text-gray-400 text-xs leading-none hover:text-black"
+                    onClick={handleDecrease}
+                  >
+                    ▼
                   </button>
                 </div>
               </div>
             </div>
 
             <button
-              className="bg-blue-600 text-white py-1 px-4 rounded hover:bg-blue-700 text-sm"
+              className="bg-blue-600 text-white p-3 rounded-4xl hover:bg-blue-700 font-bold cursor-pointer"
               onClick={() => {
                 handleClickAddToCart(product);
               }} // Thêm hàm xử lý sự kiện khi nhấn nút
             >
               Add to Cart
             </button>
-            <button className="bg-yellow-400 text-yellow-800 py-1 px-4 rounded hover:bg-yellow-500 flex items-center justify-center text-sm">
+            <button className="bg-yellow-400 text-yellow-800 p-3 rounded-4xl hover:bg-yellow-500 flex items-center justify-center cursor-pointer">
               <FaPaypal className="mr-1 text-blue-700" />
               PayPal
             </button>

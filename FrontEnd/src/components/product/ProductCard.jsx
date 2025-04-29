@@ -7,12 +7,12 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/product/${product.productID}/productDetail`);
+    navigate(`/product/${product.productID}/productAbout`);
   };
 
   return (
     <div
-      className="w-full max-w-[200px]  bg-white shadow rounded-lg p-3 mx-auto hover:shadow-lg transition"
+      className="w-full max-w-[200px]  bg-white shadow rounded-lg p-3 mx-auto hover:shadow-lg transition cursor-pointer"
       onClick={handleClick}
     >
       {/* Tình trạng */}

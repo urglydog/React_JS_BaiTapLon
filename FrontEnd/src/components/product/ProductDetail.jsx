@@ -27,7 +27,7 @@ export default function ProductDetail() {
   async function fetchProduct(id) {
     try {
       const res = await axiosInstance.get(
-        `/api/product/getProductByIdWithDetails/${id}`
+        `/api/product/getProductDetailById/${id}`
       );
       if (res.data && res.data.DT && res.data.DT.length > 0) {
         setProduct(res.data.DT[0]);
@@ -51,10 +51,10 @@ export default function ProductDetail() {
   return (
     <div className="bg-gray-50">
       {/* Main Content Area */}
-      <div className="border border-gray-400 rounded-lg p-4">
+      <div className="p-4">
         <div className="flex flex-col md:flex-row">
           {/* Left Section: Product Info */}
-          <div className="md:w-1/2 mb-8 md:mb-0 bg-gray-100 p-6 rounded-lg">
+          <div className="md:w-1/2 mb-8 md:mb-0 md:pr-6">
             <div className="text-sm mb-4">
               <span className="text-gray-600">
                 Home / {product.categoryName} /{" "}
@@ -68,59 +68,11 @@ export default function ProductDetail() {
             </p>
 
             <div className="space-y-1 text-sm">
-              <p>
-                <span className="font-semibold">• Intel Core i7-10700F</span>
-              </p>
-              <p>
-                <span className="font-semibold">• Intel HDD</span>
-              </p>
-              <p>
-                <span className="font-semibold">• Wi-Fi 6</span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • NVIDIA MSI GeForce RTX 2060 SUPER 8GB AERO ITX OC/8GB
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • 32GB DDR4 (16GB x 1) DDR4 2666MHz
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • 2 total slots (16GB Max)
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • 500GB (1 x 500GB) M.2 NVMe PCIe GEN4 SSD 7TB (3.5") 5400RPM
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • Gaming Keyboard (GK8) + Gaming Mouse (GM)
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • 15.6" HD (60Hz) 23" HD(1920x1080) (4:3 16:9)
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">
-                  • Intel Wi-Fi/Ethernet (10/100/1000M)
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">• AC600 (WiFi 5) (H:RB13)</span>
-              </p>
-              <p>
-                <span className="font-semibold">• PSU 330W</span>
-              </p>
-              <p>
-                <span className="font-semibold">• Fan Cooler</span>
-              </p>
+              {product.attributeList?.split("|").map((attr, index) => (
+                <p key={index}>
+                  <span className="font-semibold">• {attr.trim()}</span>
+                </p>
+              ))}
             </div>
 
             <div className="mt-6">

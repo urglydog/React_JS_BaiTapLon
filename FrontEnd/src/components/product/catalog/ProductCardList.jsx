@@ -16,7 +16,7 @@ export default function ProductCardList({ product }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/product/${product.productID}/productDetail`);
+    navigate(`/product/${product.productID}/productAbout`);
   };
 
   return (
@@ -93,7 +93,10 @@ export default function ProductCardList({ product }) {
         <div className="flex items-center justify-between">
           <button
             className="bg-white text-[#0156FF] border-[#0156FF] border-2 px-4 py-2 text-sm rounded-4xl hover:font-bold transition"
-            onClick={handleAddToCart}
+            onClick={(e) => {
+              e.stopPropagation(); // Ngăn chặn click từ lan ra ngoài
+              handleAddToCart();
+            }}
           >
             <img
               src={logo_add_cart}
