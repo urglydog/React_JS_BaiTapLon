@@ -759,7 +759,6 @@ class AdminService {
       const productId = await ProductModel.create(productData);
       console.log("Created product with ID:", productId);
       
-      // Đảm bảo trả về đúng định dạng mà frontend mong đợi
       const createdProduct = { id: productId, ...productData };
       console.log("Returning product data:", createdProduct);
       return createdProduct;

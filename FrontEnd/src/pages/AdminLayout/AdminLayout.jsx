@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import {
   FaChartPie,
   FaDesktop,
@@ -48,6 +49,7 @@ import LaptopTable from "./LaptopTable";
 const API_URL = "http://localhost:4000/api/admin";
 
 export default function ComputerStoreAdminLayout() {
+  
   const [darkMode, setDarkMode] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,11 +65,19 @@ export default function ComputerStoreAdminLayout() {
   const [computers, setComputers] = useState([]); // State for computers
   // Timeframe for sales data
   const [timeframe, setTimeframe] = useState("last7days");
+ 
 
+  const handleLogout = () => {
+    console.log("Logout button clicked"); // nên thấy dòng này
+    localStorage.removeItem('token'); // hoặc sessionStorage.clear()
+    
+    // Điều hướng về trang đăng nhập
+    window.location.href = '/login';
+  }
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
-
+  
   // Fetch all dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -410,14 +420,19 @@ export default function ComputerStoreAdminLayout() {
 
         {/* User section at bottom */}
         <div className={`p-4 flex items-center border-t ${borderColor}`}>
-          <div className="mr-3">
-            <FaUserCircle size={24} className="text-gray-400" />
-          </div>
-          <div>
-            <div className="font-medium">Admin User</div>
-            <div className={`text-xs ${secondaryTextColor}`}>Store Manager</div>
-          </div>
-        </div>
+  <div className="mr-3">
+    <FaUserCircle size={24} className="text-gray-400" />
+  </div>
+  <div>
+    <div className="font-medium">Admin User</div>
+    <div
+      onClick={handleLogout}
+      className={`text-xs ${secondaryTextColor} cursor-pointer hover:underline`}
+    >
+      Đăng xuất
+    </div>
+  </div>
+</div>
       </div>
 
       {/* Main Content */}
@@ -452,13 +467,8 @@ export default function ComputerStoreAdminLayout() {
             >
               {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
             </button>
-            <button className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20">
-              <FaClock size={18} />
-            </button>
-            <button className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20 relative">
-              <FaBell size={18} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+          
+           
           </div>
         </header>
 
