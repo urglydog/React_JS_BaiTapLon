@@ -46,6 +46,7 @@ import {
 } from "recharts";
 import LaptopTable from "./LaptopTable";
 import CustomerTable from "./CustomerTable";
+import OrderTable from "./OrderTable";
 // Base API URL - replace with your actual backend URL
 const API_URL = "http://localhost:4000/api/admin";
 
@@ -69,6 +70,8 @@ export default function ComputerStoreAdminLayout() {
   const [showModal, setShowModal] = useState(false);
   const [topSpenders, setTopSpenders] = useState([]);
   const [spendersTimeframe, setSpendersTimeframe] = useState("last7days"); // Mặc định là tuần
+
+  const [orders, setOrders] = useState([]);
   const handleLogoutConfirm = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
@@ -202,6 +205,23 @@ export default function ComputerStoreAdminLayout() {
         if (!topSpendersResponse.ok) throw new Error("Failed to fetch top spenders data");
         const topSpendersData = await topSpendersResponse.json();
         setTopSpenders(topSpendersData);
+
+        
+
+        const orders1Response = await fetch(`${API_URL}/orders`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!orders1Response.ok) {
+          throw new Error("Failed to fetch orders data");
+        }
+
+        const orders1Data = await orders1Response.json();
+        console.log("Orders data:", orders1Data);
+        setOrders(orders1Data);
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -338,7 +358,56 @@ export default function ComputerStoreAdminLayout() {
       throw error;
     }
   };
+  const getOrderById = async (orderId) => {
+    try {
+      const response = await fetch(`${API_URL}/orders/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
+      if (!response.ok) {
+        throw new Error("Failed to get order");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error getting order with ID ${orderId}:`, error);
+      throw error;
+    }
+  };
+
+  // Hàm cập nhật trạng thái đơn hàng
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update order status");
+      }
+
+      const updatedOrder = await response.json();
+
+      // Cập nhật danh sách đơn hàng trong state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.orderId === orderId ? updatedOrder : order
+        )
+      );
+
+      return updatedOrder;
+    } catch (error) {
+      console.error(`Error updating order status for ID ${orderId}:`, error);
+      throw error;
+    }
+  };
   // Update sales data when timeframe changes
   const handleTimeframeChange = (event) => {
     setTimeframe(event.target.value);
@@ -851,7 +920,7 @@ export default function ComputerStoreAdminLayout() {
                         <th className="pb-3 text-left">Date</th>
                         <th className="pb-3 text-left">Amount</th>
                         <th className="pb-3 text-left">Status</th>
-                        <th className="pb-3 text-left">Actions</th>
+                       
                       </tr>
                     </thead>
                     <tbody>
@@ -859,14 +928,14 @@ export default function ComputerStoreAdminLayout() {
                         Array.isArray(recentOrders) &&
                         recentOrders.map((order) => {
                           let statusColor;
-                          switch (order.status.toLowerCase()) {
-                            case "processing":
+                          switch (order.status) {
+                            case "pending":
                               statusColor = "blue";
                               break;
-                            case "shipped":
+                            case "shipping":
                               statusColor = "green";
                               break;
-                            case "delivered":
+                            case "completed":
                               statusColor = "purple";
                               break;
                             case "canceled":
@@ -894,16 +963,19 @@ export default function ComputerStoreAdminLayout() {
                                 <span
                                   className={`inline-block px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-800`}
                                 >
+                                  {/* {order.status} */}
                                   {order.status}
+                                  
+                                  
                                 </span>
                               </td>
-                              <td className="py-3">
+                              {/* <td className="py-3">
                                 <div className="flex space-x-2">
                                   <button className="text-blue-500 hover:text-blue-700">
                                     <FaEllipsisH size={14} />
                                   </button>
                                 </div>
-                              </td>
+                              </td> */}
                             </tr>
                           );
                         })}
@@ -997,9 +1069,13 @@ export default function ComputerStoreAdminLayout() {
           )}
           {activeMenu === "Orders" && (
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Orders</h2>
-              <p>Đây là danh sách các đơn hàng.</p>
-              {/* Thêm logic để hiển thị danh sách đơn hàng */}
+             
+              <OrderTable
+              orders={orders}
+              theme={darkMode ? "dark" : "light"}
+              getOrderById={getOrderById}
+              updateOrderStatus={updateOrderStatus}
+              />
             </div>
           )}
           {activeMenu === "Customers" && (
@@ -1276,7 +1352,7 @@ function TopSpendersChart({ data, darkMode }) {
   const barColor = darkMode ? "#10b981" : "#059669"; // Màu xanh lá cho cột
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={280}>
       <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#e5e7eb"} />
         <XAxis
