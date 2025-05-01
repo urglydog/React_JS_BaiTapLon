@@ -50,15 +50,7 @@ export class AdminPageController {
     }
   }
   
-  getTrendingProducts = async (req, res) => {
-    try {
-      const data = await this.adminService.getTrendingProducts();
-      res.json(data);
-    } catch (error) {
-      console.error('Error in getTrendingProducts:', error);
-      res.status(500).json({ error: 'Failed to fetch trending products data' });
-    }
-  }
+ 
   
   getRecentOrders = async (req, res) => {
     try {

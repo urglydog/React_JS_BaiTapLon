@@ -284,7 +284,7 @@ const LaptopTable = memo(
         if (formState.formType === 'add') {
           await createProduct(productData); // Use the passed createProduct function
         } else {
-          const productId = formState.currentComputer.id;
+          const productId = formState.currentComputer ? formState.currentComputer.id : null;
           await updateProduct(productId, productData); // Use the passed updateProduct function
         }
         setFormState((prev) => ({ ...prev, isOpen: false }));

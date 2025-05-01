@@ -15,8 +15,7 @@ router.get('/dashboard/sales-performance', (req, res) => adminController.getSale
 router.get('/dashboard/device-usage', (req, res) => adminController.getDeviceUsage(req, res));
 // có 
 router.get('/dashboard/category-sales', (req, res) => adminController.getCategorySales(req, res));
-//có
-router.get('/dashboard/trending-products', (req, res) => adminController.getTrendingProducts(req, res));
+
 
 router.get('/dashboard/recent-orders', (req, res) => adminController.getRecentOrders(req, res));
 

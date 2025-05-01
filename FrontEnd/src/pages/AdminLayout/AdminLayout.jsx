@@ -58,7 +58,7 @@ export default function ComputerStoreAdminLayout() {
   const [salesData, setSalesData] = useState([]);
   const [deviceUsage, setDeviceUsage] = useState([]);
   const [categorySales, setCategorySales] = useState([]);
-  const [trendingProducts, setTrendingProducts] = useState([]);
+
   const [recentOrders, setRecentOrders] = useState([]);
   const [computers, setComputers] = useState([]); // State for computers
   // Timeframe for sales data
@@ -138,26 +138,6 @@ export default function ComputerStoreAdminLayout() {
         const categoryData = await categoryResponse.json();
         setCategorySales(categoryData);
 
-        // Fetch trending products
-        const trendingResponse = await fetch(
-          `${API_URL}/dashboard/trending-products`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        if (!trendingResponse.ok) {
-          throw new Error("Failed to fetch trending products data");
-        }
-
-        const trendingData = await trendingResponse.json();
-        const formattedTrending = Array.isArray(trendingData)
-          ? trendingData
-          : [trendingData];
-        setTrendingProducts(formattedTrending);
-
         // Fetch recent orders
         const ordersResponse = await fetch(
           `${API_URL}/dashboard/recent-orders`,
@@ -192,7 +172,6 @@ export default function ComputerStoreAdminLayout() {
         setComputers(laptopData);
 
         //
-        
 
         setLoading(false);
       } catch (err) {
@@ -775,85 +754,13 @@ export default function ComputerStoreAdminLayout() {
                 </div>
               </div>
 
-              {/* Trending Products */}
-              <div
-                className={`p-6 rounded-lg ${cardBg} border ${borderColor} mb-6`}
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-medium text-purple-500">
-                    Trending Products
-                  </h3>
-                  <button>
-                    <FaEllipsisH size={16} />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Array.isArray(trendingProducts) &&
-                    trendingProducts.map((product, index) => {
-                      const colors = ["blue", "green", "purple"];
-                      const color = colors[index % colors.length];
-
-                      const icons = [
-                        <FaMicrochip key="chip" size={18} />,
-                        <FaLaptop key="laptop" size={18} />,
-                        <FaMemory key="memory" size={18} />,
-                      ];
-
-                      return (
-                        <div
-                          className={`p-4 rounded-lg border ${borderColor}`}
-                          key={product.productId}
-                        >
-                          <div className="flex items-center mb-2">
-                            <div
-                              className={`w-12 h-12 rounded bg-${color}-500 bg-opacity-20 flex items-center justify-center mr-3`}
-                            >
-                              <div className={`text-${color}-500`}>
-                                {icons[index % icons.length]}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="font-medium">
-                                {product.productName}
-                              </div>
-                              <div className={`text-xs ${secondaryTextColor}`}>
-                                {product.categoryName}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex justify-between text-sm mt-2">
-                            <span>Sales: {product.totalSold} units</span>
-                            <span
-                              className={
-                                product.percentChange >= 0
-                                  ? "text-green-500 flex items-center"
-                                  : "text-red-500 flex items-center"
-                              }
-                            >
-                              {product.percentChange >= 0 ? (
-                                <FaArrowUp size={12} className="mr-1" />
-                              ) : (
-                                <FaArrowDown size={12} className="mr-1" />
-                              )}
-                              {Math.abs(product.percentChange)}%
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-
               {/* Recent Orders Table */}
               <div className={`p-6 rounded-lg ${cardBg} border ${borderColor}`}>
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-medium textsac-blue-500">
                     Recent Orders
                   </h3>
-                  <button className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm">
-                    View All
-                  </button>
+                  
                 </div>
 
                 <div className="overflow-x-auto">
@@ -962,7 +869,7 @@ export default function ComputerStoreAdminLayout() {
                 activeMenu="Laptops"
                 computers={computers}
                 theme={darkMode ? "dark" : "light"}
-                    createProduct={createProduct}
+                createProduct={createProduct}
                 updateProduct={updateProduct}
                 deleteProduct={deleteProduct}
                 getProductById={getProductById}
@@ -1053,88 +960,138 @@ function SalesChart({ data, timeframe, darkMode }) {
 
 // Device Usage Chart Component
 function DeviceUsageChart({ data, darkMode }) {
-  let formattedData = [];
+  const [displayType, setDisplayType] = useState("categories");
 
-  if (data) {
-    const distributionData = Array.isArray(data.distribution)
-      ? data.distribution.map((item) => ({
-          platform: item.category,
-          percentage: item.percentage,
-        }))
-      : [];
+  if (!data) return <div>No device usage data available</div>;
 
-    const brandData = Array.isArray(data.brands)
-      ? data.brands.map((item) => ({
-          platform: item.brand,
-          percentage: item.percentage,
-        }))
-      : [];
+  let chartData = [];
 
-    const categoryData = Array.isArray(data.categories)
-      ? data.categories.map((item) => ({
-          platform: item.category,
-          percentage: item.percentage,
-        }))
-      : [];
-
-    formattedData = [...distributionData, ...brandData, ...categoryData];
+  switch (displayType) {
+    case "distribution":
+      chartData = Array.isArray(data.distribution)
+        ? data.distribution.map((item) => ({
+            name: item.category,
+            value: item.percentage,
+          }))
+        : [];
+      break;
+    case "brands":
+      chartData = Array.isArray(data.brands)
+        ? data.brands.map((item) => ({
+            name: item.brand,
+            value: item.percentage,
+          }))
+        : [];
+      break;
+    case "categories":
+    default:
+      chartData = Array.isArray(data.categories)
+        ? data.categories.map((item) => ({
+            name: item.category,
+            value: item.percentage,
+          }))
+        : [];
+      break;
   }
 
   const COLORS = [
-    "#3b82f6",
-    "#10b981",
-    "#f59e0b",
-    "#ef4444",
-    "#8b5cf6",
-    "#6b7280",
+    "#3b82f6", // blue
+    "#10b981", // green
+    "#f59e0b", // amber
+    "#ef4444", // red
+    "#8b5cf6", // purple
+    "#6b7280", // gray
+    "#ec4899", // pink
+    "#14b8a6", // teal
+    "#f97316", // orange
+    "#84cc16", // lime
   ];
 
-  if (!formattedData.length) return <div>No device usage data available</div>;
+  if (!chartData.length) return <div>No {displayType} data available</div>;
+
+  const displayLabels = {
+    categories: "Danh mục sản phẩm",
+    brands: "Thương hiệu",
+    distribution: "Phân phối sản phẩm",
+  };
+  console.log(displayLabels);
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <PieChart width={500} height={250}>
-        <Pie
-          data={formattedData}
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-          innerRadius={50}
-          fill="#8884d8"
-          dataKey="percentage"
-          nameKey="platform"
-          label={({ name, percent }) =>
-            `${name}: ${(percent * 100).toFixed(1)}%`
-          }
-          labelLine={false}
+    <div className="w-full h-full flex">
+      {/* Left side - Selection controls */}
+      <div className="w-1/4 flex flex-col items-start justify-center pl-1">
+        <h3
+          className={`text-base font-medium mb-3 ${
+            darkMode ? "text-gray-200" : "text-gray-800"
+          }`}
         >
-          {formattedData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip
-          formatter={(value) => [`${value}%`, "Usage Rate"]}
-          contentStyle={{
-            backgroundColor: darkMode ? "#1f2937" : "#ffffff",
-            borderColor: darkMode ? "#374151" : "#e5e7eb",
-            color: darkMode ? "#f3f4f6" : "#111827",
-          }}
-        />
-        <Legend
-          layout="horizontal"
-          verticalAlign="bottom"
-          align="center"
-          formatter={(value) => (
-            <span style={{ color: darkMode ? "#d1d5db" : "#374151" }}>
-              {value}
-            </span>
-          )}
-        />
-      </PieChart>
+          Phân tích theo
+        </h3>
+
+        <div className="w-full">
+          <select
+            value={displayType}
+            onChange={(e) => setDisplayType(e.target.value)}
+            className={`w-full px-3 py-2 rounded border ${
+              darkMode
+                ? "bg-gray-700 border-gray-600 text-white"
+                : "bg-white border-gray-300"
+            }`}
+          >
+            <option value="categories">Danh mục  </option>
+            <option value="brands">Thương hiệu</option>
+            <option value="distribution">Độ Phân phối </option>
+          </select>
+        </div>
+
+        <div className="mt-4"></div>
+      </div>
+
+      {/* Right side - Chart */}
+      <div className="w-3/4 flex items-center justify-center">
+        <PieChart width={360} height={220}>
+          <Pie
+            data={chartData}
+            cx={150}
+            cy={100}
+            outerRadius={80}
+            innerRadius={40}
+            fill="#8884d8"
+            dataKey="value"
+            nameKey="name"
+            label={({ value }) => `${value}%`} // bỏ tên nếu không cần
+          >
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value) => [`${value}%`, "Tỷ lệ"]}
+            labelFormatter={() => ""} // ẩn dòng đầu (dòng "0")
+            contentStyle={{
+              backgroundColor: darkMode ? "#1f2937" : "#ffffff",
+              borderColor: darkMode ? "#374151" : "#e5e7eb",
+              color: darkMode ? "#f3f4f6" : "#111827",
+            }}
+          />
+          <Legend
+            layout="horizontal"
+            verticalAlign="bottom"
+            align="center"
+            formatter={(value) => (
+              <span style={{ color: darkMode ? "#d1d5db" : "#374151" }}>
+                {value}
+              </span>
+            )}
+          />
+        </PieChart>
+      </div>
     </div>
   );
 }
-
 // Category Sales Chart Component
 function CategorySalesChart({ data, darkMode }) {
   const normalizedData = Array.isArray(data) ? data : [data];

@@ -696,58 +696,8 @@ class AdminService {
     }
   };
 
-  getTrendingProducts = async () => {
-    const conn = await pool.getConnection();
-    try {
-      const query = `
-       SELECT 
-  p.productId,
-  p.productName,
-  pc.categoryName,
-  SUM(od.quantity) as totalSold,
-  ROUND(
-    CASE 
-      WHEN COALESCE((SELECT SUM(od2.quantity) 
-                     FROM OrderDetails od2 
-                     JOIN Orders o2 ON od2.orderId = o2.orderId 
-                     WHERE od2.productId = p.productId 
-                     AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
-                    ), 0) = 0
-      THEN 25  -- Thay vì 100%, mặc định là 25% nếu tháng trước không có doanh số bán
-      ELSE (SUM(od.quantity) - 
-            COALESCE((SELECT SUM(od2.quantity) 
-                      FROM OrderDetails od2 
-                      JOIN Orders o2 ON od2.orderId = o2.orderId 
-                      WHERE od2.productId = p.productId 
-                      AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)), 0)
-           ) / 
-           COALESCE((SELECT SUM(od2.quantity) 
-                     FROM OrderDetails od2 
-                     JOIN Orders o2 ON od2.orderId = o2.orderId 
-                     WHERE od2.productId = p.productId 
-                     AND MONTH(o2.orderDate) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)
-                    ), 1) * 100
-    END
-  , 1) AS percentChange
-FROM OrderDetails od
-JOIN Products p ON od.productId = p.productId
-JOIN Orders o ON od.orderId = o.orderId
-JOIN ProductCategories pc ON p.categoryId = pc.categoryId
-WHERE MONTH(o.orderDate) = MONTH(CURRENT_DATE)
-GROUP BY p.productId, p.productName, pc.categoryName
-ORDER BY totalSold DESC
-LIMIT 3;
-      `;
-
-      const [results] = await conn.query(query);
-      return results;
-    } catch (error) {
-      console.error("Error in AdminService.getTrendingProducts:", error);
-      throw error;
-    } finally {
-      conn.release();
-    }
-  };
+  // 3. Improved getTrendingProducts function with better error handling
+ 
 
   getRecentOrders = async () => {
     const conn = await pool.getConnection();
