@@ -82,6 +82,38 @@ export class AdminPageController {
       res.status(500).json({ error: 'Failed to fetch laptop' });
     }
   }
+
+  getAllMouse = async (req, res) => {
+    try {
+      const laptops = await this.adminService.getAllMouse();
+      res.json(laptops);
+    } catch (error) {
+      console.error('Error in getAllMouse:', error);
+      res.status(500).json({ error: 'Failed to fetch getAllMouse' });
+    }
+  }
+  getAllPhone = async (req, res) => {
+    try {
+      const laptops = await this.adminService.getAllPhone();
+      res.json(laptops);
+    } catch (error) {
+      console.error('Error in getAllPhone:', error);
+      res.status(500).json({ error: 'Failed to fetch getAllPhone' });
+    }
+  }
+  getAllKeyboard = async (req, res) => {
+    try {
+      const laptops = await this.adminService.getAllKeyboard();
+      res.json(laptops);
+    } catch (error) {
+      console.error('Error in getAllKeyboard:', error);
+      res.status(500).json({ error: 'Failed to fetch getAllKeyboard' });
+    }
+  }
+
+
+
+
   getProductById = async (req, res) => {
     try {
       const product = await this.adminService.getProductById(req.params.id);

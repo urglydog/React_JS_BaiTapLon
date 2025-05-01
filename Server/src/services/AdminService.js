@@ -745,6 +745,30 @@ class AdminService {
       throw error;
     }
   };
+
+  getAllPhone = async () => {
+    try {
+      return await ProductModel.getAllPhone();
+    } catch (error) {
+      console.error("Error in AdminService.getAllLaptop:", error);
+      throw error;
+    }
+  }; 
+  getAllMouse = async () => {
+    try {
+      return await ProductModel.getAllMouse();
+    } catch (error) {
+      console.error("Error in AdminService.getAllLaptop:", error);
+      throw error;
+    }
+  }; getAllKeyboard = async () => {
+    try {
+      return await ProductModel.getAllKeyboard();
+    } catch (error) {
+      console.error("Error in AdminService.getAllLaptop:", error);
+      throw error;
+    }
+  };
   getProductById = async (id) => {
     try {
       return await ProductModel.getById("productId", id);

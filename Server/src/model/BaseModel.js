@@ -42,6 +42,37 @@ class BaseModel {
       conn.release();
     }
 }
+
+async getAllMouse() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (6, 7, 8, 9, 10)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllKeyboard() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (1, 2, 3, 4, 5)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllPhone() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (52, 53, 54)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
   async getById(idField, id) {
     const conn = await pool.getConnection();
     try {

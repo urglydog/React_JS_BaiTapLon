@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import {
   FaChartPie,
   FaDesktop,
+  FaCogs,
+  FaHeadphones,
+  FaRegSquare,
   FaMicrochip,
   FaMemory,
   FaHdd,
@@ -25,8 +28,11 @@ import {
   FaLinux,
   FaAndroid,
   FaPhone,
-  FaPhoneSlash,
-  FaPhoneSquare,
+  FaMouse,
+  FaKeyboard,
+  FaServer,
+  FaProjectDiagram,
+  FaPlug,
   FaMobile,
 } from "react-icons/fa";
 import {
@@ -47,6 +53,9 @@ import {
 import LaptopTable from "./LaptopTable";
 import CustomerTable from "./CustomerTable";
 import OrderTable from "./OrderTable";
+import PhoneTable from "./PhoneTable";
+import MouseTable from "./MouseTable";
+import KeyboardTable from "./KeyboardTable";
 // Base API URL - replace with your actual backend URL
 const API_URL = "http://localhost:4000/api/admin";
 
@@ -63,7 +72,10 @@ export default function ComputerStoreAdminLayout() {
   const [categorySales, setCategorySales] = useState([]);
 
   const [recentOrders, setRecentOrders] = useState([]);
-  const [computers, setComputers] = useState([]); // State for computers
+  const [computers, setComputers] = useState([]); // State for laptop
+  const [phone, setPhones] = useState([]);
+  const [mouse, setMouses] = useState([]);
+  const [keyboard, setKeyboards] = useState([]);
   const [customers ,setCustomers]=useState([]); 
   // Timeframe for sales data
   const [timeframe, setTimeframe] = useState("last7days");
@@ -182,6 +194,49 @@ export default function ComputerStoreAdminLayout() {
 
         const laptopData = await laptopResponse.json();
         setComputers(laptopData);
+
+
+
+
+        //
+        const PhoneResponse = await fetch(`${API_URL}/products/phone`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!PhoneResponse.ok) {
+          throw new Error("Failed to fetch device usage data");
+        }
+
+        const phoneData = await PhoneResponse.json();
+        setPhones(phoneData);
+        //
+        const MouseResponse = await fetch(`${API_URL}/products/mouse`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!MouseResponse.ok) {
+          throw new Error("Failed to fetch device usage data");
+        }
+
+        const mouseData = await MouseResponse.json();
+        setMouses(mouseData);
+        //
+        const keyboardResponse = await fetch(`${API_URL}/products/keyboard`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!keyboardResponse.ok) {
+          throw new Error("Failed to fetch device usage data");
+        }
+
+        const keyboardData = await keyboardResponse.json();
+        setKeyboards(keyboardData);
 
         const customerResponse = await fetch(`${API_URL}/customers`, {
           headers: {
@@ -480,36 +535,44 @@ export default function ComputerStoreAdminLayout() {
 
         {/* Navigation Menu */}
         <div className="flex-1 overflow-y-auto">
-          <nav className="px-4 py-2">
-            <ul className="space-y-1">
-              {[
-                { name: "Dashboard", icon: FaChartPie },
-                { name: "Computers", icon: FaDesktop },
-                { name: "Processors", icon: FaMicrochip },
-                { name: "RAM", icon: FaMemory },
-                { name: "Storage", icon: FaHdd },
-                { name: "Laptops", icon: FaLaptop },
-                { name: "Phone", icon: FaMobile },
-                { name: "Orders", icon: FaShoppingCart },
-                { name: "Customers", icon: FaUsers },
-              ].map((menu) => (
-                <li key={menu.name}>
-                  <button
-                    onClick={() => setActiveMenu(menu.name)}
-                    className={`flex items-center p-3 rounded-lg w-full text-left transition-colors ${
-                      activeMenu === menu.name
-                        ? `${activeMenuBg} ${activeMenuText}`
-                        : `${hoverMenuBg}`
-                    }`}
-                  >
-                    <menu.icon className="mr-3" size={18} />
-                    <span>{menu.name}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
+  <nav className="px-4 py-2">
+    <ul className="space-y-1">
+      {[
+        { name: "Dashboard", icon: FaChartPie },
+        { name: "Computers", icon: FaDesktop },
+        { name: "Processors", icon: FaMicrochip },
+        { name: "RAM", icon: FaMemory },
+        { name: "Storage", icon: FaHdd },
+        { name: "Case", icon: FaServer },
+        { name: "Mainboard", icon: FaProjectDiagram },
+        { name: "Psu", icon: FaPlug },
+        { name: "PC", icon: FaCogs },
+        { name: "Headphone", icon: FaHeadphones },
+        { name: "Mousepad", icon: FaRegSquare },
+        { name: "Laptops", icon: FaLaptop },
+        { name: "Phone", icon: FaMobile },
+        { name: "Mouse", icon: FaMouse },
+        { name: "KeyBoard", icon: FaKeyboard },
+        { name: "Orders", icon: FaShoppingCart },
+        { name: "Customers", icon: FaUsers },
+      ].map((menu) => (
+        <li key={menu.name}>
+          <button
+            onClick={() => setActiveMenu(menu.name)}
+            className={`flex items-center p-3 rounded-lg w-full text-left transition-colors ${
+              activeMenu === menu.name
+                ? `${activeMenuBg} ${activeMenuText}`
+                : `${hoverMenuBg}`
+            }`}
+          >
+            <menu.icon className="mr-3" size={18} />
+            <span>{menu.name}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</div>
 
         {/* User section at bottom */}
         <div className={`p-4 flex items-center border-t ${borderColor}`}>
@@ -1046,6 +1109,48 @@ export default function ComputerStoreAdminLayout() {
               {/* Thêm logic để hiển thị danh sách thiết bị lưu trữ */}
             </div>
           )}
+          {activeMenu === "Case" && (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Case</h2>
+    <p>Đây là danh sách các Case.</p>
+    {/* Thêm logic để hiển thị danh sách Case, ví dụ: gọi API và hiển thị bảng */}
+  </div>
+)}
+{activeMenu === "Mainboard" && (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Mainboard</h2>
+    <p>Đây là danh sách các Mainboard.</p>
+    {/* Thêm logic để hiển thị danh sách Mainboard */}
+  </div>
+)}
+{activeMenu === "Psu" && (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Psu</h2>
+    <p>Đây là danh sách các PSU.</p>
+    {/* Thêm logic để hiển thị danh sách PSU */}
+  </div>
+)}
+{activeMenu === "PC" && (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">PC</h2>
+    <p>Đây là danh sách các PC.</p>
+    {/* Thêm logic để hiển thị danh sách PC */}
+  </div>
+)}
+{activeMenu === "Headphone" && (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Headphone</h2>
+    <p>Đây là danh sách các Headphone.</p>
+    {/* Thêm logic để hiển thị danh sách Headphone */}
+  </div>
+)}
+{activeMenu === "Mousepad" && (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Mousepad</h2>
+    <p>Đây là danh sách các Mousepad.</p>
+    {/* Thêm logic để hiển thị danh sách Mousepad */}
+  </div>
+)}
           {activeMenu === "Laptops" && (
             <div className="p-6">
               <LaptopTable
@@ -1062,9 +1167,45 @@ export default function ComputerStoreAdminLayout() {
           )}
           {activeMenu === "Phone" && (
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Phone</h2>
-              <p>Đây là danh sách các dien thoai.</p>
-              {/* Thêm logic để hiển thị danh sách đơn hàng */}
+            
+             <PhoneTable
+             activeMenu="Phone"
+             phones={phone} // Pass the phone state
+             theme={darkMode ? "dark" : "light"}
+             createProduct={createProduct}
+             updateProduct={updateProduct}
+             deleteProduct={deleteProduct}
+             getProductById={getProductById}
+             />
+            </div>
+          )}
+          {activeMenu === "Mouse" && (
+            <div className="p-6">
+             
+            <MouseTable
+            activeMenu="Mouse"
+            mouses={mouse} // Pass the mouse state
+            theme={darkMode ? "dark" : "light"}
+            createProduct={createProduct}
+            updateProduct={updateProduct}
+            deleteProduct={deleteProduct}
+            getProductById={getProductById}
+            />
+            </div>
+          )}
+          {activeMenu === "KeyBoard" && (
+            <div className="p-6">
+              
+              {/* Thêm logic để hiển thị danh sách thiết bị lưu trữ */}
+              <KeyboardTable // Assuming you have a KeyboardTable component
+      activeMenu="KeyBoard"
+      keyboards={keyboard} // Pass the keyboard state
+      theme={darkMode ? "dark" : "light"}
+      createProduct={createProduct}
+      updateProduct={updateProduct}
+      deleteProduct={deleteProduct}
+      getProductById={getProductById}
+    />
             </div>
           )}
           {activeMenu === "Orders" && (
