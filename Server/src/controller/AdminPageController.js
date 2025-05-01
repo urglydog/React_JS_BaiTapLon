@@ -112,7 +112,105 @@ export class AdminPageController {
   }
 
 
-
+  getAllComputers = async (req, res) => {
+    try {
+      const computers = await this.adminService.getAllComputers();
+      res.json(computers);
+    } catch (error) {
+      console.error('Error in getAllComputers:', error);
+      res.status(500).json({ error: 'Failed to fetch computers' });
+    }
+  };
+  
+  getAllProcessors = async (req, res) => {
+    try {
+      const processors = await this.adminService.getAllProcessors();
+      res.json(processors);
+    } catch (error) {
+      console.error('Error in getAllProcessors:', error);
+      res.status(500).json({ error: 'Failed to fetch processors' });
+    }
+  };
+  
+  getAllRAM = async (req, res) => {
+    try {
+      const ram = await this.adminService.getAllRAM();
+      res.json(ram);
+    } catch (error) {
+      console.error('Error in getAllRAM:', error);
+      res.status(500).json({ error: 'Failed to fetch RAM' });
+    }
+  };
+  
+  getAllStorage = async (req, res) => {
+    try {
+      const storage = await this.adminService.getAllStorage();
+      res.json(storage);
+    } catch (error) {
+      console.error('Error in getAllStorage:', error);
+      res.status(500).json({ error: 'Failed to fetch storage' });
+    }
+  };
+  
+  getAllCase = async (req, res) => {
+    try {
+      const cases = await this.adminService.getAllCase();
+      res.json(cases);
+    } catch (error) {
+      console.error('Error in getAllCase:', error);
+      res.status(500).json({ error: 'Failed to fetch cases' });
+    }
+  };
+  
+  getAllMainboard = async (req, res) => {
+    try {
+      const mainboards = await this.adminService.getAllMainboard();
+      res.json(mainboards);
+    } catch (error) {
+      console.error('Error in getAllMainboard:', error);
+      res.status(500).json({ error: 'Failed to fetch mainboards' });
+    }
+  };
+  
+  getAllPsu = async (req, res) => {
+    try {
+      const psus = await this.adminService.getAllPsu();
+      res.json(psus);
+    } catch (error) {
+      console.error('Error in getAllPsu:', error);
+      res.status(500).json({ error: 'Failed to fetch PSUs' });
+    }
+  };
+  
+  getAllPC = async (req, res) => {
+    try {
+      const pcs = await this.adminService.getAllPC();
+      res.json(pcs);
+    } catch (error) {
+      console.error('Error in getAllPC:', error);
+      res.status(500).json({ error: 'Failed to fetch PCs' });
+    }
+  };
+  
+  getAllHeadphone = async (req, res) => {
+    try {
+      const headphones = await this.adminService.getAllHeadphone();
+      res.json(headphones);
+    } catch (error) {
+      console.error('Error in getAllHeadphone:', error);
+      res.status(500).json({ error: 'Failed to fetch headphones' });
+    }
+  };
+  
+  getAllMousepad = async (req, res) => {
+    try {
+      const mousepads = await this.adminService.getAllMousepad();
+      res.json(mousepads);
+    } catch (error) {
+      console.error('Error in getAllMousepad:', error);
+      res.status(500).json({ error: 'Failed to fetch mousepads' });
+    }
+  };
 
   getProductById = async (req, res) => {
     try {

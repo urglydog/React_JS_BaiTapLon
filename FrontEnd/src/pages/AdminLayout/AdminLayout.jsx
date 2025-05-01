@@ -56,6 +56,17 @@ import OrderTable from "./OrderTable";
 import PhoneTable from "./PhoneTable";
 import MouseTable from "./MouseTable";
 import KeyboardTable from "./KeyboardTable";
+import MonitorsTable from "./MonitorsTable";
+import ProcessorsTable from "./ProcessorsTable";
+import Ram from "./Ram";
+
+import Mainboard from "./Mainboard";
+import Psus from "./Psus";
+import Pc from "./Pc";
+import Headphone from "./Headphone";
+import Mousepad from "./Mousepad";
+import Storage from "./Storage";
+import Cases from "./Cases";
 // Base API URL - replace with your actual backend URL
 const API_URL = "http://localhost:4000/api/admin";
 
@@ -70,6 +81,19 @@ export default function ComputerStoreAdminLayout() {
   const [salesData, setSalesData] = useState([]);
   const [deviceUsage, setDeviceUsage] = useState([]);
   const [categorySales, setCategorySales] = useState([]);
+
+
+// State mới cho các danh mục
+const [monitors, setMonitors] = useState([]); // Computers (Monitors)
+const [processors, setProcessors] = useState([]);
+const [ram, setRam] = useState([]);
+const [storage, setStorage] = useState([]);
+const [cases, setCases] = useState([]);
+const [mainboards, setMainboards] = useState([]);
+const [psus, setPsus] = useState([]);
+const [pcs, setPcs] = useState([]);
+const [headphones, setHeadphones] = useState([]);
+const [mousepads, setMousepads] = useState([]);
 
   const [recentOrders, setRecentOrders] = useState([]);
   const [computers, setComputers] = useState([]); // State for laptop
@@ -276,6 +300,109 @@ export default function ComputerStoreAdminLayout() {
         const orders1Data = await orders1Response.json();
         console.log("Orders data:", orders1Data);
         setOrders(orders1Data);
+
+
+        const monitorsResponse = await fetch(`${API_URL}/products/computers`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!monitorsResponse.ok) throw new Error("Failed to fetch computers data");
+        const monitorsData = await monitorsResponse.json();
+        setMonitors(monitorsData);
+  
+        // Fetch processors
+        const processorsResponse = await fetch(`${API_URL}/products/processors`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!processorsResponse.ok) throw new Error("Failed to fetch processors data");
+        const processorsData = await processorsResponse.json();
+        setProcessors(processorsData);
+  
+        // Fetch RAM
+        const ramResponse = await fetch(`${API_URL}/products/ram`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!ramResponse.ok) throw new Error("Failed to fetch RAM data");
+        const ramData = await ramResponse.json();
+        setRam(ramData);
+  
+        // Fetch storage
+        const storageResponse = await fetch(`${API_URL}/products/storage`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!storageResponse.ok) throw new Error("Failed to fetch storage data");
+        const storageData = await storageResponse.json();
+        setStorage(storageData);
+  
+        // Fetch cases
+        const casesResponse = await fetch(`${API_URL}/products/cases`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!casesResponse.ok) throw new Error("Failed to fetch cases data");
+        const casesData = await casesResponse.json();
+        setCases(casesData);
+  
+        // Fetch mainboards
+        const mainboardsResponse = await fetch(`${API_URL}/products/mainboards`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!mainboardsResponse.ok) throw new Error("Failed to fetch mainboards data");
+        const mainboardsData = await mainboardsResponse.json();
+        setMainboards(mainboardsData);
+  
+        // Fetch PSUs
+        const psusResponse = await fetch(`${API_URL}/products/psus`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!psusResponse.ok) throw new Error("Failed to fetch PSUs data");
+        const psusData = await psusResponse.json();
+        setPsus(psusData);
+  
+        // Fetch PCs
+        const pcsResponse = await fetch(`${API_URL}/products/pcs`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!pcsResponse.ok) throw new Error("Failed to fetch PCs data");
+        const pcsData = await pcsResponse.json();
+        setPcs(pcsData);
+  
+        // Fetch headphones
+        const headphonesResponse = await fetch(`${API_URL}/products/headphones`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!headphonesResponse.ok) throw new Error("Failed to fetch headphones data");
+        const headphonesData = await headphonesResponse.json();
+        setHeadphones(headphonesData);
+  
+        // Fetch mousepads
+        const mousepadsResponse = await fetch(`${API_URL}/products/mousepads`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!mousepadsResponse.ok) throw new Error("Failed to fetch mousepads data");
+        const mousepadsData = await mousepadsResponse.json();
+        setMousepads(mousepadsData);
+
+
+
 
         setLoading(false);
       } catch (err) {
@@ -1086,6 +1213,15 @@ export default function ComputerStoreAdminLayout() {
               {/* <h2 className="text-2xl font-semibold mb-4">Computers</h2> */}
 
               {/* Thêm logic để hiển thị danh sách máy tính, ví dụ: gọi API và hiển thị bảng */}
+              <MonitorsTable
+               activeMenu="Computers"
+              monitors={monitors}
+              theme={darkMode ? "dark" : "light"}
+              createProduct={createProduct}
+              updateProduct={updateProduct}
+              deleteProduct={deleteProduct}
+              getProductById={getProductById}
+              />
             </div>
           )}
           {activeMenu === "Processors" && (
@@ -1093,6 +1229,15 @@ export default function ComputerStoreAdminLayout() {
               <h2 className="text-2xl font-semibold mb-4">Processors</h2>
               <p>Đây là danh sách các bộ vi xử lý.</p>
               {/* Thêm logic để hiển thị danh sách bộ vi xử lý */}
+              <ProcessorsTable
+               activeMenu="Processors"
+              processors={processors}
+              theme={darkMode ? "dark" : "light"}
+              createProduct={createProduct}
+              updateProduct={updateProduct}
+              deleteProduct={deleteProduct}
+              getProductById={getProductById}
+              />
             </div>
           )}
           {activeMenu === "RAM" && (
@@ -1100,6 +1245,15 @@ export default function ComputerStoreAdminLayout() {
               <h2 className="text-2xl font-semibold mb-4">RAM</h2>
               <p>Đây là danh sách các RAM.</p>
               {/* Thêm logic để hiển thị danh sách RAM */}
+              <Ram 
+                activeMenu="RAM"
+              ram={ram}
+              theme={darkMode ? "dark" : "light"}
+              createProduct={createProduct}
+              updateProduct={updateProduct}
+              deleteProduct={deleteProduct}
+              getProductById={getProductById}
+              />
             </div>
           )}
           {activeMenu === "Storage" && (
@@ -1107,6 +1261,15 @@ export default function ComputerStoreAdminLayout() {
               <h2 className="text-2xl font-semibold mb-4">Storage</h2>
               <p>Đây là danh sách các thiết bị lưu trữ.</p>
               {/* Thêm logic để hiển thị danh sách thiết bị lưu trữ */}
+              <Storage
+               activeMenu="Storage"
+              storage={storage}
+              theme={darkMode ? "dark" : "light"}
+              createProduct={createProduct}
+              updateProduct={updateProduct}
+              deleteProduct={deleteProduct}
+              getProductById={getProductById}
+              />
             </div>
           )}
           {activeMenu === "Case" && (
@@ -1114,6 +1277,15 @@ export default function ComputerStoreAdminLayout() {
     <h2 className="text-2xl font-semibold mb-4">Case</h2>
     <p>Đây là danh sách các Case.</p>
     {/* Thêm logic để hiển thị danh sách Case, ví dụ: gọi API và hiển thị bảng */}
+    <Cases
+      activeMenu="Case"
+    cases={cases}
+    theme={darkMode ? "dark" : "light"}
+    createProduct={createProduct}
+    updateProduct={updateProduct}
+    deleteProduct={deleteProduct}
+    getProductById={getProductById}
+    />
   </div>
 )}
 {activeMenu === "Mainboard" && (
@@ -1121,6 +1293,15 @@ export default function ComputerStoreAdminLayout() {
     <h2 className="text-2xl font-semibold mb-4">Mainboard</h2>
     <p>Đây là danh sách các Mainboard.</p>
     {/* Thêm logic để hiển thị danh sách Mainboard */}
+    <Mainboard
+      activeMenu="Mainboard"
+    mainboards={mainboards}
+    theme={darkMode ? "dark" : "light"}
+    createProduct={createProduct}
+    updateProduct={updateProduct}
+    deleteProduct={deleteProduct}
+    getProductById={getProductById}
+    />
   </div>
 )}
 {activeMenu === "Psu" && (
@@ -1128,6 +1309,15 @@ export default function ComputerStoreAdminLayout() {
     <h2 className="text-2xl font-semibold mb-4">Psu</h2>
     <p>Đây là danh sách các PSU.</p>
     {/* Thêm logic để hiển thị danh sách PSU */}
+    <Psus
+     activeMenu="Psu"
+    psus={psus}
+    theme={darkMode ? "dark" : "light"}
+    createProduct={createProduct}
+    updateProduct={updateProduct}
+    deleteProduct={deleteProduct}
+    getProductById={getProductById}
+    />
   </div>
 )}
 {activeMenu === "PC" && (
@@ -1135,6 +1325,15 @@ export default function ComputerStoreAdminLayout() {
     <h2 className="text-2xl font-semibold mb-4">PC</h2>
     <p>Đây là danh sách các PC.</p>
     {/* Thêm logic để hiển thị danh sách PC */}
+    <Pc
+     activeMenu="PC"
+    pcs={pcs}
+    theme={darkMode ? "dark" : "light"}
+    createProduct={createProduct}
+    updateProduct={updateProduct}
+    deleteProduct={deleteProduct}
+    getProductById={getProductById}
+    />
   </div>
 )}
 {activeMenu === "Headphone" && (
@@ -1142,6 +1341,15 @@ export default function ComputerStoreAdminLayout() {
     <h2 className="text-2xl font-semibold mb-4">Headphone</h2>
     <p>Đây là danh sách các Headphone.</p>
     {/* Thêm logic để hiển thị danh sách Headphone */}
+    <Headphone
+     activeMenu="Headphone"
+    headphones={headphones}
+    theme={darkMode ? "dark" : "light"}
+    createProduct={createProduct}
+    updateProduct={updateProduct}
+    deleteProduct={deleteProduct}
+    getProductById={getProductById}
+    />
   </div>
 )}
 {activeMenu === "Mousepad" && (
@@ -1149,6 +1357,15 @@ export default function ComputerStoreAdminLayout() {
     <h2 className="text-2xl font-semibold mb-4">Mousepad</h2>
     <p>Đây là danh sách các Mousepad.</p>
     {/* Thêm logic để hiển thị danh sách Mousepad */}
+    <Mousepad
+     activeMenu="Mousepad"
+    mousepads={mousepads}
+    theme={darkMode ? "dark" : "light"}
+    createProduct={createProduct}
+    updateProduct={updateProduct}
+    deleteProduct={deleteProduct}
+    getProductById={getProductById}
+    />
   </div>
 )}
           {activeMenu === "Laptops" && (

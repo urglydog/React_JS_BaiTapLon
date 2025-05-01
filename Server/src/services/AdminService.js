@@ -769,6 +769,95 @@ class AdminService {
       throw error;
     }
   };
+  getAllComputers = async () => {
+    try {
+      return await ProductModel.getAllComputers();
+    } catch (error) {
+      console.error("Error in AdminService.getAllComputers:", error);
+      throw error;
+    }
+  };
+  
+  getAllProcessors = async () => {
+    try {
+      return await ProductModel.getAllProcessors();
+    } catch (error) {
+      console.error("Error in AdminService.getAllProcessors:", error);
+      throw error;
+    }
+  };
+  
+  getAllRAM = async () => {
+    try {
+      return await ProductModel.getAllRAM();
+    } catch (error) {
+      console.error("Error in AdminService.getAllRAM:", error);
+      throw error;
+    }
+  };
+  
+  getAllStorage = async () => {
+    try {
+      return await ProductModel.getAllStorage();
+    } catch (error) {
+      console.error("Error in AdminService.getAllStorage:", error);
+      throw error;
+    }
+  };
+  
+  getAllCase = async () => {
+    try {
+      return await ProductModel.getAllCase();
+    } catch (error) {
+      console.error("Error in AdminService.getAllCase:", error);
+      throw error;
+    }
+  };
+  
+  getAllMainboard = async () => {
+    try {
+      return await ProductModel.getAllMainboard();
+    } catch (error) {
+      console.error("Error in AdminService.getAllMainboard:", error);
+      throw error;
+    }
+  };
+  
+  getAllPsu = async () => {
+    try {
+      return await ProductModel.getAllPsu();
+    } catch (error) {
+      console.error("Error in AdminService.getAllPsu:", error);
+      throw error;
+    }
+  };
+  
+  getAllPC = async () => {
+    try {
+      return await ProductModel.getAllPC();
+    } catch (error) {
+      console.error("Error in AdminService.getAllPC:", error);
+      throw error;
+    }
+  };
+  
+  getAllHeadphone = async () => {
+    try {
+      return await ProductModel.getAllHeadphone();
+    } catch (error) {
+      console.error("Error in AdminService.getAllHeadphone:", error);
+      throw error;
+    }
+  };
+  
+  getAllMousepad = async () => {
+    try {
+      return await ProductModel.getAllMousepad();
+    } catch (error) {
+      console.error("Error in AdminService.getAllMousepad:", error);
+      throw error;
+    }
+  };
   getProductById = async (id) => {
     try {
       return await ProductModel.getById("productId", id);

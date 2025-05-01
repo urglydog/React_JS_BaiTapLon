@@ -72,7 +72,105 @@ async getAllPhone() {
     conn.release();
   }
 }
+async getAllComputers() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (36, 37, 38, 39)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
 
+async getAllProcessors() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (18, 19)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllRAM() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (30, 31, 32)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllStorage() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (27, 28, 29)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllCase() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID = 17`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllMainboard() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (20, 21, 22)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllPsu() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (23, 24, 25, 26)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllPC() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (40, 41)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllHeadphone() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (42, 43)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+
+async getAllMousepad() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (11, 12, 13)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
   async getById(idField, id) {
     const conn = await pool.getConnection();
     try {
