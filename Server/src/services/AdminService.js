@@ -757,13 +757,17 @@ class AdminService {
   createProduct = async (productData) => {
     try {
       const productId = await ProductModel.create(productData);
-      return { productId, ...productData };
+      console.log("Created product with ID:", productId);
+      
+      // Đảm bảo trả về đúng định dạng mà frontend mong đợi
+      const createdProduct = { id: productId, ...productData };
+      console.log("Returning product data:", createdProduct);
+      return createdProduct;
     } catch (error) {
       console.error("Error in AdminService.createProduct:", error);
       throw error;
     }
   };
-
   updateProduct = async (id, productData) => {
     try {
       return await ProductModel.update("productId", id, productData);
@@ -773,15 +777,21 @@ class AdminService {
     }
   };
 
-  deleteProduct = async (id) => {
+  deleteProduct = async (productId) => {
     try {
-      return await ProductModel.delete("productId", id);
+      // Chuyển đổi ID nếu cần thiết
+      const id = typeof productId === 'string' && !isNaN(productId) 
+        ? BigInt(productId) 
+        : productId;
+        
+      // Thực hiện xóa
+      const result = await ProductModel.delete(id);
+      return result && result.success; // Giả sử kết quả có trường success
     } catch (error) {
       console.error("Error in AdminService.deleteProduct:", error);
       throw error;
     }
   };
-
   // Order management services
   getAllOrders = async () => {
     try {

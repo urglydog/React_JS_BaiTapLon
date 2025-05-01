@@ -65,7 +65,7 @@ const LaptopForm = ({ computer = {}, onSave, onCancel, formTitle, theme }) => {
   }[theme || 'dark'];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black bg-opacity-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg`}>
         <h3 className="text-xl font-semibold mb-4">{formTitle}</h3>
 
@@ -217,7 +217,7 @@ const LaptopTable = memo(
         buttonDanger: 'bg-red-600 hover:bg-red-700 text-white shadow-md',
         buttonIcon: 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600 p-2 rounded-full shadow-sm',
         dialog: 'bg-gray-800 text-gray-200',
-        overlay: 'bg-black bg-opacity-70',
+        overlay: '',
       },
       light: {
         container: 'bg-white text-gray-800',
@@ -231,7 +231,7 @@ const LaptopTable = memo(
         buttonDanger: 'bg-red-500 hover:bg-red-600 text-white shadow-md',
         buttonIcon: 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow-sm',
         dialog: 'bg-white text-gray-800',
-        overlay: 'bg-black bg-opacity-60',
+        overlay: '',
       },
     };
 
@@ -241,7 +241,7 @@ const LaptopTable = memo(
     const handleAdd = () => {
       setFormState({
         isOpen: true,
-        formType: ' visite add',
+        formType: 'add',
         currentComputer: null,
       });
     };
@@ -302,7 +302,7 @@ const LaptopTable = memo(
       if (!confirmDialog.isOpen) return null;
 
       return (
-        <div className={`fixed inset-0 flex items-center justify-center z-50 ${currentTheme.overlay}`}>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className={`${currentTheme.dialog} rounded-lg shadow-xl p-6 w-full max-w-md`}>
             <h3 className="text-xl font-semibold mb-2">{confirmDialog.title}</h3>
             <p className="mb-6">{confirmDialog.message}</p>

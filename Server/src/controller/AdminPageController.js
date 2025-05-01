@@ -98,7 +98,15 @@ export class AdminPageController {
   createProduct = async (req, res) => {
     try {
       const product = await this.adminService.createProduct(req.body);
-      res.status(201).json(product);
+      
+     
+      const sanitizedProduct = JSON.parse(
+        JSON.stringify(product, (key, value) => 
+          typeof value === 'bigint' ? value.toString() : value
+        )
+      );
+      
+      res.status(201).json(sanitizedProduct);
     } catch (error) {
       console.error('Error in createProduct:', error);
       res.status(500).json({ error: 'Failed to create product' });
@@ -120,14 +128,26 @@ export class AdminPageController {
   
   deleteProduct = async (req, res) => {
     try {
-      const success = await this.adminService.deleteProduct(req.params.id);
+      console.log("Delete request for product ID:", req.params.id);
+      console.log("Type of ID:", typeof req.params.id);
+      
+      // Convert to appropriate type if needed
+      const productId = Number(req.params.id) || req.params.id;
+      
+      const success = await this.adminService.deleteProduct(productId);
+      console.log("Delete operation result:", success);
+      
       if (!success) {
         return res.status(404).json({ error: 'Product not found' });
       }
+      
       res.json({ message: 'Product deleted successfully' });
     } catch (error) {
-      console.error('Error in deleteProduct:', error);
-      res.status(500).json({ error: 'Failed to delete product' });
+      console.error('Detailed error in deleteProduct:', error);
+      res.status(500).json({ 
+        error: 'Failed to delete product',
+        details: error.message 
+      });
     }
   }
   

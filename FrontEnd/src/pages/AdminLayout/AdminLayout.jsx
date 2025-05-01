@@ -186,6 +186,7 @@ export default function ComputerStoreAdminLayout() {
   // CRUD operations for products
   const createProduct = async (productData) => {
     try {
+      console.log("Sending product data:", productData);
       const response = await fetch(`${API_URL}/products`, {
         method: "POST",
         headers: {
@@ -194,16 +195,30 @@ export default function ComputerStoreAdminLayout() {
         },
         body: JSON.stringify(productData),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to create product");
+  
+      // Log toàn bộ response để debug
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+      
+      const responseText = await response.text();
+      console.log("Response text:", responseText);
+      
+      // Nếu không phải JSON hợp lệ, sẽ báo lỗi ở đây
+      let newProduct;
+      try {
+        newProduct = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Invalid JSON response:", e);
+        throw new Error("Server returned invalid JSON");
       }
-
-      const newProduct = await response.json();
-
+  
+      if (!response.ok) {
+        throw new Error(`Failed to create product: ${newProduct.error || response.statusText}`);
+      }
+  
       // Update the computers state with the new product
       setComputers((prevComputers) => [...prevComputers, newProduct]);
-
+  
       return newProduct;
     } catch (error) {
       console.error("Error creating product:", error);
@@ -263,22 +278,29 @@ export default function ComputerStoreAdminLayout() {
 
   const deleteProduct = async (productId) => {
     try {
+      console.log("Deleting product with ID:", productId);
+      console.log("Type of productId:", typeof productId); // Kiểm tra kiểu dữ liệu của ID
+      
       const response = await fetch(`${API_URL}/products/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
+      
+      console.log("Delete response status:", response.status);
+      const responseText = await response.text();
+      console.log("Delete response text:", responseText);
+  
       if (!response.ok) {
-        throw new Error("Failed to delete product");
+        throw new Error(`Failed to delete product: ${responseText}`);
       }
-
+  
       // Remove the deleted product from the computers state
       setComputers((prevComputers) =>
         prevComputers.filter((product) => product.id !== productId)
       );
-
+  
       return true;
     } catch (error) {
       console.error(`Error deleting product with ID ${productId}:`, error);
