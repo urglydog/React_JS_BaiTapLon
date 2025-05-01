@@ -930,6 +930,90 @@ class AdminService {
       conn.release();
     }
   };
+  getTopCustomers = async () => {
+    const conn = await pool.getConnection();
+    try {
+        const query = `
+            SELECT 
+                c.customerId,
+                c.fullName,
+                c.email,
+                COUNT(o.orderId) as orderCount,
+                COALESCE(SUM(o.totalAmount), 0) as totalSpent,
+                MAX(o.orderDate) as lastOrderDate
+            FROM Customers c
+            JOIN Orders o ON c.customerId = o.customerId
+            WHERE o.status = 'Completed'
+            GROUP BY c.customerId, c.fullName, c.email
+        `;
+
+        console.log("Executing query to get customers with completed orders");
+
+        // Thực thi query
+        const result = await conn.query(query);
+        console.log("Raw query result:", result);
+
+        // Xử lý các định dạng kết quả khác nhau
+        let customers = [];
+
+        // Định dạng 1: [rows, fields]
+        if (Array.isArray(result) && result.length > 0 && Array.isArray(result[0])) {
+            console.log("Format detected: [rows, fields]");
+            customers = result[0]; // result[0] phải là mảng
+        } 
+        // Định dạng 2: {rows: [...], fields: [...]}
+        else if (result && result.rows) {
+            console.log("Format detected: {rows, fields}");
+            customers = result.rows;
+        }
+        // Định dạng 3: Kết quả trực tiếp là mảng
+        else if (Array.isArray(result)) {
+            console.log("Format detected: direct array");
+            customers = result;
+        }
+        // Định dạng 4: Kết quả trực tiếp là object
+        else if (result && typeof result === 'object') {
+            console.log("Format detected: direct object");
+            customers = [result];
+        }
+
+        console.log("Processed customers data type:", typeof customers, Array.isArray(customers));
+
+        // Đảm bảo customers là một mảng
+        if (!Array.isArray(customers)) {
+            console.log("Converting to array:", customers);
+            customers = customers ? [customers] : [];
+        }
+
+        if (customers.length === 0) {
+            console.log("No customer results found");
+            return [];
+        }
+
+        console.log("Processing", customers.length, "customer records");
+
+        // Format dữ liệu để hiển thị
+        const formattedResults = customers.map(customer => {
+            console.log("Processing customer:", customer);
+            return {
+                customerId: customer.customerId,
+                fullName: customer.fullName,
+                email: customer.email,
+                orderCount: Number(customer.orderCount), // Chuyển BigInt thành Number
+                totalSpent: parseFloat(customer.totalSpent || 0).toFixed(2),
+                lastOrderDate: customer.lastOrderDate ? new Date(customer.lastOrderDate).toLocaleDateString() : null
+            };
+        });
+
+        console.log("Final formatted results:", formattedResults);
+        return formattedResults;
+    } catch (error) {
+        console.error("Error in AdminService.getTopCustomers:", error);
+        throw error;
+    } finally {
+        if (conn) conn.release();
+    }
+};
 }
 
 export default AdminService;

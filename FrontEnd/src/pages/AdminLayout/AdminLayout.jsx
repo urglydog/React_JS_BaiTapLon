@@ -45,6 +45,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import LaptopTable from "./LaptopTable";
+import CustomerTable from "./CustomerTable";
 // Base API URL - replace with your actual backend URL
 const API_URL = "http://localhost:4000/api/admin";
 
@@ -62,10 +63,12 @@ export default function ComputerStoreAdminLayout() {
 
   const [recentOrders, setRecentOrders] = useState([]);
   const [computers, setComputers] = useState([]); // State for computers
+  const [customers ,setCustomers]=useState([]); 
   // Timeframe for sales data
   const [timeframe, setTimeframe] = useState("last7days");
   const [showModal, setShowModal] = useState(false);
-
+  const [topSpenders, setTopSpenders] = useState([]);
+  const [spendersTimeframe, setSpendersTimeframe] = useState("last7days"); // Mặc định là tuần
   const handleLogoutConfirm = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
@@ -177,8 +180,28 @@ export default function ComputerStoreAdminLayout() {
         const laptopData = await laptopResponse.json();
         setComputers(laptopData);
 
-        //
+        const customerResponse = await fetch(`${API_URL}/customers`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
+        if (!customerResponse.ok) {
+          throw new Error("Failed to fetch device usage data");
+        }
+        console.log(customerResponse);
+        
+        const customerData = await customerResponse.json();
+        console.log(customerData);
+        setCustomers(customerData);
+        //
+        const topSpendersResponse = await fetch(
+          `${API_URL}/customers/statistics/top-spenders?timeframe=${spendersTimeframe}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+        if (!topSpendersResponse.ok) throw new Error("Failed to fetch top spenders data");
+        const topSpendersData = await topSpendersResponse.json();
+        setTopSpenders(topSpendersData);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -319,6 +342,9 @@ export default function ComputerStoreAdminLayout() {
   // Update sales data when timeframe changes
   const handleTimeframeChange = (event) => {
     setTimeframe(event.target.value);
+  };
+  const handleSpendersTimeframeChange = (event) => {
+    setSpendersTimeframe(event.target.value);
   };
 
   const mainBg = darkMode ? "bg-gray-900" : "bg-gray-50";
@@ -883,6 +909,39 @@ export default function ComputerStoreAdminLayout() {
                         })}
                     </tbody>
                   </table>
+
+
+                </div>
+              </div>
+
+              <div className={`mt-5 p-6 rounded-lg ${cardBg} border ${borderColor}` }>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-green-500">Top Spenders</h3>
+                  <div className="flex items-center">
+                    <select
+                      className={`mr-2 ${cardBg} border ${borderColor} rounded px-2 py-1`}
+                      value={spendersTimeframe}
+                      onChange={handleSpendersTimeframeChange}
+                    >
+                      <option value="last7days">Last 7 Days</option>
+                      <option value="last30days">Last 30 Days</option>
+                      <option value="lastYear">Last Year</option>
+                    </select>
+                    <button>
+                      <FaEllipsisH size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Biểu đồ cột Top Spenders */}
+                <div className="h-64 w-full">
+                  {topSpenders && topSpenders.length > 0 ? (
+                    <TopSpendersChart data={topSpenders} darkMode={darkMode} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p>No top spenders data available for the selected timeframe</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
@@ -945,9 +1004,12 @@ export default function ComputerStoreAdminLayout() {
           )}
           {activeMenu === "Customers" && (
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Customers</h2>
-              <p>Đây là danh sách các khách hàng.</p>
-              {/* Thêm logic để hiển thị danh sách khách hàng */}
+             
+             <CustomerTable
+               activeMenu="Customers"
+               customers={customers}
+               theme={darkMode ? "dark" : "light"}
+             />
             </div>
           )}
         </div>
@@ -1200,5 +1262,44 @@ function CategorySalesChart({ data, darkMode }) {
         </Bar>
       </BarChart>
     </div>
+  );
+}
+function TopSpendersChart({ data, darkMode }) {
+  if (!data || data.length === 0) return <div>No data available</div>;
+
+  // Chuyển đổi dữ liệu để phù hợp với biểu đồ
+  const chartData = data.map((item) => ({
+    name: item.fullName,
+    totalSpent: Number(item.totalSpent),
+  }));
+
+  const barColor = darkMode ? "#10b981" : "#059669"; // Màu xanh lá cho cột
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#e5e7eb"} />
+        <XAxis
+          dataKey="name"
+          tick={{ fill: darkMode ? "#9ca3af" : "#4b5563" }}
+          axisLine={{ stroke: darkMode ? "#4b5563" : "#d1d5db" }}
+        />
+        <YAxis
+          tick={{ fill: darkMode ? "#9ca3af" : "#4b5563" }}
+          axisLine={{ stroke: darkMode ? "#4b5563" : "#d1d5db" }}
+          tickFormatter={(value) => `$${value.toLocaleString()}`}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: darkMode ? "#1f2937" : "#ffffff",
+            borderColor: darkMode ? "#374151" : "#e5e7eb",
+            color: darkMode ? "#f3f4f6" : "#111827",
+          }}
+          formatter={(value) => [`$${value.toLocaleString()}`, "Total Spent"]}
+        />
+        <Legend />
+        <Bar dataKey="totalSpent" fill={barColor} name="Total Spent" />
+      </BarChart>
+    </ResponsiveContainer>
   );
 }

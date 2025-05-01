@@ -228,4 +228,14 @@ export class AdminPageController {
       res.status(500).json({ error: 'Failed to fetch low stock items' });
     }
   }
+  getTopCustomers = async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+      const topCustomers = await this.adminService.getTopCustomers(limit);
+      res.json(topCustomers);
+    } catch (error) {
+      console.error('Error in getTopCustomers:', error);
+      res.status(500).json({ error: 'Failed to fetch top customer statistics' });
+    }
+  }
 }

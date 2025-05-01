@@ -35,7 +35,7 @@ router.put('/orders/:id/status', (req, res) => adminController.updateOrderStatus
 // Customer management routes
 router.get('/customers', (req, res) => adminController.getAllCustomers(req, res));
 router.get('/customers/:id', (req, res) => adminController.getCustomerById(req, res));
-
+router.get('/customers/statistics/top-spenders', (req, res) => adminController.getTopCustomers(req, res));
 // Inventory management routes
 router.get('/inventory/low-stock', (req, res) => adminController.getLowStockItems(req, res));
 
