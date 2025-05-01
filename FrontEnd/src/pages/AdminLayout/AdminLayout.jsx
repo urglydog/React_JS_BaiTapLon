@@ -49,7 +49,6 @@ import LaptopTable from "./LaptopTable";
 const API_URL = "http://localhost:4000/api/admin";
 
 export default function ComputerStoreAdminLayout() {
-  
   const [darkMode, setDarkMode] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,19 +64,16 @@ export default function ComputerStoreAdminLayout() {
   const [computers, setComputers] = useState([]); // State for computers
   // Timeframe for sales data
   const [timeframe, setTimeframe] = useState("last7days");
- 
+  const [showModal, setShowModal] = useState(false);
 
-  const handleLogout = () => {
-    console.log("Logout button clicked"); // nên thấy dòng này
-    localStorage.removeItem('token'); // hoặc sessionStorage.clear()
-    
-    // Điều hướng về trang đăng nhập
-    window.location.href = '/login';
-  }
+  const handleLogoutConfirm = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
-  
+
   // Fetch all dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -205,14 +201,14 @@ export default function ComputerStoreAdminLayout() {
         },
         body: JSON.stringify(productData),
       });
-  
+
       // Log toàn bộ response để debug
       console.log("Response status:", response.status);
       console.log("Response headers:", response.headers);
-      
+
       const responseText = await response.text();
       console.log("Response text:", responseText);
-      
+
       // Nếu không phải JSON hợp lệ, sẽ báo lỗi ở đây
       let newProduct;
       try {
@@ -221,14 +217,16 @@ export default function ComputerStoreAdminLayout() {
         console.error("Invalid JSON response:", e);
         throw new Error("Server returned invalid JSON");
       }
-  
+
       if (!response.ok) {
-        throw new Error(`Failed to create product: ${newProduct.error || response.statusText}`);
+        throw new Error(
+          `Failed to create product: ${newProduct.error || response.statusText}`
+        );
       }
-  
+
       // Update the computers state with the new product
       setComputers((prevComputers) => [...prevComputers, newProduct]);
-  
+
       return newProduct;
     } catch (error) {
       console.error("Error creating product:", error);
@@ -290,27 +288,27 @@ export default function ComputerStoreAdminLayout() {
     try {
       console.log("Deleting product with ID:", productId);
       console.log("Type of productId:", typeof productId); // Kiểm tra kiểu dữ liệu của ID
-      
+
       const response = await fetch(`${API_URL}/products/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      
+
       console.log("Delete response status:", response.status);
       const responseText = await response.text();
       console.log("Delete response text:", responseText);
-  
+
       if (!response.ok) {
         throw new Error(`Failed to delete product: ${responseText}`);
       }
-  
+
       // Remove the deleted product from the computers state
       setComputers((prevComputers) =>
         prevComputers.filter((product) => product.id !== productId)
       );
-  
+
       return true;
     } catch (error) {
       console.error(`Error deleting product with ID ${productId}:`, error);
@@ -420,19 +418,44 @@ export default function ComputerStoreAdminLayout() {
 
         {/* User section at bottom */}
         <div className={`p-4 flex items-center border-t ${borderColor}`}>
-  <div className="mr-3">
-    <FaUserCircle size={24} className="text-gray-400" />
-  </div>
-  <div>
-    <div className="font-medium">Admin User</div>
-    <div
-      onClick={handleLogout}
-      className={`text-xs ${secondaryTextColor} cursor-pointer hover:underline`}
-    >
-      Đăng xuất
-    </div>
-  </div>
-</div>
+          <div className="mr-3">
+            <FaUserCircle size={24} className="text-gray-400" />
+          </div>
+          <div>
+            <div className="font-medium">Admin User</div>
+            <div
+              onClick={() => setShowModal(true)}
+              className={`text-xs ${secondaryTextColor} cursor-pointer hover:underline`}
+            >
+              Đăng xuất
+            </div>
+          </div>
+        </div>
+
+        {/* Modal xác nhận */}
+        {showModal && (
+          <div className="fixed inset-0  bg-opacity-40 flex items-center justify-center z-[9999]">
+            <div className="bg-white text-amber-500 p-6 rounded-xl shadow-lg text-center w-80">
+              <h2 className="text-lg font-semibold mb-4">
+                Bạn có chắc muốn đăng xuất không?
+              </h2>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="px-4 py-2 bg-red-500 text-black rounded hover:bg-red-600"
+                >
+                  Có
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
@@ -467,8 +490,6 @@ export default function ComputerStoreAdminLayout() {
             >
               {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
             </button>
-          
-           
           </div>
         </header>
 
@@ -792,7 +813,6 @@ export default function ComputerStoreAdminLayout() {
                   <h3 className="text-lg font-medium textsac-blue-500">
                     Recent Orders
                   </h3>
-                  
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1070,7 +1090,7 @@ function DeviceUsageChart({ data, darkMode }) {
                 : "bg-white border-gray-300"
             }`}
           >
-            <option value="categories">Danh mục  </option>
+            <option value="categories">Danh mục </option>
             <option value="brands">Thương hiệu</option>
             <option value="distribution">Độ Phân phối </option>
           </select>
