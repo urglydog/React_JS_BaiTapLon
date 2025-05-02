@@ -1,10 +1,12 @@
 import express from 'express';
 import { AdminPageController } from '../controller/AdminPageController.js';
 import {verifyToken} from "../middleware/authMiddleware.js"
+import cloudinaryModule from '../config/cloudinary.js';
+
 const router = express.Router();
 const adminController = new AdminPageController();
 
-
+const { addProductWithImage, updateProductImages, getImagesFromFolder, getAllImageFolders } = cloudinaryModule;
 router.get('/test', (req, res) => {
   res.json({ message: 'Admin routes working!' });
 });
@@ -41,6 +43,67 @@ router.post('/products', (req, res) => adminController.createProduct(req, res));
 router.get('/products/:id', (req, res) => adminController.getProductById(req, res));
 router.put('/products/:id', (req, res) => adminController.updateProduct(req, res));
 router.delete('/products/:id', (req, res) => adminController.deleteProduct(req, res));
+router.post('/productsa', async (req, res) => {
+  try {
+    const productData = req.body;
+    const result = await addProductWithImage(productData);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create product',
+      error: error.message,
+    });
+  }
+});
+
+// Route để cập nhật hình ảnh sản phẩm
+router.post('/products/update-images', async (req, res) => {
+  try {
+    const result = await updateProductImages();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update product images',
+      error: error.message,
+    });
+  }
+});
+router.get('/images/all', async (req, res) => {
+  try {
+    const allImages = await getAllImageFolders();
+    res.json(allImages);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Không thể lấy tất cả hình ảnh',
+      error: error.message,
+    });
+  }
+});
+
+// Route /images/:category
+router.get('/images/:category', async (req, res) => {
+  try {
+    const category = req.params.category;
+    const folderPath = folderMap[category];
+    if (!folderPath) {
+      return res.status(400).json({ message: 'Danh mục không hợp lệ' });
+    }
+
+    const images = await getImagesFromFolder(folderPath);
+    res.json(images);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Không thể lấy hình ảnh',
+      error: error.message,
+    });
+  }
+});
+
+// Route để lấy tất cả hình ảnh từ các thư mục
 
 // Order management routes
 router.get('/orders', (req, res) => adminController.getAllOrders(req, res));

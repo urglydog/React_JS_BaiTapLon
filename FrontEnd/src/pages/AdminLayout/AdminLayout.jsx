@@ -135,13 +135,36 @@ export default function ComputerStoreAdminLayout() {
   const [showModal, setShowModal] = useState(false);
   const [topSpenders, setTopSpenders] = useState([]);
   const [spendersTimeframe, setSpendersTimeframe] = useState("last7days");
-
+  const [allImages, setAllImages] = useState({});
   const toggleDarkMode = () => setDarkMode(!darkMode);
   const handleLogoutConfirm = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
-
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+     
+  
+        // Fetch all images from Cloudinary
+        const imagesResponse = await fetch(`${API_URL}/images/all`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (!imagesResponse.ok) throw new Error("Failed to fetch images");
+        const imagesData = await imagesResponse.json();
+        setAllImages(imagesData);
+  
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+  
+    fetchDashboardData();
+  }, [timeframe, spendersTimeframe]);
   // Hàm chung để xử lý CRUD cho các danh mục
   const performProductOperation = async (operation, category, productData, productId) => {
     const validCategoryIds = CATEGORY_IDS[category];
@@ -566,7 +589,7 @@ export default function ComputerStoreAdminLayout() {
                     <h3 className="text-lg font-medium">New Customers</h3>
                     <span className={dashboardStats?.newCustomers?.percentChange >= 0 ? "text-green-500 flex items-center" : "text-red-500 flex items-center"}>
                       {dashboardStats?.newCustomers?.percentChange >= 0 ? <FaArrowUp className="mr-1" size={14} /> : <FaArrowDown className="mr-1" size={14} />}
-                      16%
+                     
                     </span>
                   </div>
                   <p className="text-3xl font-bold">{dashboardStats?.newCustomers?.value || 0}</p>
@@ -792,6 +815,13 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("computers", productId)}
                 getProductById={getProductById}
                   validCategoryIds={CATEGORY_IDS.computers}
+                  images={[
+                    ...(allImages.monitor || []),
+                    ...(allImages.monitors_asus || []),
+                    ...(allImages.monitors_acer || []),
+                    ...(allImages.monitors_lg || []),
+                    ...(allImages.monitors_msi || []),
+                  ]} // Combine all monitor-related images
               />
             </div>
           )}
@@ -806,6 +836,11 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("processors", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.processors}
+                images={[
+                  ...(allImages.cpu || []),
+                  ...(allImages.processors_amd || []),
+                  ...(allImages.processors_intel || []),
+                ]} // Combine all processor-related images
               />
             </div>
           )}
@@ -820,6 +855,12 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("ram", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.ram}
+                images={[
+                  ...(allImages.ram || []),
+                  ...(allImages.ram_kingston || []),
+                  ...(allImages.ram_corsair || []),
+                  ...(allImages.ram_pny || []),
+                ]} // Combine all RAM-related images
               />
             </div>
           )}
@@ -834,6 +875,12 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("storage", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.storage}
+                images={[
+                  ...(allImages.storage || []),
+                  ...(allImages.storage_kingston || []),
+                  ...(allImages.storage_samsung || []),
+                  ...(allImages.storage_western_digital || []),
+                ]} // Combine all storage-related images
               />
             </div>
           )}
@@ -848,6 +895,15 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("case", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.case}
+                images={[
+                  ...(allImages.case || []),
+                  ...(allImages.case_xigmatek || []),
+                  ...(allImages.case_cougar || []),
+                  ...(allImages.case_corsair || []),
+                  ...(allImages.case_cooler_master || []),
+                  ...(allImages.case_nzxt || []),
+                  ...(allImages.case_thermaltake || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến case
               />
             </div>
           )}
@@ -862,6 +918,12 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("mainboard", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.mainboard}
+                images={[
+                  ...(allImages.motherboard || []),
+                  ...(allImages.mainboard_asus || []),
+                  ...(allImages.mainboard_gigabyte || []),
+                  ...(allImages.mainboard_msi || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến mainboard
               />
             </div>
           )}
@@ -876,6 +938,13 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("psu", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.psu}
+                images={[
+                  ...(allImages.power_supply || []),
+                  ...(allImages.psu_asus || []),
+                  ...(allImages.psu_corsair || []),
+                  ...(allImages.psu_deepcool || []),
+                  ...(allImages.psu_msi || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến PSU
               />
             </div>
           )}
@@ -890,6 +959,11 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("pc", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.pc}
+                images={[
+                  ...(allImages.pc || []),
+                  ...(allImages.pc_msi || []),
+                  ...(allImages.pc_asus || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến PC
               />
             </div>
           )}
@@ -904,6 +978,11 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("headphone", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.headphone}
+                images={[
+                  ...(allImages.headphone || []),
+                  ...(allImages.headphone_asus || []),
+                  ...(allImages.headphone_razer || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Headphone
               />
             </div>
           )}
@@ -918,6 +997,12 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("mousepad", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.mousepad}
+                images={[
+                  ...(allImages.mousepad || []),
+                  ...(allImages.mousepad_daeru || []),
+                  ...(allImages.mousepad_asus || []),
+                  ...(allImages.mousepad_razer || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Mousepad
               />
             </div>
           )}
@@ -932,6 +1017,10 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("tablet", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.tablet}
+                images={[
+                  ...(allImages.ipad || []),
+                  ...(allImages.tablet_apple || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Tablet
               />
             </div>
           )}
@@ -946,6 +1035,12 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("gamingGear", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.gamingGear}
+                images={[
+                  ...(allImages.gaming_gear || []),
+                  ...(allImages.gamingGear_sony || []),
+                  ...(allImages.gamingGear_lenovo || []),
+                  ...(allImages.gamingGear_daeru || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Gaming Gear
               />
             </div>
           )}
@@ -960,7 +1055,16 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("laptop", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.laptop}
-                
+                images={[
+                  ...(allImages.laptop || []),
+                  ...(allImages.laptop_acer || []),
+                  ...(allImages.laptop_asus || []),
+                  ...(allImages.laptop_dell || []),
+                  ...(allImages.laptop_gigabyte || []),
+                  ...(allImages.laptop_lenovo || []),
+                  ...(allImages.laptop_mac || []),
+                  ...(allImages.laptop_msi || []),
+                ]} // Combine all laptop-related images
               />
             </div>
           )}
@@ -975,6 +1079,12 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("phone", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.phone}
+                images={[
+                  ...(allImages.phone || []),
+                  ...(allImages.phone_iphone || []),
+                  ...(allImages.phone_samsung || []),
+                  ...(allImages.phone_xiaomi || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Phone
               />
             </div>
           )}

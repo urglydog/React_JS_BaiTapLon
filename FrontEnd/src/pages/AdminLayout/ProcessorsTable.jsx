@@ -15,6 +15,7 @@ const ProcessorForm = ({
   formTitle,
   theme,
   validCategoryIds = [18, 19],
+  images = [], // Add images prop
 }) => {
   const [formData, setFormData] = useState({
     productName: processor?.productName || '',
@@ -22,10 +23,13 @@ const ProcessorForm = ({
     price: processor?.price || '',
     stockQuantity: processor?.stockQuantity || '',
     categoryID: processor?.categoryID || '',
-    image: processor?.image || '',
+    image: processor?.image || '', // Store image filename
     isLoading: false,
     error: null,
   });
+
+  const [imageSearchTerm, setImageSearchTerm] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   useEffect(() => {
     if (formData.error) {
@@ -37,25 +41,25 @@ const ProcessorForm = ({
   }, [formData.error]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'image' && files[0]) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]:
-          name === 'price' || name === 'stockQuantity'
-            ? parseFloat(value) || value
-            : name === 'categoryID'
-            ? value === '' ? '' : parseInt(value)
-            : value,
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === 'price' || name === 'stockQuantity'
+          ? parseFloat(value) || value
+          : name === 'categoryID'
+          ? value === '' ? '' : parseInt(value)
+          : value,
+    }));
+  };
+
+  const handleImageSelect = (image) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: image.filename, // Store the selected image's filename
+    }));
+    setShowImagePicker(false);
+    setImageSearchTerm('');
   };
 
   const handleSubmit = async (e) => {
@@ -80,7 +84,7 @@ const ProcessorForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
-        image: formData.image || null,
+        image: formData.image || null, // Include image filename (or null if not selected)
       };
 
       await onSave(productData);
@@ -90,10 +94,16 @@ const ProcessorForm = ({
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save processor',
+        error: error.message || 'Không thể lưu bộ vi xử lý',
       }));
     }
   };
+
+  const filteredImages = imageSearchTerm.trim() === ''
+    ? images
+    : images.filter((image) =>
+        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+      );
 
   const currentTheme = {
     dark: {
@@ -102,6 +112,7 @@ const ProcessorForm = ({
       buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
       buttonSecondary: 'bg-gray-600 hover:bg-gray-700 text-white shadow-md',
       error: 'text-red-400',
+      imagePicker: 'bg-gray-700 border-gray-600',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -109,12 +120,13 @@ const ProcessorForm = ({
       buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
       buttonSecondary: 'bg-gray-300 hover:bg-gray-400 text-gray-800 shadow-md',
       error: 'text-red-600',
+      imagePicker: 'bg-gray-100 border-gray-300',
     },
   }[theme || 'dark'];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg`}>
+      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg relative`}>
         <h3 className="text-xl font-semibold mb-4">{formTitle}</h3>
 
         {formData.error && (
@@ -195,7 +207,79 @@ const ProcessorForm = ({
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block mb-1">Hình ảnh</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.image || 'Chọn hình ảnh'}
+                  onClick={() => setShowImagePicker(true)}
+                  readOnly
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                />
+                {formData.image && (
+                  <div className="mt-2">
+                    <img
+                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      alt="Selected"
+                      className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
+          {showImagePicker && (
+            <div className={`absolute top-0 left-0 w-full h-full ${currentTheme.imagePicker} rounded-lg p-4 overflow-y-auto z-10`}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">Chọn hình ảnh</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowImagePicker(false)}
+                  className="text-gray-400 hover:text-gray-200"
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm hình ảnh..."
+                  value={imageSearchTerm}
+                  onChange={(e) => setImageSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${currentTheme.input}`}
+                />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                {filteredImages.length > 0 ? (
+                  filteredImages.map((image) => (
+                    <div
+                      key={image.filename}
+                      onClick={() => handleImageSelect(image)}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.filename}
+                        className="h-20 w-full object-cover rounded-lg"
+                      />
+                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center text-gray-400">
+                    Không tìm thấy hình ảnh
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
@@ -221,7 +305,7 @@ const ProcessorForm = ({
   );
 };
 
-// Wrap component with React.memo to prevent unnecessary re-renders
+// Component ProcessorsTable
 const ProcessorsTable = memo(
   ({
     activeMenu,
@@ -230,6 +314,7 @@ const ProcessorsTable = memo(
     createProduct,
     updateProduct,
     validCategoryIds = [18, 19],
+    images = [], // Add images prop
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -265,6 +350,19 @@ const ProcessorsTable = memo(
         style: 'currency',
         currency: 'VND',
       }).format(price);
+    };
+
+    // Hàm tìm ảnh từ danh sách images dựa trên processor.image
+    const findMatchingImage = (imageFilename) => {
+      if (!imageFilename || !images || images.length === 0) {
+        console.log('No image found: invalid filename or empty images', { imageFilename, images });
+        return null;
+      }
+      const foundImage = images.find((img) => img.filename === imageFilename);
+      if (!foundImage) {
+        console.log('No matching image found for filename:', imageFilename);
+      }
+      return foundImage;
     };
 
     const filteredProcessors = searchTerm.trim() === ''
@@ -310,6 +408,7 @@ const ProcessorsTable = memo(
     };
 
     const handleEdit = (processor) => {
+      console.log('Editing processor:', processor);
       setFormState({
         isOpen: true,
         formType: 'edit',
@@ -323,11 +422,12 @@ const ProcessorsTable = memo(
         setIsSynced(false);
         if (formState.formType === 'add') {
           const newProduct = await createProduct(productData);
+          console.log('New product from API:', newProduct);
           setLocalProcessors((prev) => [
             ...prev,
             {
               ...productData,
-              id: newProduct.id || newProduct.productID || productData.productName, // Fallback to productName if no ID
+              id: newProduct.id || newProduct.productID || productData.productName,
             },
           ]);
         } else {
@@ -335,8 +435,8 @@ const ProcessorsTable = memo(
           if (!productId) {
             throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
           }
+          console.log('Updating product ID:', productId, 'with data:', productData);
           await updateProduct(productId, productData);
-          // Update localProcessors to reflect the edited data
           setLocalProcessors((prev) =>
             prev.map((processor) =>
               (processor.id || processor.productID || processor.productName) === productId
@@ -435,48 +535,59 @@ const ProcessorsTable = memo(
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredProcessors.map((processor, index) => (
-                  <tr
-                    key={processor.id || processor.productID || processor.productName || `processor-${index}`}
-                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={processor.image || '/api/placeholder/48/48'}
-                          alt={processor.productName || 'Processor'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {processor.productName || 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                      <div className="max-w-xs truncate">{processor.description || 'Không có mô tả'}</div>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {formatPrice(processor.price)}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {processor.stockQuantity !== undefined ? processor.stockQuantity : 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {CATEGORY_BRAND_MAPPING[processor.categoryID] || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(processor)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredProcessors.map((processor, index) => {
+                  const matchingImage = findMatchingImage(processor.image);
+
+                  return (
+                    <tr
+                      key={processor.id || processor.productID || processor.productName || `processor-${index}`}
+                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          {matchingImage ? (
+                            <img
+                              src={matchingImage.url}
+                              alt={processor.productName || 'Processor'}
+                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            />
+                          ) : (
+                            <ImageOff
+                              className={currentTheme.secondaryText}
+                              size={24}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {processor.productName || 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                        <div className="max-w-xs truncate">{processor.description || 'Không có mô tả'}</div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {formatPrice(processor.price)}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {processor.stockQuantity !== undefined ? processor.stockQuantity : 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {CATEGORY_BRAND_MAPPING[processor.categoryID] || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(processor)}
+                            className={`transition-colors ${currentTheme.buttonIcon}`}
+                            title="Chỉnh sửa"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -490,6 +601,7 @@ const ProcessorsTable = memo(
             formTitle={formState.formType === 'add' ? 'Thêm bộ vi xử lý mới' : 'Chỉnh sửa bộ vi xử lý'}
             theme={theme}
             validCategoryIds={validCategoryIds}
+            images={images} // Pass images prop to ProcessorForm
           />
         )}
       </div>

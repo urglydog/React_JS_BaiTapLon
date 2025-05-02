@@ -9,16 +9,28 @@ const CATEGORY_BRAND_MAPPING = {
 };
 
 // Form component for adding/editing RAM
-const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryIds = [30, 31, 32] }) => {
+const RamForm = ({
+  ram = {},
+  onSave,
+  onCancel,
+  formTitle,
+  theme,
+  validCategoryIds = [30, 31, 32],
+  images = [], // Add images prop
+}) => {
   const [formData, setFormData] = useState({
     productName: ram?.productName || '',
     description: ram?.description || '',
     price: ram?.price || '',
     stockQuantity: ram?.stockQuantity || '',
     categoryId: ram?.categoryId || '',
+    image: ram?.image || '', // Store image filename
     isLoading: false,
     error: null,
   });
+
+  const [imageSearchTerm, setImageSearchTerm] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   useEffect(() => {
     if (formData.error) {
@@ -40,6 +52,15 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
           ? value === '' ? '' : parseInt(value)
           : value,
     }));
+  };
+
+  const handleImageSelect = (image) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: image.filename, // Store the selected image's filename
+    }));
+    setShowImagePicker(false);
+    setImageSearchTerm('');
   };
 
   const handleSubmit = async (e) => {
@@ -64,6 +85,7 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryId: parseInt(formData.categoryId),
+        image: formData.image || null, // Include image filename (or null if not selected)
       };
 
       await onSave(productData);
@@ -73,10 +95,16 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save RAM',
+        error: error.message || 'Không thể lưu RAM',
       }));
     }
   };
+
+  const filteredImages = imageSearchTerm.trim() === ''
+    ? images
+    : images.filter((image) =>
+        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+      );
 
   const currentTheme = {
     dark: {
@@ -85,6 +113,7 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
       buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
       buttonSecondary: 'bg-gray-600 hover:bg-gray-700 text-white shadow-md',
       error: 'text-red-400',
+      imagePicker: 'bg-gray-700 border-gray-600',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -92,12 +121,13 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
       buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
       buttonSecondary: 'bg-gray-300 hover:bg-gray-400 text-gray-800 shadow-md',
       error: 'text-red-600',
+      imagePicker: 'bg-gray-100 border-gray-300',
     },
   }[theme || 'dark'];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg`}>
+      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg relative`}>
         <h3 className="text-xl font-semibold mb-4">{formTitle}</h3>
 
         {formData.error && (
@@ -178,7 +208,79 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block mb-1">Hình ảnh</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.image || 'Chọn hình ảnh'}
+                  onClick={() => setShowImagePicker(true)}
+                  readOnly
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                />
+                {formData.image && (
+                  <div className="mt-2">
+                    <img
+                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      alt="Selected"
+                      className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
+          {showImagePicker && (
+            <div className={`absolute top-0 left-0 w-full h-full ${currentTheme.imagePicker} rounded-lg p-4 overflow-y-auto z-10`}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">Chọn hình ảnh</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowImagePicker(false)}
+                  className="text-gray-400 hover:text-gray-200"
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm hình ảnh..."
+                  value={imageSearchTerm}
+                  onChange={(e) => setImageSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${currentTheme.input}`}
+                />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                {filteredImages.length > 0 ? (
+                  filteredImages.map((image) => (
+                    <div
+                      key={image.filename}
+                      onClick={() => handleImageSelect(image)}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.filename}
+                        className="h-20 w-full object-cover rounded-lg"
+                      />
+                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center text-gray-400">
+                    Không tìm thấy hình ảnh
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
@@ -204,7 +306,7 @@ const RamForm = ({ ram = {}, onSave, onCancel, formTitle, theme, validCategoryId
   );
 };
 
-// Wrap component with React.memo to prevent unnecessary re-renders
+// Component Ram
 const Ram = memo(
   ({
     activeMenu,
@@ -213,6 +315,8 @@ const Ram = memo(
     createProduct,
     updateProduct,
     getProductById,
+    validCategoryIds = [30, 31, 32],
+    images = [], // Add images prop
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -243,7 +347,6 @@ console.log(getProductById);
 
     if (activeMenu !== 'RAM') return null;
 
-    // Format price in VND
     const formatPrice = (price) => {
       if (price === undefined || price === null) return 'N/A';
       return new Intl.NumberFormat('vi-VN', {
@@ -252,7 +355,19 @@ console.log(getProductById);
       }).format(price);
     };
 
-    // Filter RAM based on search term
+    // Hàm tìm ảnh từ danh sách images dựa trên ramItem.image
+    const findMatchingImage = (imageFilename) => {
+      if (!imageFilename || !images || images.length === 0) {
+        console.log('No image found: invalid filename or empty images', { imageFilename, images });
+        return null;
+      }
+      const foundImage = images.find((img) => img.filename === imageFilename);
+      if (!foundImage) {
+        console.log('No matching image found for filename:', imageFilename);
+      }
+      return foundImage;
+    };
+
     const filteredRam = searchTerm.trim() === ''
       ? localRam
       : localRam.filter((item) =>
@@ -260,7 +375,6 @@ console.log(getProductById);
           (item?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-    // Define theme-based classes
     const themeClasses = {
       dark: {
         container: 'bg-gray-900 text-gray-200',
@@ -288,7 +402,6 @@ console.log(getProductById);
 
     const currentTheme = themeClasses[theme] || themeClasses.dark;
 
-    // Add new RAM handler
     const handleAdd = () => {
       setFormState({
         isOpen: true,
@@ -297,8 +410,8 @@ console.log(getProductById);
       });
     };
 
-    // Edit RAM handler
     const handleEdit = (ramItem) => {
+      console.log('Editing RAM:', ramItem);
       setFormState({
         isOpen: true,
         formType: 'edit',
@@ -306,18 +419,18 @@ console.log(getProductById);
       });
     };
 
-    // Save handler for the form (used for both add and edit)
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
         setIsSynced(false);
         if (formState.formType === 'add') {
           const newProduct = await createProduct(productData);
+          console.log('New product from API:', newProduct);
           setLocalRam((prev) => [
             ...prev,
             {
               ...productData,
-              id: newProduct.id || newProduct.productID || productData.productName, // Fallback to productName if no ID
+              id: newProduct.id || newProduct.productID || productData.productName,
             },
           ]);
         } else {
@@ -325,8 +438,8 @@ console.log(getProductById);
           if (!productId) {
             throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
           }
+          console.log('Updating product ID:', productId, 'with data:', productData);
           await updateProduct(productId, productData);
-          // Update localRam to reflect the edited data
           setLocalRam((prev) =>
             prev.map((item) =>
               (item.id || item.productID || item.productName) === productId
@@ -425,48 +538,59 @@ console.log(getProductById);
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredRam.map((ramItem, index) => (
-                  <tr
-                    key={ramItem.id || ramItem.productID || ramItem.productName || `ram-${index}`}
-                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={ramItem.image || '/api/placeholder/48/48'}
-                          alt={ramItem.productName || 'RAM'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {ramItem.productName || 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                      <div className="max-w-xs truncate">{ramItem.description || 'Không có mô tả'}</div>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {formatPrice(ramItem.price)}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {ramItem.stockQuantity !== undefined ? ramItem.stockQuantity : 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {CATEGORY_BRAND_MAPPING[ramItem.categoryId] || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(ramItem)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredRam.map((ramItem, index) => {
+                  const matchingImage = findMatchingImage(ramItem.image);
+
+                  return (
+                    <tr
+                      key={ramItem.id || ramItem.productID || ramItem.productName || `ram-${index}`}
+                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          {matchingImage ? (
+                            <img
+                              src={matchingImage.url}
+                              alt={ramItem.productName || 'RAM'}
+                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            />
+                          ) : (
+                            <ImageOff
+                              className={currentTheme.secondaryText}
+                              size={24}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {ramItem.productName || 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                        <div className="max-w-xs truncate">{ramItem.description || 'Không có mô tả'}</div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {formatPrice(ramItem.price)}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {ramItem.stockQuantity !== undefined ? ramItem.stockQuantity : 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {CATEGORY_BRAND_MAPPING[ramItem.categoryId] || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(ramItem)}
+                            className={`transition-colors ${currentTheme.buttonIcon}`}
+                            title="Chỉnh sửa"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -479,7 +603,8 @@ console.log(getProductById);
             onCancel={() => setFormState((prev) => ({ ...prev, isOpen: false }))}
             formTitle={formState.formType === 'add' ? 'Thêm RAM mới' : 'Chỉnh sửa RAM'}
             theme={theme}
-            validCategoryIds={[30, 31, 32]}
+            validCategoryIds={validCategoryIds}
+            images={images} // Pass images prop to RamForm
           />
         )}
       </div>

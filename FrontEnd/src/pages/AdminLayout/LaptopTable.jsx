@@ -12,7 +12,7 @@ const CATEGORY_BRAND_MAPPING = {
   51: 'MSI',
 };
 
-// Form component for adding/editing laptops
+// Component LaptopForm (defined within LaptopTable, now with image selection)
 const LaptopForm = ({
   computer = {},
   onSave,
@@ -20,6 +20,7 @@ const LaptopForm = ({
   formTitle,
   theme,
   validCategoryIds = [45, 46, 47, 48, 49, 50, 51],
+  images = [], // Add images prop for Cloudinary images
 }) => {
   const [formData, setFormData] = useState({
     productName: computer?.productName || '',
@@ -27,10 +28,13 @@ const LaptopForm = ({
     price: computer?.price || '',
     stockQuantity: computer?.stockQuantity || '',
     categoryID: computer?.categoryID || '',
-    image: computer?.image || '',
+    image: computer?.image || '', // Store image filename
     isLoading: false,
     error: null,
   });
+
+  const [imageSearchTerm, setImageSearchTerm] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   useEffect(() => {
     if (formData.error) {
@@ -42,25 +46,25 @@ const LaptopForm = ({
   }, [formData.error]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'image' && files[0]) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]:
-          name === 'price' || name === 'stockQuantity'
-            ? parseFloat(value) || value
-            : name === 'categoryID'
-            ? value === '' ? '' : parseInt(value)
-            : value,
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === 'price' || name === 'stockQuantity'
+          ? parseFloat(value) || value
+          : name === 'categoryID'
+          ? value === '' ? '' : parseInt(value)
+          : value,
+    }));
+  };
+
+  const handleImageSelect = (image) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: image.filename, // Store the selected image's filename
+    }));
+    setShowImagePicker(false);
+    setImageSearchTerm('');
   };
 
   const handleSubmit = async (e) => {
@@ -68,7 +72,6 @@ const LaptopForm = ({
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Validation
       if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
         throw new Error('Vui lòng chọn một hãng hợp lệ');
       }
@@ -85,7 +88,7 @@ const LaptopForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
-        image: formData.image || null,
+        image: formData.image || null, // Include image filename (or null if not selected)
       };
 
       await onSave(productData);
@@ -95,10 +98,16 @@ const LaptopForm = ({
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save product',
+        error: error.message || 'Không thể lưu sản phẩm',
       }));
     }
   };
+
+  const filteredImages = imageSearchTerm.trim() === ''
+    ? images
+    : images.filter((image) =>
+        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+      );
 
   const currentTheme = {
     dark: {
@@ -107,6 +116,7 @@ const LaptopForm = ({
       buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
       buttonSecondary: 'bg-gray-600 hover:bg-gray-700 text-white shadow-md',
       error: 'text-red-400',
+      imagePicker: 'bg-gray-700 border-gray-600',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -114,12 +124,13 @@ const LaptopForm = ({
       buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
       buttonSecondary: 'bg-gray-300 hover:bg-gray-400 text-gray-800 shadow-md',
       error: 'text-red-600',
+      imagePicker: 'bg-gray-100 border-gray-300',
     },
   }[theme || 'dark'];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg`}>
+      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg relative`}>
         <h3 className="text-xl font-semibold mb-4">{formTitle}</h3>
 
         {formData.error && (
@@ -200,7 +211,79 @@ const LaptopForm = ({
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block mb-1">Hình ảnh</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.image || 'Chọn hình ảnh'}
+                  onClick={() => setShowImagePicker(true)}
+                  readOnly
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                />
+                {formData.image && (
+                  <div className="mt-.ConcurrentModificationException2">
+                    <img
+                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      alt="Selected"
+                      className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
+          {showImagePicker && (
+            <div className={`absolute top-0 left-0 w-full h-full ${currentTheme.imagePicker} rounded-lg p-4 overflow-y-auto z-10`}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">Chọn hình ảnh</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowImagePicker(false)}
+                  className="text-gray-400 hover:text-gray-200"
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm hình ảnh..."
+                  value={imageSearchTerm}
+                  onChange={(e) => setImageSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${currentTheme.input}`}
+                />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                {filteredImages.length > 0 ? (
+                  filteredImages.map((image) => (
+                    <div
+                      key={image.filename}
+                      onClick={() => handleImageSelect(image)}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.filename}
+                        className="h-20 w-full object-cover rounded-lg"
+                      />
+                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center text-gray-400">
+                    Không tìm thấy hình ảnh
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
@@ -226,7 +309,7 @@ const LaptopForm = ({
   );
 };
 
-// Component bảng danh sách laptop
+// Component LaptopTable
 const LaptopTable = memo(
   ({
     activeMenu,
@@ -235,6 +318,7 @@ const LaptopTable = memo(
     createProduct,
     updateProduct,
     validCategoryIds = [45, 46, 47, 48, 49, 50, 51],
+    images = [],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -244,12 +328,9 @@ const LaptopTable = memo(
       formType: null, // 'add' or 'edit'
       currentComputer: null,
     });
-    // State để quản lý danh sách laptop cục bộ
     const [localComputers, setLocalComputers] = useState(computers);
-    // State để kiểm soát xem có nên đồng bộ với props computers hay không
     const [isSynced, setIsSynced] = useState(true);
 
-    // Đồng bộ localComputers với prop computers chỉ khi khởi tạo hoặc cần reset
     useEffect(() => {
       if (isSynced) {
         setLocalComputers(computers);
@@ -273,6 +354,19 @@ const LaptopTable = memo(
         style: 'currency',
         currency: 'VND',
       }).format(price);
+    };
+
+    // Hàm tìm ảnh từ Cloudinary dựa trên computer.image
+    const findMatchingImage = (imageFilename) => {
+      if (!imageFilename || !images || images.length === 0) {
+        console.log('No image found: invalid filename or empty images', { imageFilename, images });
+        return null;
+      }
+      const foundImage = images.find((img) => img.filename === imageFilename);
+      if (!foundImage) {
+        console.log('No matching image found for filename:', imageFilename);
+      }
+      return foundImage;
     };
 
     const filteredComputers = searchTerm.trim() === ''
@@ -329,33 +423,28 @@ const LaptopTable = memo(
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
-        setIsSynced(false); // Ngăn đồng bộ với props computers sau khi chỉnh sửa
+        setIsSynced(false);
         if (formState.formType === 'add') {
-          // Gọi API để tạo sản phẩm mới
           const newProduct = await createProduct(productData);
-          console.log('New product from API:', newProduct); // Debug API response
-          // Kiểm tra xem API có trả về ID không
+          console.log('New product from API:', newProduct);
           if (!newProduct.id && !newProduct.productID) {
             throw new Error('API không trả về ID sản phẩm');
           }
-          // Cập nhật danh sách localComputers với sản phẩm mới
           setLocalComputers((prev) => [
             ...prev,
             {
               ...productData,
-              id: newProduct.id || newProduct.productID, // Lấy ID từ API
+              id: newProduct.id || newProduct.productID,
             },
           ]);
         } else {
-          // Lấy ID sản phẩm để cập nhật
           const productId = formState.currentComputer?.id || formState.currentComputer?.productID;
           if (!productId) {
-            throw new Error('Không tìm thấy ID sản phẩm để cập nhật. Kiểm tra dữ liệu sản phẩm.');
+            throw new Error('Không tìm thấy ID sản phẩm để cập nhật.');
           }
-          console.log('Updating product ID:', productId, 'with data:', productData); // Debug input data
+          console.log('Updating product ID:', productId, 'with data:', productData);
           const updatedProduct = await updateProduct(productId, productData);
-          console.log('Updated product from API:', updatedProduct); // Debug API response
-          // Cập nhật sản phẩm trong localComputers
+          console.log('Updated product from API:', updatedProduct);
           setLocalComputers((prev) =>
             prev.map((computer) =>
               (computer.id || computer.productID) === productId
@@ -454,48 +543,59 @@ const LaptopTable = memo(
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredComputers.map((computer, index) => (
-                  <tr
-                    key={computer.id || computer.productID || `computer-${index}`}
-                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={computer.image || '/api/placeholder/48/48'}
-                          alt={computer.productName || 'Laptop'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {computer.productName || 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                      <div className="max-w-xs truncate">{computer.description || 'Không có mô tả'}</div>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {formatPrice(computer.price)}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {computer.stockQuantity !== undefined ? computer.stockQuantity : 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {CATEGORY_BRAND_MAPPING[computer.categoryID] || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(computer)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredComputers.map((computer, index) => {
+                  const matchingImage = findMatchingImage(computer.image);
+
+                  return (
+                    <tr
+                      key={computer.id || computer.productID || `computer-${index}`}
+                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          {matchingImage ? (
+                            <img
+                              src={matchingImage.url}
+                              alt={computer.productName || 'Laptop'}
+                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            />
+                          ) : (
+                            <ImageOff
+                              className={currentTheme.secondaryText}
+                              size={24}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {computer.productName || 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                        <div className="max-w-xs truncate">{computer.description || 'Không có mô tả'}</div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {formatPrice(computer.price)}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {computer.stockQuantity !== undefined ? computer.stockQuantity : 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {CATEGORY_BRAND_MAPPING[computer.categoryID] || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(computer)}
+                            className={`transition-colors ${currentTheme.buttonIcon}`}
+                            title="Chỉnh sửa"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -509,6 +609,7 @@ const LaptopTable = memo(
             formTitle={formState.formType === 'add' ? 'Thêm máy tính mới' : 'Chỉnh sửa máy tính'}
             theme={theme}
             validCategoryIds={validCategoryIds}
+            images={images} // Pass images prop to LaptopForm
           />
         )}
       </div>
@@ -516,4 +617,4 @@ const LaptopTable = memo(
   }
 );
 
-export default LaptopTable; // Sửa lỗi export từ LaptopTables thành LaptopTable
+export default LaptopTable;

@@ -5,7 +5,6 @@ import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-rea
 const CATEGORY_BRAND_MAPPING = {
   40: 'MSI',
   41: 'ASUS',
-
 };
 
 // Form component for adding/editing PCs
@@ -16,6 +15,7 @@ const PcForm = ({
   formTitle,
   theme,
   validCategoryIds = [40, 41],
+  images = [],
 }) => {
   const [formData, setFormData] = useState({
     productName: pc?.productName || '',
@@ -28,6 +28,9 @@ const PcForm = ({
     error: null,
   });
 
+  const [imageSearchTerm, setImageSearchTerm] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
+
   useEffect(() => {
     if (formData.error) {
       const timer = setTimeout(() => {
@@ -38,25 +41,25 @@ const PcForm = ({
   }, [formData.error]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'image' && files[0]) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]:
-          name === 'price' || name === 'stockQuantity'
-            ? parseFloat(value) || value
-            : name === 'categoryID'
-            ? value === '' ? '' : parseInt(value)
-            : value,
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === 'price' || name === 'stockQuantity'
+          ? parseFloat(value) || value
+          : name === 'categoryID'
+          ? value === '' ? '' : parseInt(value)
+          : value,
+    }));
+  };
+
+  const handleImageSelect = (image) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: image.filename,
+    }));
+    setShowImagePicker(false);
+    setImageSearchTerm('');
   };
 
   const handleSubmit = async (e) => {
@@ -64,7 +67,6 @@ const PcForm = ({
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Validation
       if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
         throw new Error('Vui lòng chọn một hãng hợp lệ');
       }
@@ -96,6 +98,12 @@ const PcForm = ({
     }
   };
 
+  const filteredImages = imageSearchTerm.trim() === ''
+    ? images
+    : images.filter((image) =>
+        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+      );
+
   const currentTheme = {
     dark: {
       container: 'bg-gray-800 text-gray-200',
@@ -103,6 +111,7 @@ const PcForm = ({
       buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
       buttonSecondary: 'bg-gray-600 hover:bg-gray-700 text-white shadow-md',
       error: 'text-red-400',
+      imagePicker: 'bg-gray-700 border-gray-600',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -110,12 +119,13 @@ const PcForm = ({
       buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
       buttonSecondary: 'bg-gray-300 hover:bg-gray-400 text-gray-800 shadow-md',
       error: 'text-red-600',
+      imagePicker: 'bg-gray-100 border-gray-300',
     },
   }[theme || 'dark'];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg`}>
+      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg relative`}>
         <h3 className="text-xl font-semibold mb-4">{formTitle}</h3>
 
         {formData.error && (
@@ -197,17 +207,78 @@ const PcForm = ({
               </select>
             </div>
 
-            {/* <div>
+            <div>
               <label className="block mb-1">Hình ảnh</label>
-              <input
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={handleChange}
-                className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
-              />
-            </div> */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.image || 'Chọn hình ảnh'}
+                  onClick={() => setShowImagePicker(true)}
+                  readOnly
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                />
+                {formData.image && (
+                  <div className="mt-2">
+                    <img
+                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      alt="Selected"
+                      className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
+          {showImagePicker && (
+            <div className={`absolute top-0 left-0 w-full h-full ${currentTheme.imagePicker} rounded-lg p-4 overflow-y-auto z-10`}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">Chọn hình ảnh</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowImagePicker(false)}
+                  className="text-gray-400 hover:text-gray-200"
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm hình ảnh..."
+                  value={imageSearchTerm}
+                  onChange={(e) => setImageSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${currentTheme.input}`}
+                />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                {filteredImages.length > 0 ? (
+                  filteredImages.map((image) => (
+                    <div
+                      key={image.filename}
+                      onClick={() => handleImageSelect(image)}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.filename}
+                        className="h-20 w-full object-cover rounded-lg"
+                      />
+                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center text-gray-400">
+                    Không tìm thấy hình ảnh
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
@@ -233,7 +304,7 @@ const PcForm = ({
   );
 };
 
-// PCs component
+// Pc component
 const Pc = memo(
   ({
     activeMenu,
@@ -243,7 +314,8 @@ const Pc = memo(
     updateProduct,
     getProductById,
     loading,
-    validCategoryIds = [40, 41, 42],
+    validCategoryIds = [40, 41],
+    images = [],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -280,6 +352,14 @@ console.log(getProductById);
         style: 'currency',
         currency: 'VND',
       }).format(price);
+    };
+
+    const findMatchingImage = (imageFilename) => {
+      if (!imageFilename || !images || images.length === 0) {
+        return null;
+      }
+      const foundImage = images.find((img) => img.filename === imageFilename);
+      return foundImage;
     };
 
     const filteredPcs = searchTerm.trim() === ''
@@ -372,8 +452,6 @@ console.log(getProductById);
       }
     };
 
-    const IMAGE_BASE_URL = "http://localhost:4000/images/";
-
     return (
       <div className={`p-6 ${currentTheme.container}`}>
         {error && (
@@ -451,50 +529,57 @@ console.log(getProductById);
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredPcs.map((pc, index) => (
-                  <tr
-                    key={pc.id || pc.productID || `pc-${index}`}
-                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        {pc.image ? (
-                          <img
-                            src={`${IMAGE_BASE_URL}${pc.image}`}
-                            alt={pc.productName || 'PC'}
-                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                          />
-                        ) : (
-                          <ImageOff size={24} className={currentTheme.secondaryText} />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {pc.productName || 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                      <div className="max-w-xs truncate">{pc.description || 'Không có mô tả'}</div>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {formatPrice(pc.price)}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {pc.stockQuantity !== undefined ? pc.stockQuantity : 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {CATEGORY_BRAND_MAPPING[pc.categoryID] || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleEdit(pc)}
-                        className={`transition-colors ${currentTheme.buttonIcon}`}
-                        title="Chỉnh sửa"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredPcs.map((pc, index) => {
+                  const matchingImage = findMatchingImage(pc.image);
+
+                  return (
+                    <tr
+                      key={pc.id || pc.productID || `pc-${index}`}
+                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          {matchingImage ? (
+                            <img
+                              src={matchingImage.url}
+                              alt={pc.productName || 'PC'}
+                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            />
+                          ) : (
+                            <ImageOff
+                              className={currentTheme.secondaryText}
+                              size={24}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {pc.productName || 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                        <div className="max-w-xs truncate">{pc.description || 'Không có mô tả'}</div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {formatPrice(pc.price)}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {pc.stockQuantity !== undefined ? pc.stockQuantity : 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {CATEGORY_BRAND_MAPPING[pc.categoryID] || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleEdit(pc)}
+                          className={`transition-colors ${currentTheme.buttonIcon}`}
+                          title="Chỉnh sửa"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -508,6 +593,7 @@ console.log(getProductById);
             formTitle={formState.formType === 'add' ? 'Thêm PC mới' : 'Chỉnh sửa PC'}
             theme={theme}
             validCategoryIds={validCategoryIds}
+            images={images}
           />
         )}
       </div>
