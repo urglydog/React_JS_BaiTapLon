@@ -121,7 +121,24 @@ export class AdminPageController {
       res.status(500).json({ error: 'Failed to fetch computers' });
     }
   };
-  
+  getAllTablet = async (req, res) => {
+    try {
+      const computers = await this.adminService.getAllTablet();
+      res.json(computers);
+    } catch (error) {
+      console.error('Error in getAllComputers:', error);
+      res.status(500).json({ error: 'Failed to fetch computers' });
+    }
+  };
+  getAllGamingGear = async (req, res) => {
+    try {
+      const computers = await this.adminService.getAllGamingGear();
+      res.json(computers);
+    } catch (error) {
+      console.error('Error in getAllComputers:', error);
+      res.status(500).json({ error: 'Failed to fetch computers' });
+    }
+  };
   getAllProcessors = async (req, res) => {
     try {
       const processors = await this.adminService.getAllProcessors();

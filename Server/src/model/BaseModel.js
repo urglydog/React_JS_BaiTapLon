@@ -81,6 +81,24 @@ async getAllComputers() {
     conn.release();
   }
 }
+async getAllTablet() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID = 44`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
+async getAllGamingGear() {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT * FROM ${this.table} WHERE categoryID IN (14, 15, 16)`);
+    return result;
+  } finally {
+    conn.release();
+  }
+}
 
 async getAllProcessors() {
   const conn = await pool.getConnection();
@@ -200,13 +218,26 @@ async getAllMousepad() {
   }
 
   async delete(idField, id) {
+    if (!idField || idField === undefined) {
+      throw new Error("Tên cột (idField) không hợp lệ");
+    }
     const conn = await pool.getConnection();
     try {
       const result = await conn.query(
         `DELETE FROM ${this.table} WHERE ${idField} = ?`,
         [id]
       );
-      return result.affectedRows > 0;
+      console.log("Query result:", result); // In: OkPacket { affectedRows: 1, ... }
+      if (result.affectedRows === undefined) {
+        throw new Error("Lỗi khi thực thi câu lệnh SQL: Kết quả không hợp lệ");
+      }
+      if (result.affectedRows === 0) {
+        throw new Error("Product not found");
+      }
+      return result.affectedRows > 0; // Trả về true nếu xóa thành công
+    } catch (error) {
+      console.error("Error in ProductModel.delete:", error);
+      throw error;
     } finally {
       conn.release();
     }

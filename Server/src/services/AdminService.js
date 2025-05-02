@@ -777,7 +777,22 @@ class AdminService {
       throw error;
     }
   };
-  
+  getAllTablet = async () => {
+    try {
+      return await ProductModel.getAllTablet();
+    } catch (error) {
+      console.error("Error in AdminService.getAllTablet:", error);
+      throw error;
+    }
+  };
+  getAllGamingGear = async () => {
+    try {
+      return await ProductModel.getAllGamingGear();
+    } catch (error) {
+      console.error("Error in AdminService.getAllGamingGear:", error);
+      throw error;
+    }
+  };
   getAllProcessors = async () => {
     try {
       return await ProductModel.getAllProcessors();
@@ -888,20 +903,25 @@ class AdminService {
       throw error;
     }
   };
-
   deleteProduct = async (productId) => {
     try {
-      // Chuyển đổi ID nếu cần thiết
+      console.log("ProductID received in deleteProduct:", productId);
+      console.log("Type of productId:", typeof productId);
+      if (!productId || productId === undefined || productId === null || 
+          (typeof productId === 'string' && productId.trim() === "")) {
+        throw new Error('ID sản phẩm không hợp lệ');
+      }
       const id = typeof productId === 'string' && !isNaN(productId) 
-        ? BigInt(productId) 
+        ? Number(productId) 
         : productId;
-        
-      // Thực hiện xóa
-      const result = await ProductModel.delete(id);
-      return result && result.success; // Giả sử kết quả có trường success
+      console.log("Converted ID:", id);
+      console.log("Type of converted ID:", typeof id);
+      const result = await ProductModel.delete("productID", id);
+      console.log("Delete operation result:", result); // In: true
+      return result && result.success; // Vấn đề: result.success không tồn tại
     } catch (error) {
-      console.error("Error in AdminService.deleteProduct:", error);
-      throw error;
+      console.error("Detailed error in deleteProduct:", error);
+      throw new Error(`Không thể xóa sản phẩm: ${error.message}`);
     }
   };
   // Order management services
