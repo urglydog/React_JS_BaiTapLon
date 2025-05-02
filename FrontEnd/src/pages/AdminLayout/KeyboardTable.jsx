@@ -1,6 +1,14 @@
 import React, { memo, useState } from 'react';
 import { Loader2, AlertCircle, ImageOff, Search, Plus, Pencil } from 'lucide-react';
-import { FaBan } from 'react-icons/fa';
+
+// Ánh xạ categoryID với tên hãng cho danh mục Keyboards
+const CATEGORY_BRAND_MAPPING = {
+  1: 'Logitech',
+  2: 'Aula',
+  3: 'Rapoo',
+  4: 'Asus',
+  5: 'Logitech',
+};
 
 // Form component for adding/editing keyboards
 const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => {
@@ -9,7 +17,7 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
     description: keyboard?.description || '',
     price: keyboard?.price || '',
     stockQuantity: keyboard?.stockQuantity || '',
-    categoryId: keyboard?.categoryId || 1,
+    categoryID: keyboard?.categoryID || '',
     isLoading: false,
     error: null,
   });
@@ -18,7 +26,12 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'price' || name === 'stockQuantity' ? parseFloat(value) || value : value,
+      [name]:
+        name === 'price' || name === 'stockQuantity'
+          ? parseFloat(value) || value
+          : name === 'categoryID'
+          ? value === '' ? '' : parseInt(value)
+          : value,
     }));
   };
 
@@ -27,12 +40,23 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      // Validation
+      if (!formData.categoryID || ![1, 2, 3, 4, 5].includes(parseInt(formData.categoryID))) {
+        throw new Error('Vui lòng chọn một hãng hợp lệ');
+      }
+      if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+        throw new Error('Giá phải là số dương');
+      }
+      if (isNaN(parseInt(formData.stockQuantity)) || parseInt(formData.stockQuantity) < 0) {
+        throw new Error('Số lượng tồn kho phải là số không âm');
+      }
+
       const productData = {
         productName: formData.productName,
         description: formData.description,
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
-        categoryId: parseInt(formData.categoryId),
+        categoryID: parseInt(formData.categoryID),
       };
 
       await onSave(productData);
@@ -42,7 +66,7 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save keyboard',
+        error: error.message || 'Không thể lưu bàn phím',
       }));
     }
   };
@@ -131,17 +155,20 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
             </div>
 
             <div>
-              <label className="block mb-1">Danh mục</label>
+              <label className="block mb-1">Hãng</label>
               <select
-                name="categoryId"
-                value={formData.categoryId}
+                name="categoryID"
+                value={formData.categoryID}
                 onChange={handleChange}
                 className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
                 required
               >
-                <option value={1}>Logitech</option>
-                <option value={2}>Razer</option>
-                <option value={3}>SteelSeries</option>
+                <option value="">Chọn hãng</option>
+                {Object.entries(CATEGORY_BRAND_MAPPING).map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -178,7 +205,7 @@ const KeyboardTable = memo(
     theme = 'dark',
     createProduct,
     updateProduct,
-    deleteProduct,
+    loading,
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -187,15 +214,6 @@ const KeyboardTable = memo(
       isOpen: false,
       formType: null, // 'add' or 'edit'
       currentKeyboard: null,
-    });
-
-    // Confirmation dialog state
-    const [confirmDialog, setConfirmDialog] = useState({
-      isOpen: false,
-      keyboard: null,
-      title: '',
-      message: '',
-      confirmAction: null,
     });
 
     // Only render if activeMenu is 'KeyBoard'
@@ -229,10 +247,7 @@ const KeyboardTable = memo(
         input: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
         emptyState: 'text-gray-400',
         buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
-        buttonDanger: 'bg-red-600 hover:bg-red-700 text-white shadow-md',
         buttonIcon: 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600 p-2 rounded-full shadow-sm',
-        dialog: 'bg-gray-800 text-gray-200',
-        overlay: '',
       },
       light: {
         container: 'bg-white text-gray-800',
@@ -243,10 +258,7 @@ const KeyboardTable = memo(
         input: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
         emptyState: 'text-gray-500',
         buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
-        buttonDanger: 'bg-red-500 hover:bg-red-600 text-white shadow-md',
         buttonIcon: 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow-sm',
-        dialog: 'bg-white text-gray-800',
-        overlay: '',
       },
     };
 
@@ -270,80 +282,30 @@ const KeyboardTable = memo(
       });
     };
 
-    // Deactivate/delete keyboard handler
-    const handleDeactivate = (keyboard) => {
-      setConfirmDialog({
-        isOpen: true,
-        keyboard,
-        title: 'Xác nhận xóa',
-        message: `Bạn có chắc chắn muốn xóa "${keyboard.productName}" không?`,
-        confirmAction: async () => {
-          try {
-            setIsLoading(true);
-            await deleteProduct(keyboard.id);
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-            setIsLoading(false);
-          } catch (error) {
-            console.error('Error deleting keyboard:', error);
-            setError('Failed to delete keyboard: ' + (error.message || ''));
-            setIsLoading(false);
-          }
-        },
-      });
-    };
-
     // Save handler for add/edit
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
         if (formState.formType === 'add') {
-          await createProduct(productData);
+          const newProduct = await createProduct(productData);
+          if (!newProduct.id && !newProduct.productID) {
+            throw new Error('API không trả về ID sản phẩm');
+          }
         } else {
-          const productId = formState.currentKeyboard ? formState.currentKeyboard.id : null;
-          if (!productId) throw new Error('Product ID is missing');
+          const productId = formState.currentKeyboard?.id || formState.currentKeyboard?.productID;
+          if (!productId) {
+            throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
+          }
           await updateProduct(productId, productData);
         }
         setFormState((prev) => ({ ...prev, isOpen: false }));
         setIsLoading(false);
       } catch (error) {
         console.error('Error saving keyboard:', error);
-        setError('Failed to save keyboard: ' + (error.message || ''));
+        setError('Không thể lưu bàn phím: ' + (error.message || ''));
         setIsLoading(false);
-        throw error; // Propagate error to KeyboardForm
+        throw error;
       }
-    };
-
-    // Confirmation Dialog Component
-    const ConfirmationDialog = () => {
-      if (!confirmDialog.isOpen) return null;
-
-      return (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className={`${currentTheme.dialog} rounded-lg shadow-xl p-6 w-full max-w-md`}>
-            <h3 className="text-xl font-semibold mb-2">{confirmDialog.title}</h3>
-            <p className="mb-6">{confirmDialog.message}</p>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
-                className={`px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white`}
-                disabled={isLoading}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmDialog.confirmAction}
-                className={`px-4 py-2 rounded-lg flex items-center ${currentTheme.buttonDanger}`}
-                disabled={isLoading}
-              >
-
-                {isLoading && <Loader2 size={18} className="animate-spin mr-2" />}
-                Xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      );
     };
 
     return (
@@ -388,21 +350,21 @@ const KeyboardTable = memo(
           </div>
         </div>
 
-        {isLoading && keyboards.length === 0 && (
+        {(loading || isLoading) && keyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.secondaryText}`}>
             <Loader2 className="animate-spin mr-2" size={24} />
             <span>Đang tải dữ liệu...</span>
           </div>
         )}
 
-        {!isLoading && keyboards.length === 0 && (
+        {!loading && !isLoading && keyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy bàn phím nào.</span>
           </div>
         )}
 
-        {!isLoading && keyboards.length > 0 && filteredKeyboards.length === 0 && (
+        {!loading && !isLoading && keyboards.length > 0 && filteredKeyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy bàn phím phù hợp.</span>
@@ -419,22 +381,19 @@ const KeyboardTable = memo(
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mô tả</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Giá</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tồn kho</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hãng</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredKeyboards.map((keyboard, index) => (
                   <tr
-                    key={keyboard.id || `keyboard-${index}`}
+                    key={keyboard.id || keyboard.productID || `keyboard-${index}`}
                     className={`transition-colors duration-150 ${currentTheme.tableRow}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={keyboard.image || '/api/placeholder/48/48'}
-                          alt={keyboard.productName || 'Keyboard'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
+                        <ImageOff size={24} className={currentTheme.secondaryText} />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -449,23 +408,17 @@ const KeyboardTable = memo(
                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
                       {keyboard.stockQuantity !== undefined ? keyboard.stockQuantity : 'N/A'}
                     </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[keyboard.categoryID] || 'N/A'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(keyboard)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeactivate(keyboard)}
-                          className={`transition-colors ${currentTheme.buttonIcon} text-red-500 hover:text-red-400`}
-                          title="Xóa"
-                        >
-                          <FaBan size={14} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleEdit(keyboard)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -483,8 +436,6 @@ const KeyboardTable = memo(
             theme={theme}
           />
         )}
-
-        <ConfirmationDialog />
       </div>
     );
   }

@@ -1,25 +1,64 @@
-import React, { memo, useState } from 'react';
-import { Loader2, AlertCircle, ImageOff, Search, Plus, Pencil } from 'lucide-react';
-import { FaBan } from 'react-icons/fa';
+import React, { memo, useState, useEffect } from 'react';
+import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-react';
+
+// Ánh xạ categoryID với tên hãng cho danh mục Mice
+const CATEGORY_BRAND_MAPPING = {
+  6: 'Dareu',
+  7: 'MSI',
+  8: 'Logitech',
+  9: 'Rapoo',
+  10: 'Razer',
+};
 
 // Form component for adding/editing mice
-const MouseForm = ({ computer = {}, onSave, onCancel, formTitle, theme }) => {
+const MouseForm = ({
+  mouse = {},
+  onSave,
+  onCancel,
+  formTitle,
+  theme,
+  validCategoryIds = [6, 7, 8, 9, 10],
+}) => {
   const [formData, setFormData] = useState({
-    productName: computer?.productName || '',
-    description: computer?.description || '',
-    price: computer?.price || '',
-    stockQuantity: computer?.stockQuantity || '',
-    categoryId: computer?.categoryId || 1, // Default categoryId
+    productName: mouse?.productName || '',
+    description: mouse?.description || '',
+    price: mouse?.price || '',
+    stockQuantity: mouse?.stockQuantity || '',
+    categoryID: mouse?.categoryID || '',
+    image: mouse?.image || '',
     isLoading: false,
     error: null,
   });
 
+  useEffect(() => {
+    if (formData.error) {
+      const timer = setTimeout(() => {
+        setFormData((prev) => ({ ...prev, error: null }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.error]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'price' || name === 'stockQuantity' ? parseFloat(value) || value : value,
-    }));
+    const { name, value, files } = e.target;
+    if (name === 'image' && files[0]) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFormData((prev) => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]:
+          name === 'price' || name === 'stockQuantity'
+            ? parseFloat(value) || value
+            : name === 'categoryID'
+            ? value === '' ? '' : parseInt(value)
+            : value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -27,12 +66,24 @@ const MouseForm = ({ computer = {}, onSave, onCancel, formTitle, theme }) => {
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      // Validation
+      if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
+        throw new Error('Vui lòng chọn một hãng hợp lệ');
+      }
+      if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+        throw new Error('Giá phải là số dương');
+      }
+      if (isNaN(parseInt(formData.stockQuantity)) || parseInt(formData.stockQuantity) < 0) {
+        throw new Error('Số lượng tồn kho phải là số không âm');
+      }
+
       const productData = {
         productName: formData.productName,
         description: formData.description,
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
-        categoryId: parseInt(formData.categoryId),
+        categoryID: parseInt(formData.categoryID),
+        image: formData.image || null,
       };
 
       await onSave(productData);
@@ -42,7 +93,7 @@ const MouseForm = ({ computer = {}, onSave, onCancel, formTitle, theme }) => {
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save mouse',
+        error: error.message || 'Không thể lưu chuột',
       }));
     }
   };
@@ -131,18 +182,20 @@ const MouseForm = ({ computer = {}, onSave, onCancel, formTitle, theme }) => {
             </div>
 
             <div>
-              <label className="block mb-1">Danh mục</label>
+              <label className="block mb-1">Hãng</label>
               <select
-                name="categoryId"
-                value={formData.categoryId}
+                name="categoryID"
+                value={formData.categoryID}
                 onChange={handleChange}
                 className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
                 required
               >
-                <option value={1}>Logitech</option>
-                <option value={2}>Razer</option>
-                <option value={3}>SteelSeries</option>
-                {/* Add more categories as needed */}
+                <option value="">Chọn hãng</option>
+                {validCategoryIds.map((id) => (
+                  <option key={id} value={id}>
+                    {CATEGORY_BRAND_MAPPING[id] || `Danh mục ${id}`}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -171,7 +224,7 @@ const MouseForm = ({ computer = {}, onSave, onCancel, formTitle, theme }) => {
   );
 };
 
-// Wrap component with React.memo to prevent unnecessary re-renders
+// Component bảng danh sách mice
 const MouseTable = memo(
   ({
     activeMenu,
@@ -180,6 +233,8 @@ const MouseTable = memo(
     createProduct,
     updateProduct,
     deleteProduct,
+    loading,
+    validCategoryIds = [6, 7, 8, 9, 10],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -189,20 +244,27 @@ const MouseTable = memo(
       formType: null, // 'add' or 'edit'
       currentMouse: null,
     });
+    const [localMouses, setLocalMouses] = useState(mouses);
+    const [isSynced, setIsSynced] = useState(true);
+console.log(deleteProduct);
 
-    // Confirmation dialog state
-    const [confirmDialog, setConfirmDialog] = useState({
-      isOpen: false,
-      mouse: null,
-      title: '',
-      message: '',
-      confirmAction: null,
-    });
+    useEffect(() => {
+      if (isSynced) {
+        setLocalMouses(mouses);
+      }
+    }, [mouses, isSynced]);
 
-    // Only render if activeMenu is 'Mouse'
+    useEffect(() => {
+      if (error) {
+        const timer = setTimeout(() => {
+          setError(null);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }, [error]);
+
     if (activeMenu !== 'Mouse') return null;
 
-    // Format price in VND
     const formatPrice = (price) => {
       if (price === undefined || price === null) return 'N/A';
       return new Intl.NumberFormat('vi-VN', {
@@ -211,15 +273,13 @@ const MouseTable = memo(
       }).format(price);
     };
 
-    // Filter mouses based on search term
     const filteredMouses = searchTerm.trim() === ''
-      ? mouses
-      : mouses.filter((mouse) =>
+      ? localMouses
+      : localMouses.filter((mouse) =>
           (mouse?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (mouse?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-    // Define theme-based classes
     const themeClasses = {
       dark: {
         container: 'bg-gray-900 text-gray-200',
@@ -230,10 +290,7 @@ const MouseTable = memo(
         input: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
         emptyState: 'text-gray-400',
         buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
-        buttonDanger: 'bg-red-600 hover:bg-red-700 text-white shadow-md',
         buttonIcon: 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600 p-2 rounded-full shadow-sm',
-        dialog: 'bg-gray-800 text-gray-200',
-        overlay: '',
       },
       light: {
         container: 'bg-white text-gray-800',
@@ -244,16 +301,12 @@ const MouseTable = memo(
         input: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
         emptyState: 'text-gray-500',
         buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
-        buttonDanger: 'bg-red-500 hover:bg-red-600 text-white shadow-md',
         buttonIcon: 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow-sm',
-        dialog: 'bg-white text-gray-800',
-        overlay: '',
       },
     };
 
     const currentTheme = themeClasses[theme] || themeClasses.dark;
 
-    // Add new mouse handler
     const handleAdd = () => {
       setFormState({
         isOpen: true,
@@ -262,7 +315,6 @@ const MouseTable = memo(
       });
     };
 
-    // Edit mouse handler
     const handleEdit = (mouse) => {
       setFormState({
         isOpen: true,
@@ -271,80 +323,47 @@ const MouseTable = memo(
       });
     };
 
-    // Deactivate/delete mouse handler
-    const handleDeactivate = (mouse) => {
-      setConfirmDialog({
-        isOpen: true,
-        mouse,
-        title: 'Xác nhận xóa',
-        message: `Bạn có chắc chắn muốn xóa "${mouse.productName}" không?`,
-        confirmAction: async () => {
-          try {
-            setIsLoading(true);
-            await deleteProduct(mouse.id);
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-            setIsLoading(false);
-          } catch (error) {
-            console.error('Error deleting mouse:', error);
-            setError('Failed to delete mouse: ' + (error.message || ''));
-            setIsLoading(false);
-          }
-        },
-      });
-    };
-
-    // Save handler for add/edit
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
+        setIsSynced(false);
         if (formState.formType === 'add') {
-          await createProduct(productData);
+          const newProduct = await createProduct(productData);
+          if (!newProduct.id && !newProduct.productID) {
+            throw new Error('API không trả về ID sản phẩm');
+          }
+          setLocalMouses((prev) => [
+            ...prev,
+            {
+              ...productData,
+              id: newProduct.id || newProduct.productID,
+            },
+          ]);
         } else {
-          const productId = formState.currentMouse ? formState.currentMouse.id : null;
-          if (!productId) throw new Error('Product ID is missing');
+          const productId = formState.currentMouse?.id || formState.currentMouse?.productID;
+          if (!productId) {
+            throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
+          }
           await updateProduct(productId, productData);
+          setLocalMouses((prev) =>
+            prev.map((item) =>
+              (item.id || item.productID) === productId
+                ? { ...item, ...productData }
+                : item
+            )
+          );
         }
         setFormState((prev) => ({ ...prev, isOpen: false }));
         setIsLoading(false);
       } catch (error) {
         console.error('Error saving mouse:', error);
-        setError('Failed to save mouse: ' + (error.message || ''));
+        setError(error.message || 'Không thể lưu chuột');
         setIsLoading(false);
-        throw error; // Propagate error to MouseForm
+        throw error;
       }
     };
 
-    // Confirmation Dialog Component
-    const ConfirmationDialog = () => {
-      if (!confirmDialog.isOpen) return null;
-
-      return (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className={`${currentTheme.dialog} rounded-lg shadow-xl p-6 w-full max-w-md`}>
-            <h3 className="text-xl font-semibold mb-2">{confirmDialog.title}</h3>
-            <p className="mb-6">{confirmDialog.message}</p>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
-                className={`px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white`}
-                disabled={isLoading}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmDialog.confirmAction}
-                className={`px-4 py-2 rounded-lg flex items-center ${currentTheme.buttonDanger}`}
-                disabled={isLoading}
-              >
-                {isLoading && <Loader2 size={18} className="animate-spin mr-2" />}
-                Xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    };
+    const IMAGE_BASE_URL = "http://localhost:4000/images/";
 
     return (
       <div className={`p-6 ${currentTheme.container}`}>
@@ -362,12 +381,11 @@ const MouseTable = memo(
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-center">Danh sách chuột</h2>
+          <h2 className="text-2xl font-semibold">Danh sách Chuột</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleAdd}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${currentTheme.buttonPrimary}`}
-              disabled={isLoading}
             >
               <Plus size={18} />
               <span>Thêm</span>
@@ -388,28 +406,28 @@ const MouseTable = memo(
           </div>
         </div>
 
-        {isLoading && mouses.length === 0 && (
+        {(loading || isLoading) && localMouses.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.secondaryText}`}>
             <Loader2 className="animate-spin mr-2" size={24} />
-            <span>Đang tải dữ  dữ liệu...</span>
+            <span>Đang tải dữ liệu...</span>
           </div>
         )}
 
-        {!isLoading && mouses.length === 0 && (
+        {!loading && !isLoading && localMouses.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy chuột nào.</span>
           </div>
         )}
 
-        {!isLoading && mouses.length > 0 && filteredMouses.length === 0 && (
+        {!loading && !isLoading && localMouses.length > 0 && filteredMouses.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy chuột phù hợp.</span>
           </div>
         )}
 
-        {mouses.length > 0 && filteredMouses.length > 0 && (
+        {localMouses.length > 0 && filteredMouses.length > 0 && (
           <div className="overflow-x-auto rounded-lg shadow-lg">
             <table className={`min-w-full border ${currentTheme.table}`}>
               <thead className={currentTheme.tableHeader}>
@@ -419,22 +437,27 @@ const MouseTable = memo(
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mô tả</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Giá</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tồn kho</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hãng</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredMouses.map((mouse, index) => (
                   <tr
-                    key={mouse.id || `mouse-${index}`}
+                    key={mouse.id || mouse.productID || `mouse-${index}`}
                     className={`transition-colors duration-150 ${currentTheme.tableRow}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={mouse.image || '/api/placeholder/48/48'}
-                          alt={mouse.productName || 'Mouse'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
+                        {mouse.image ? (
+                          <img
+                            src={`${IMAGE_BASE_URL}${mouse.image}`}
+                            alt={mouse.productName || 'Mouse'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                          />
+                        ) : (
+                          <ImageOff size={24} className={currentTheme.secondaryText} />
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -449,23 +472,17 @@ const MouseTable = memo(
                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
                       {mouse.stockQuantity !== undefined ? mouse.stockQuantity : 'N/A'}
                     </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[mouse.categoryID] || 'N/A'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(mouse)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeactivate(mouse)}
-                          className={`transition-colors ${currentTheme.buttonIcon} text-red-500 hover:text-red-400`}
-                          title="Xóa"
-                        >
-                          <FaBan size={14} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleEdit(mouse)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -476,15 +493,14 @@ const MouseTable = memo(
 
         {formState.isOpen && (
           <MouseForm
-            computer={formState.currentMouse}
+            mouse={formState.currentMouse}
             onSave={handleSave}
             onCancel={() => setFormState((prev) => ({ ...prev, isOpen: false }))}
-            formTitle={formState.formType === 'add' ? 'Thêm chuột mới' : 'Chỉnh sửa chuột'}
+            formTitle={formState.formType === 'add' ? 'Thêm Chuột mới' : 'Chỉnh sửa Chuột'}
             theme={theme}
+            validCategoryIds={validCategoryIds}
           />
         )}
-
-        <ConfirmationDialog />
       </div>
     );
   }
