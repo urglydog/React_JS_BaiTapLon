@@ -1,25 +1,62 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-react';
-import { FaBan } from 'react-icons/fa';
 
-// Form component for adding/editing mousepads
-const MousepadForm = ({ mousepad = {}, onSave, onCancel, formTitle, theme }) => {
+// Ánh xạ categoryID với tên hãng cho danh mục Mousepads
+const CATEGORY_BRAND_MAPPING = {
+  11: 'Daeru',
+  12: 'ASUS',
+  13: 'Razer',
+};
+
+// Form component for adding/editing Mousepads
+const MousepadForm = ({
+  mousepad = {},
+  onSave,
+  onCancel,
+  formTitle,
+  theme,
+  validCategoryIds = [11, 12, 13],
+}) => {
   const [formData, setFormData] = useState({
     productName: mousepad?.productName || '',
     description: mousepad?.description || '',
     price: mousepad?.price || '',
     stockQuantity: mousepad?.stockQuantity || '',
-    categoryId: mousepad?.categoryId || 1,
+    categoryID: mousepad?.categoryID || '',
+    image: mousepad?.image || '',
     isLoading: false,
     error: null,
   });
 
+  useEffect(() => {
+    if (formData.error) {
+      const timer = setTimeout(() => {
+        setFormData((prev) => ({ ...prev, error: null }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.error]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'price' || name === 'stockQuantity' ? parseFloat(value) || value : value,
-    }));
+    const { name, value, files } = e.target;
+    if (name === 'image' && files[0]) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFormData((prev) => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]:
+          name === 'price' || name === 'stockQuantity'
+            ? parseFloat(value) || value
+            : name === 'categoryID'
+            ? value === '' ? '' : parseInt(value)
+            : value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -27,22 +64,34 @@ const MousepadForm = ({ mousepad = {}, onSave, onCancel, formTitle, theme }) => 
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      // Validation
+      if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
+        throw new Error('Vui lòng chọn một hãng hợp lệ');
+      }
+      if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+        throw new Error('Giá phải là số dương');
+      }
+      if (isNaN(parseInt(formData.stockQuantity)) || parseInt(formData.stockQuantity) < 0) {
+        throw new Error('Số lượng tồn kho phải là số không âm');
+      }
+
       const productData = {
         productName: formData.productName,
         description: formData.description,
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
-        categoryId: formData.categoryId,
+        categoryID: parseInt(formData.categoryID),
+        image: formData.image || null,
       };
 
       await onSave(productData);
       setFormData((prev) => ({ ...prev, isLoading: false }));
     } catch (error) {
-      console.error('Error saving product:', error);
+      console.error('Error saving mousepad:', error);
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save product',
+        error: error.message || 'Không thể lưu bàn di chuột',
       }));
     }
   };
@@ -129,6 +178,35 @@ const MousepadForm = ({ mousepad = {}, onSave, onCancel, formTitle, theme }) => 
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block mb-1">Hãng</label>
+              <select
+                name="categoryID"
+                value={formData.categoryID}
+                onChange={handleChange}
+                className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
+                required
+              >
+                <option value="">Chọn hãng</option>
+                {validCategoryIds.map((id) => (
+                  <option key={id} value={id}>
+                    {CATEGORY_BRAND_MAPPING[id] || `Danh mục ${id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* <div>
+              <label className="block mb-1">Hình ảnh</label>
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleChange}
+                className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
+              />
+            </div> */}
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
@@ -155,16 +233,17 @@ const MousepadForm = ({ mousepad = {}, onSave, onCancel, formTitle, theme }) => 
   );
 };
 
-// Wrap component with React.memo to prevent unnecessary re-renders
-const MousepadTable = memo(
+// Mousepads component
+const Mousepads = memo(
   ({
     activeMenu,
     mousepads = [],
     theme = 'dark',
     createProduct,
     updateProduct,
-    deleteProduct,
     getProductById,
+    loading,
+    validCategoryIds = [11, 12, 13],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -174,20 +253,27 @@ const MousepadTable = memo(
       formType: null, // 'add' or 'edit'
       currentMousepad: null,
     });
+    const [localMousepads, setLocalMousepads] = useState(mousepads);
+    const [isSynced, setIsSynced] = useState(true);
 console.log(getProductById);
 
-    // Confirmation dialog state
-    const [confirmDialog, setConfirmDialog] = useState({
-      isOpen: false,
-      mousepad: null,
-      title: '',
-      message: '',
-      confirmAction: null,
-    });
+    useEffect(() => {
+      if (isSynced) {
+        setLocalMousepads(mousepads);
+      }
+    }, [mousepads, isSynced]);
+
+    useEffect(() => {
+      if (error) {
+        const timer = setTimeout(() => {
+          setError(null);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }, [error]);
 
     if (activeMenu !== 'Mousepad') return null;
 
-    // Format price in VND
     const formatPrice = (price) => {
       if (price === undefined || price === null) return 'N/A';
       return new Intl.NumberFormat('vi-VN', {
@@ -196,15 +282,13 @@ console.log(getProductById);
       }).format(price);
     };
 
-    // Filter mousepads based on search term
     const filteredMousepads = searchTerm.trim() === ''
-      ? mousepads
-      : mousepads.filter((mousepad) =>
-          (mousepad?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (mousepad?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+      ? localMousepads
+      : localMousepads.filter((item) =>
+          (item?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-    // Define theme-based classes
     const themeClasses = {
       dark: {
         container: 'bg-gray-900 text-gray-200',
@@ -215,10 +299,7 @@ console.log(getProductById);
         input: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
         emptyState: 'text-gray-400',
         buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
-        buttonDanger: 'bg-red-600 hover:bg-red-700 text-white shadow-md',
         buttonIcon: 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600 p-2 rounded-full shadow-sm',
-        dialog: 'bg-gray-800 text-gray-200',
-        overlay: '',
       },
       light: {
         container: 'bg-white text-gray-800',
@@ -229,16 +310,12 @@ console.log(getProductById);
         input: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
         emptyState: 'text-gray-500',
         buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
-        buttonDanger: 'bg-red-500 hover:bg-red-600 text-white shadow-md',
         buttonIcon: 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow-sm',
-        dialog: 'bg-white text-gray-800',
-        overlay: '',
       },
     };
 
     const currentTheme = themeClasses[theme] || themeClasses.dark;
 
-    // Add new mousepad handler
     const handleAdd = () => {
       setFormState({
         isOpen: true,
@@ -247,7 +324,6 @@ console.log(getProductById);
       });
     };
 
-    // Edit mousepad handler
     const handleEdit = (mousepad) => {
       setFormState({
         isOpen: true,
@@ -256,79 +332,47 @@ console.log(getProductById);
       });
     };
 
-    // Deactivate/delete mousepad handler
-    const handleDeactivate = (mousepad) => {
-      setConfirmDialog({
-        isOpen: true,
-        mousepad,
-        title: 'Xác nhận xóa',
-        message: `Bạn có chắc chắn muốn xóa "${mousepad.productName}" không?`,
-        confirmAction: async () => {
-          try {
-            setIsLoading(true);
-            await deleteProduct(mousepad.id); // Use the passed deleteProduct function
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-            setIsLoading(false);
-          } catch (error) {
-            console.error('Error deleting product:', error);
-            setError('Failed to delete product: ' + (error.message || ''));
-            setIsLoading(false);
-          }
-        },
-      });
-    };
-
-    // Save handler for the form (used for both add and edit)
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
+        setIsSynced(false);
         if (formState.formType === 'add') {
-          await createProduct(productData); // Use the passed createProduct function
+          const newProduct = await createProduct(productData);
+          if (!newProduct.id && !newProduct.productID) {
+            throw new Error('API không trả về ID sản phẩm');
+          }
+          setLocalMousepads((prev) => [
+            ...prev,
+            {
+              ...productData,
+              id: newProduct.id || newProduct.productID,
+            },
+          ]);
         } else {
-          const productId = formState.currentMousepad ? formState.currentMousepad.id : null;
-          await updateProduct(productId, productData); // Use the passed updateProduct function
+          const productId = formState.currentMousepad?.id || formState.currentMousepad?.productID;
+          if (!productId) {
+            throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
+          }
+          await updateProduct(productId, productData);
+          setLocalMousepads((prev) =>
+            prev.map((item) =>
+              (item.id || item.productID) === productId
+                ? { ...item, ...productData }
+                : item
+            )
+          );
         }
         setFormState((prev) => ({ ...prev, isOpen: false }));
         setIsLoading(false);
       } catch (error) {
-        console.error('Error saving product:', error);
-        setError('Failed to save product: ' + (error.message || ''));
+        console.error('Error saving mousepad:', error);
+        setError(error.message || 'Không thể lưu bàn di chuột');
         setIsLoading(false);
-        throw error; // Propagate error to form for handling
+        throw error;
       }
     };
 
-    // Confirmation Dialog Component
-    const ConfirmationDialog = () => {
-      if (!confirmDialog.isOpen) return null;
-
-      return (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className={`${currentTheme.dialog} rounded-lg shadow-xl p-6 w-full max-w-md`}>
-            <h3 className="text-xl font-semibold mb-2">{confirmDialog.title}</h3>
-            <p className="mb-6">{confirmDialog.message}</p>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
-                className={`px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white`}
-                disabled={isLoading}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmDialog.confirmAction}
-                className={`px-4 py-2 rounded-lg flex items-center ${currentTheme.buttonDanger}`}
-                disabled={isLoading}
-              >
-                {isLoading && <Loader2 size={18} className="animate-spin mr-2" />}
-                Xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    };
+    const IMAGE_BASE_URL = "http://localhost:4000/images/";
 
     return (
       <div className={`p-6 ${currentTheme.container}`}>
@@ -346,7 +390,7 @@ console.log(getProductById);
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-center">Danh sách bàn di chuột</h2>
+          <h2 className="text-2xl font-semibold">Danh sách bàn di chuột</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleAdd}
@@ -371,28 +415,28 @@ console.log(getProductById);
           </div>
         </div>
 
-        {isLoading && mousepads.length === 0 && (
+        {(loading || isLoading) && localMousepads.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.secondaryText}`}>
             <Loader2 className="animate-spin mr-2" size={24} />
             <span>Đang tải dữ liệu...</span>
           </div>
         )}
 
-        {!isLoading && mousepads.length === 0 && (
+        {!loading && !isLoading && localMousepads.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy bàn di chuột nào.</span>
           </div>
         )}
 
-        {!isLoading && mousepads.length > 0 && filteredMousepads.length === 0 && (
+        {!loading && !isLoading && localMousepads.length > 0 && filteredMousepads.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy bàn di chuột phù hợp.</span>
           </div>
         )}
 
-        {mousepads.length > 0 && filteredMousepads.length > 0 && (
+        {localMousepads.length > 0 && filteredMousepads.length > 0 && (
           <div className="overflow-x-auto rounded-lg shadow-lg">
             <table className={`min-w-full border ${currentTheme.table}`}>
               <thead className={currentTheme.tableHeader}>
@@ -402,22 +446,27 @@ console.log(getProductById);
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mô tả</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Giá</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tồn kho</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hãng</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredMousepads.map((mousepad, index) => (
                   <tr
-                    key={mousepad.id || `mousepad-${index}`}
+                    key={mousepad.id || mousepad.productID || `mousepad-${index}`}
                     className={`transition-colors duration-150 ${currentTheme.tableRow}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={mousepad.image || '/api/placeholder/48/48'}
-                          alt={mousepad.productName || 'Mousepad'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
+                        {mousepad.image ? (
+                          <img
+                            src={`${IMAGE_BASE_URL}${mousepad.image}`}
+                            alt={mousepad.productName || 'Mousepad'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                          />
+                        ) : (
+                          <ImageOff size={24} className={currentTheme.secondaryText} />
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -432,23 +481,17 @@ console.log(getProductById);
                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
                       {mousepad.stockQuantity !== undefined ? mousepad.stockQuantity : 'N/A'}
                     </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[mousepad.categoryID] || 'N/A'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(mousepad)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeactivate(mousepad)}
-                          className={`transition-colors ${currentTheme.buttonIcon} text-red-500 hover:text-red-400`}
-                          title="Xóa"
-                        >
-                          <FaBan size={14} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleEdit(mousepad)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -464,13 +507,12 @@ console.log(getProductById);
             onCancel={() => setFormState((prev) => ({ ...prev, isOpen: false }))}
             formTitle={formState.formType === 'add' ? 'Thêm bàn di chuột mới' : 'Chỉnh sửa bàn di chuột'}
             theme={theme}
+            validCategoryIds={validCategoryIds}
           />
         )}
-
-        <ConfirmationDialog />
       </div>
     );
   }
 );
 
-export default MousepadTable;
+export default Mousepads;

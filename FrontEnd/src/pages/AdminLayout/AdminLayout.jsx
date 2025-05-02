@@ -791,6 +791,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("computers", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("computers", productId)}
                 getProductById={getProductById}
+                  validCategoryIds={CATEGORY_IDS.computers}
               />
             </div>
           )}
@@ -804,6 +805,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("processors", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("processors", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.processors}
               />
             </div>
           )}
@@ -817,6 +819,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("ram", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("ram", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.ram}
               />
             </div>
           )}
@@ -830,6 +833,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("storage", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("storage", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.storage}
               />
             </div>
           )}
@@ -843,6 +847,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("case", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("case", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.case}
               />
             </div>
           )}
@@ -856,6 +861,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("mainboard", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("mainboard", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.mainboard}
               />
             </div>
           )}
@@ -869,6 +875,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("psu", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("psu", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.psu}
               />
             </div>
           )}
@@ -882,6 +889,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("pc", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("pc", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.pc}
               />
             </div>
           )}
@@ -895,6 +903,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("headphone", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("headphone", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.headphone}
               />
             </div>
           )}
@@ -908,6 +917,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("mousepad", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("mousepad", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.mousepad}
               />
             </div>
           )}
@@ -921,6 +931,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("tablet", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("tablet", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.tablet}
               />
             </div>
           )}
@@ -934,6 +945,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("gamingGear", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("gamingGear", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.gamingGear}
               />
             </div>
           )}
@@ -948,6 +960,7 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("laptop", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.laptop}
+                
               />
             </div>
           )}
@@ -961,6 +974,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("phone", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("phone", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.phone}
               />
             </div>
           )}
@@ -974,6 +988,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("mouse", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("mouse", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.mouse}
               />
             </div>
           )}
@@ -987,6 +1002,7 @@ export default function ComputerStoreAdminLayout() {
                 updateProduct={(productId, productData) => updateProduct("keyboard", productId, productData)}
                 deleteProduct={(productId) => deleteProduct("keyboard", productId)}
                 getProductById={getProductById}
+                validCategoryIds={CATEGORY_IDS.keyboard}
               />
             </div>
           )}

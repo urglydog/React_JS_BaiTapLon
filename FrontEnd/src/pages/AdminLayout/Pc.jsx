@@ -1,25 +1,62 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-react';
-import { FaBan } from 'react-icons/fa';
+
+// Ánh xạ categoryID với tên hãng cho danh mục PCs
+const CATEGORY_BRAND_MAPPING = {
+  40: 'MSI',
+  41: 'ASUS',
+
+};
 
 // Form component for adding/editing PCs
-const PcForm = ({ pc = {}, onSave, onCancel, formTitle, theme }) => {
+const PcForm = ({
+  pc = {},
+  onSave,
+  onCancel,
+  formTitle,
+  theme,
+  validCategoryIds = [40, 41],
+}) => {
   const [formData, setFormData] = useState({
     productName: pc?.productName || '',
     description: pc?.description || '',
     price: pc?.price || '',
     stockQuantity: pc?.stockQuantity || '',
-    categoryId: pc?.categoryId || 1,
+    categoryID: pc?.categoryID || '',
+    image: pc?.image || '',
     isLoading: false,
     error: null,
   });
 
+  useEffect(() => {
+    if (formData.error) {
+      const timer = setTimeout(() => {
+        setFormData((prev) => ({ ...prev, error: null }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.error]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'price' || name === 'stockQuantity' ? parseFloat(value) || value : value,
-    }));
+    const { name, value, files } = e.target;
+    if (name === 'image' && files[0]) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFormData((prev) => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]:
+          name === 'price' || name === 'stockQuantity'
+            ? parseFloat(value) || value
+            : name === 'categoryID'
+            ? value === '' ? '' : parseInt(value)
+            : value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -27,22 +64,34 @@ const PcForm = ({ pc = {}, onSave, onCancel, formTitle, theme }) => {
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      // Validation
+      if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
+        throw new Error('Vui lòng chọn một hãng hợp lệ');
+      }
+      if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+        throw new Error('Giá phải là số dương');
+      }
+      if (isNaN(parseInt(formData.stockQuantity)) || parseInt(formData.stockQuantity) < 0) {
+        throw new Error('Số lượng tồn kho phải là số không âm');
+      }
+
       const productData = {
         productName: formData.productName,
         description: formData.description,
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
-        categoryId: formData.categoryId,
+        categoryID: parseInt(formData.categoryID),
+        image: formData.image || null,
       };
 
       await onSave(productData);
       setFormData((prev) => ({ ...prev, isLoading: false }));
     } catch (error) {
-      console.error('Error saving product:', error);
+      console.error('Error saving PC:', error);
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Failed to save product',
+        error: error.message || 'Không thể lưu PC',
       }));
     }
   };
@@ -129,6 +178,35 @@ const PcForm = ({ pc = {}, onSave, onCancel, formTitle, theme }) => {
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block mb-1">Hãng</label>
+              <select
+                name="categoryID"
+                value={formData.categoryID}
+                onChange={handleChange}
+                className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
+                required
+              >
+                <option value="">Chọn hãng</option>
+                {validCategoryIds.map((id) => (
+                  <option key={id} value={id}>
+                    {CATEGORY_BRAND_MAPPING[id] || `Danh mục ${id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* <div>
+              <label className="block mb-1">Hình ảnh</label>
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleChange}
+                className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
+              />
+            </div> */}
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
@@ -155,16 +233,17 @@ const PcForm = ({ pc = {}, onSave, onCancel, formTitle, theme }) => {
   );
 };
 
-// Wrap component with React.memo to prevent unnecessary re-renders
-const PcTable = memo(
+// PCs component
+const Pc = memo(
   ({
     activeMenu,
     pcs = [],
     theme = 'dark',
     createProduct,
     updateProduct,
-    deleteProduct,
     getProductById,
+    loading,
+    validCategoryIds = [40, 41, 42],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -174,20 +253,27 @@ const PcTable = memo(
       formType: null, // 'add' or 'edit'
       currentPc: null,
     });
+    const [localPcs, setLocalPcs] = useState(pcs);
+    const [isSynced, setIsSynced] = useState(true);
 console.log(getProductById);
 
-    // Confirmation dialog state
-    const [confirmDialog, setConfirmDialog] = useState({
-      isOpen: false,
-      pc: null,
-      title: '',
-      message: '',
-      confirmAction: null,
-    });
+    useEffect(() => {
+      if (isSynced) {
+        setLocalPcs(pcs);
+      }
+    }, [pcs, isSynced]);
+
+    useEffect(() => {
+      if (error) {
+        const timer = setTimeout(() => {
+          setError(null);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }, [error]);
 
     if (activeMenu !== 'PC') return null;
 
-    // Format price in VND
     const formatPrice = (price) => {
       if (price === undefined || price === null) return 'N/A';
       return new Intl.NumberFormat('vi-VN', {
@@ -196,15 +282,13 @@ console.log(getProductById);
       }).format(price);
     };
 
-    // Filter PCs based on search term
     const filteredPcs = searchTerm.trim() === ''
-      ? pcs
-      : pcs.filter((pc) =>
-          (pc?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (pc?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+      ? localPcs
+      : localPcs.filter((item) =>
+          (item?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-    // Define theme-based classes
     const themeClasses = {
       dark: {
         container: 'bg-gray-900 text-gray-200',
@@ -215,10 +299,7 @@ console.log(getProductById);
         input: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
         emptyState: 'text-gray-400',
         buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
-        buttonDanger: 'bg-red-600 hover:bg-red-700 text-white shadow-md',
         buttonIcon: 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600 p-2 rounded-full shadow-sm',
-        dialog: 'bg-gray-800 text-gray-200',
-        overlay: '',
       },
       light: {
         container: 'bg-white text-gray-800',
@@ -229,16 +310,12 @@ console.log(getProductById);
         input: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
         emptyState: 'text-gray-500',
         buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
-        buttonDanger: 'bg-red-500 hover:bg-red-600 text-white shadow-md',
         buttonIcon: 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow-sm',
-        dialog: 'bg-white text-gray-800',
-        overlay: '',
       },
     };
 
     const currentTheme = themeClasses[theme] || themeClasses.dark;
 
-    // Add new PC handler
     const handleAdd = () => {
       setFormState({
         isOpen: true,
@@ -247,7 +324,6 @@ console.log(getProductById);
       });
     };
 
-    // Edit PC handler
     const handleEdit = (pc) => {
       setFormState({
         isOpen: true,
@@ -256,82 +332,50 @@ console.log(getProductById);
       });
     };
 
-    // Deactivate/delete PC handler
-    const handleDeactivate = (pc) => {
-      setConfirmDialog({
-        isOpen: true,
-        pc,
-        title: 'Xác nhận xóa',
-        message: `Bạn có chắc chắn muốn xóa "${pc.productName}" không?`,
-        confirmAction: async () => {
-          try {
-            setIsLoading(true);
-            await deleteProduct(pc.id); // Use the passed deleteProduct function
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-            setIsLoading(false);
-          } catch (error) {
-            console.error('Error deleting product:', error);
-            setError('Failed to delete product: ' + (error.message || ''));
-            setIsLoading(false);
-          }
-        },
-      });
-    };
-
-    // Save handler for the form (used for both add and edit)
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
+        setIsSynced(false);
         if (formState.formType === 'add') {
-          await createProduct(productData); // Use the passed createProduct function
+          const newProduct = await createProduct(productData);
+          if (!newProduct.id && !newProduct.productID) {
+            throw new Error('API không trả về ID sản phẩm');
+          }
+          setLocalPcs((prev) => [
+            ...prev,
+            {
+              ...productData,
+              id: newProduct.id || newProduct.productID,
+            },
+          ]);
         } else {
-          const productId = formState.currentPc ? formState.currentPc.id : null;
-          await updateProduct(productId, productData); // Use the passed updateProduct function
+          const productId = formState.currentPc?.id || formState.currentPc?.productID;
+          if (!productId) {
+            throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
+          }
+          await updateProduct(productId, productData);
+          setLocalPcs((prev) =>
+            prev.map((item) =>
+              (item.id || item.productID) === productId
+                ? { ...item, ...productData }
+                : item
+            )
+          );
         }
         setFormState((prev) => ({ ...prev, isOpen: false }));
         setIsLoading(false);
       } catch (error) {
-        console.error('Error saving product:', error);
-        setError('Failed to save product: ' + (error.message || ''));
+        console.error('Error saving PC:', error);
+        setError(error.message || 'Không thể lưu PC');
         setIsLoading(false);
-        throw error; // Propagate error to form for handling
+        throw error;
       }
     };
 
-    // Confirmation Dialog Component
-    const ConfirmationDialog = () => {
-      if (!confirmDialog.isOpen) return null;
-
-      return (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className={`${currentTheme.dialog} rounded-lg shadow-xl p-6 w-full max-w-md`}>
-            <h3 className="text-xl font-semibold mb-2">{confirmDialog.title}</h3>
-            <p className="mb-6">{confirmDialog.message}</p>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
-                className={`px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white`}
-                disabled={isLoading}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmDialog.confirmAction}
-                className={`px-4 py-2 rounded-lg flex items-center ${currentTheme.buttonDanger}`}
-                disabled={isLoading}
-              >
-                {isLoading && <Loader2 size={18} className="animate-spin mr-2" />}
-                Xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    };
+    const IMAGE_BASE_URL = "http://localhost:4000/images/";
 
     return (
-      <div className={`p-6  ${currentTheme.container}`}>
+      <div className={`p-6 ${currentTheme.container}`}>
         {error && (
           <div className="bg-red-600 text-white p-3 rounded-lg mb-4 flex items-center">
             <AlertCircle size={20} className="mr-2" />
@@ -346,7 +390,7 @@ console.log(getProductById);
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-center">Danh sách PC</h2>
+          <h2 className="text-2xl font-semibold">Danh sách PC</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleAdd}
@@ -371,28 +415,28 @@ console.log(getProductById);
           </div>
         </div>
 
-        {isLoading && pcs.length === 0 && (
+        {(loading || isLoading) && localPcs.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.secondaryText}`}>
             <Loader2 className="animate-spin mr-2" size={24} />
             <span>Đang tải dữ liệu...</span>
           </div>
         )}
 
-        {!isLoading && pcs.length === 0 && (
+        {!loading && !isLoading && localPcs.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy PC nào.</span>
           </div>
         )}
 
-        {!isLoading && pcs.length > 0 && filteredPcs.length === 0 && (
+        {!loading && !isLoading && localPcs.length > 0 && filteredPcs.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy PC phù hợp.</span>
           </div>
         )}
 
-        {pcs.length > 0 && filteredPcs.length > 0 && (
+        {localPcs.length > 0 && filteredPcs.length > 0 && (
           <div className="overflow-x-auto rounded-lg shadow-lg">
             <table className={`min-w-full border ${currentTheme.table}`}>
               <thead className={currentTheme.tableHeader}>
@@ -402,22 +446,27 @@ console.log(getProductById);
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mô tả</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Giá</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tồn kho</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hãng</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredPcs.map((pc, index) => (
                   <tr
-                    key={pc.id || `pc-${index}`}
+                    key={pc.id || pc.productID || `pc-${index}`}
                     className={`transition-colors duration-150 ${currentTheme.tableRow}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <img
-                          src={pc.image || '/api/placeholder/48/48'}
-                          alt={pc.productName || 'PC'}
-                          className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                        />
+                        {pc.image ? (
+                          <img
+                            src={`${IMAGE_BASE_URL}${pc.image}`}
+                            alt={pc.productName || 'PC'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                          />
+                        ) : (
+                          <ImageOff size={24} className={currentTheme.secondaryText} />
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -432,23 +481,17 @@ console.log(getProductById);
                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
                       {pc.stockQuantity !== undefined ? pc.stockQuantity : 'N/A'}
                     </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[pc.categoryID] || 'N/A'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(pc)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeactivate(pc)}
-                          className={`transition-colors ${currentTheme.buttonIcon} text-red-500 hover:text-red-400`}
-                          title="Xóa"
-                        >
-                          <FaBan size={14} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleEdit(pc)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -464,13 +507,12 @@ console.log(getProductById);
             onCancel={() => setFormState((prev) => ({ ...prev, isOpen: false }))}
             formTitle={formState.formType === 'add' ? 'Thêm PC mới' : 'Chỉnh sửa PC'}
             theme={theme}
+            validCategoryIds={validCategoryIds}
           />
         )}
-
-        <ConfirmationDialog />
       </div>
     );
   }
 );
 
-export default PcTable;
+export default Pc;
