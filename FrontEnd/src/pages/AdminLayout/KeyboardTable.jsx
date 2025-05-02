@@ -1,5 +1,5 @@
-import React, { memo, useState } from 'react';
-import { Loader2, AlertCircle, ImageOff, Search, Plus, Pencil } from 'lucide-react';
+import React, { memo, useState, useEffect } from 'react';
+import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-react';
 
 // Ánh xạ categoryID với tên hãng cho danh mục Keyboards
 const CATEGORY_BRAND_MAPPING = {
@@ -7,20 +7,40 @@ const CATEGORY_BRAND_MAPPING = {
   2: 'Aula',
   3: 'Rapoo',
   4: 'Asus',
-  5: 'Logitech',
 };
 
 // Form component for adding/editing keyboards
-const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => {
+const KeyboardForm = ({
+  keyboard = {},
+  onSave,
+  onCancel,
+  formTitle,
+  theme,
+  validCategoryIds = [1, 2, 3, 4],
+  images = [],
+}) => {
   const [formData, setFormData] = useState({
     productName: keyboard?.productName || '',
     description: keyboard?.description || '',
     price: keyboard?.price || '',
     stockQuantity: keyboard?.stockQuantity || '',
     categoryID: keyboard?.categoryID || '',
+    image: keyboard?.image || '',
     isLoading: false,
     error: null,
   });
+
+  const [imageSearchTerm, setImageSearchTerm] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
+
+  useEffect(() => {
+    if (formData.error) {
+      const timer = setTimeout(() => {
+        setFormData((prev) => ({ ...prev, error: null }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.error]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,13 +55,21 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
     }));
   };
 
+  const handleImageSelect = (image) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: image.filename,
+    }));
+    setShowImagePicker(false);
+    setImageSearchTerm('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Validation
-      if (!formData.categoryID || ![1, 2, 3, 4, 5].includes(parseInt(formData.categoryID))) {
+      if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
         throw new Error('Vui lòng chọn một hãng hợp lệ');
       }
       if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
@@ -57,6 +85,7 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
+        image: formData.image || null,
       };
 
       await onSave(productData);
@@ -71,6 +100,12 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
     }
   };
 
+  const filteredImages = imageSearchTerm.trim() === ''
+    ? images
+    : images.filter((image) =>
+        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+      );
+
   const currentTheme = {
     dark: {
       container: 'bg-gray-800 text-gray-200',
@@ -78,6 +113,7 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
       buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-md',
       buttonSecondary: 'bg-gray-600 hover:bg-gray-700 text-white shadow-md',
       error: 'text-red-400',
+      imagePicker: 'bg-gray-700 border-gray-600',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -85,12 +121,13 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
       buttonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md',
       buttonSecondary: 'bg-gray-300 hover:bg-gray-400 text-gray-800 shadow-md',
       error: 'text-red-600',
+      imagePicker: 'bg-gray-100 border-gray-300',
     },
   }[theme || 'dark'];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg`}>
+      <div className={`${currentTheme.container} rounded-lg shadow-xl p-6 w-full max-w-lg relative`}>
         <h3 className="text-xl font-semibold mb-4">{formTitle}</h3>
 
         {formData.error && (
@@ -164,14 +201,86 @@ const KeyboardForm = ({ keyboard = {}, onSave, onCancel, formTitle, theme }) => 
                 required
               >
                 <option value="">Chọn hãng</option>
-                {Object.entries(CATEGORY_BRAND_MAPPING).map(([id, name]) => (
+                {validCategoryIds.map((id) => (
                   <option key={id} value={id}>
-                    {name}
+                    {CATEGORY_BRAND_MAPPING[id] || `Danh mục ${id}`}
                   </option>
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block mb-1">Hình ảnh</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.image || 'Chọn hình ảnh'}
+                  onClick={() => setShowImagePicker(true)}
+                  readOnly
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                />
+                {formData.image && (
+                  <div className="mt-2">
+                    <img
+                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      alt="Selected"
+                      className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
+          {showImagePicker && (
+            <div className={`absolute top-0 left-0 w-full h-full ${currentTheme.imagePicker} rounded-lg p-4 overflow-y-auto z-10`}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold">Chọn hình ảnh</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowImagePicker(false)}
+                  className="text-gray-400 hover:text-gray-200"
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm hình ảnh..."
+                  value={imageSearchTerm}
+                  onChange={(e) => setImageSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${currentTheme.input}`}
+                />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                {filteredImages.length > 0 ? (
+                  filteredImages.map((image) => (
+                    <div
+                      key={image.filename}
+                      onClick={() => handleImageSelect(image)}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.filename}
+                        className="h-20 w-full object-cover rounded-lg"
+                      />
+                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center text-gray-400">
+                    Không tìm thấy hình ảnh
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
@@ -205,7 +314,10 @@ const KeyboardTable = memo(
     theme = 'dark',
     createProduct,
     updateProduct,
+    deleteProduct,
     loading,
+    validCategoryIds = [1, 2, 3, 4],
+    images = [],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -215,11 +327,27 @@ const KeyboardTable = memo(
       formType: null, // 'add' or 'edit'
       currentKeyboard: null,
     });
+    const [localKeyboards, setLocalKeyboards] = useState(keyboards);
+    const [isSynced, setIsSynced] = useState(true);
+console.log(deleteProduct);
 
-    // Only render if activeMenu is 'KeyBoard'
+    useEffect(() => {
+      if (isSynced) {
+        setLocalKeyboards(keyboards);
+      }
+    }, [keyboards, isSynced]);
+
+    useEffect(() => {
+      if (error) {
+        const timer = setTimeout(() => {
+          setError(null);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }, [error]);
+
     if (activeMenu !== 'KeyBoard') return null;
 
-    // Format price in VND
     const formatPrice = (price) => {
       if (price === undefined || price === null) return 'N/A';
       return new Intl.NumberFormat('vi-VN', {
@@ -228,15 +356,21 @@ const KeyboardTable = memo(
       }).format(price);
     };
 
-    // Filter keyboards based on search term
+    const findMatchingImage = (imageFilename) => {
+      if (!imageFilename || !images || images.length === 0) {
+        return null;
+      }
+      const foundImage = images.find((img) => img.filename === imageFilename);
+      return foundImage;
+    };
+
     const filteredKeyboards = searchTerm.trim() === ''
-      ? keyboards
-      : keyboards.filter((keyboard) =>
+      ? localKeyboards
+      : localKeyboards.filter((keyboard) =>
           (keyboard?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (keyboard?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-    // Define theme-based classes
     const themeClasses = {
       dark: {
         container: 'bg-gray-900 text-gray-200',
@@ -264,7 +398,6 @@ const KeyboardTable = memo(
 
     const currentTheme = themeClasses[theme] || themeClasses.dark;
 
-    // Add new keyboard handler
     const handleAdd = () => {
       setFormState({
         isOpen: true,
@@ -273,7 +406,6 @@ const KeyboardTable = memo(
       });
     };
 
-    // Edit keyboard handler
     const handleEdit = (keyboard) => {
       setFormState({
         isOpen: true,
@@ -282,27 +414,41 @@ const KeyboardTable = memo(
       });
     };
 
-    // Save handler for add/edit
     const handleSave = async (productData) => {
       try {
         setIsLoading(true);
+        setIsSynced(false);
         if (formState.formType === 'add') {
           const newProduct = await createProduct(productData);
           if (!newProduct.id && !newProduct.productID) {
             throw new Error('API không trả về ID sản phẩm');
           }
+          setLocalKeyboards((prev) => [
+            ...prev,
+            {
+              ...productData,
+              id: newProduct.id || newProduct.productID,
+            },
+          ]);
         } else {
           const productId = formState.currentKeyboard?.id || formState.currentKeyboard?.productID;
           if (!productId) {
             throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
           }
           await updateProduct(productId, productData);
+          setLocalKeyboards((prev) =>
+            prev.map((item) =>
+              (item.id || item.productID) === productId
+                ? { ...item, ...productData }
+                : item
+            )
+          );
         }
         setFormState((prev) => ({ ...prev, isOpen: false }));
         setIsLoading(false);
       } catch (error) {
         console.error('Error saving keyboard:', error);
-        setError('Không thể lưu bàn phím: ' + (error.message || ''));
+        setError(error.message || 'Không thể lưu bàn phím');
         setIsLoading(false);
         throw error;
       }
@@ -324,7 +470,7 @@ const KeyboardTable = memo(
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-center">Danh sách bàn phím</h2>
+          <h2 className="text-2xl font-semibold">Danh sách Bàn Phím</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleAdd}
@@ -350,28 +496,28 @@ const KeyboardTable = memo(
           </div>
         </div>
 
-        {(loading || isLoading) && keyboards.length === 0 && (
+        {(loading || isLoading) && localKeyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.secondaryText}`}>
             <Loader2 className="animate-spin mr-2" size={24} />
             <span>Đang tải dữ liệu...</span>
           </div>
         )}
 
-        {!loading && !isLoading && keyboards.length === 0 && (
+        {!loading && !isLoading && localKeyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy bàn phím nào.</span>
           </div>
         )}
 
-        {!loading && !isLoading && keyboards.length > 0 && filteredKeyboards.length === 0 && (
+        {!loading && !isLoading && localKeyboards.length > 0 && filteredKeyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
             <span>Không tìm thấy bàn phím phù hợp.</span>
           </div>
         )}
 
-        {keyboards.length > 0 && filteredKeyboards.length > 0 && (
+        {localKeyboards.length > 0 && filteredKeyboards.length > 0 && (
           <div className="overflow-x-auto rounded-lg shadow-lg">
             <table className={`min-w-full border ${currentTheme.table}`}>
               <thead className={currentTheme.tableHeader}>
@@ -386,42 +532,57 @@ const KeyboardTable = memo(
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredKeyboards.map((keyboard, index) => (
-                  <tr
-                    key={keyboard.id || keyboard.productID || `keyboard-${index}`}
-                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                        <ImageOff size={24} className={currentTheme.secondaryText} />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {keyboard.productName || 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                      <div className="max-w-xs truncate">{keyboard.description || 'Không có mô tả'}</div>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {formatPrice(keyboard.price)}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {keyboard.stockQuantity !== undefined ? keyboard.stockQuantity : 'N/A'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                      {CATEGORY_BRAND_MAPPING[keyboard.categoryID] || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleEdit(keyboard)}
-                        className={`transition-colors ${currentTheme.buttonIcon}`}
-                        title="Chỉnh sửa"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredKeyboards.map((keyboard, index) => {
+                  const matchingImage = findMatchingImage(keyboard.image);
+
+                  return (
+                    <tr
+                      key={keyboard.id || keyboard.productID || `keyboard-${index}`}
+                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                          {matchingImage ? (
+                            <img
+                              src={matchingImage.url}
+                              alt={keyboard.productName || 'Keyboard'}
+                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            />
+                          ) : (
+                            <ImageOff
+                              className={currentTheme.secondaryText}
+                              size={24}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {keyboard.productName || 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                        <div className="max-w-xs truncate">{keyboard.description || 'Không có mô tả'}</div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {formatPrice(keyboard.price)}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {keyboard.stockQuantity !== undefined ? keyboard.stockQuantity : 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                        {CATEGORY_BRAND_MAPPING[keyboard.categoryID] || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleEdit(keyboard)}
+                          className={`transition-colors ${currentTheme.buttonIcon}`}
+                          title="Chỉnh sửa"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -432,8 +593,10 @@ const KeyboardTable = memo(
             keyboard={formState.currentKeyboard}
             onSave={handleSave}
             onCancel={() => setFormState((prev) => ({ ...prev, isOpen: false }))}
-            formTitle={formState.formType === 'add' ? 'Thêm bàn phím mới' : 'Chỉnh sửa bàn phím'}
+            formTitle={formState.formType === 'add' ? 'Thêm Bàn Phím mới' : 'Chỉnh sửa Bàn Phím'}
             theme={theme}
+            validCategoryIds={validCategoryIds}
+            images={images}
           />
         )}
       </div>

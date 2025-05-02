@@ -1099,6 +1099,14 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("mouse", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.mouse}
+                images={[
+                  ...(allImages.mouse || []),
+                  ...(allImages.mouse_dareu || []),
+                  ...(allImages.mouse_msi || []),
+                  ...(allImages.mouse_logitech || []),
+                  ...(allImages.mouse_rapoo || []),
+                  ...(allImages.mouse_razer || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Mouse
               />
             </div>
           )}
@@ -1113,6 +1121,13 @@ export default function ComputerStoreAdminLayout() {
                 deleteProduct={(productId) => deleteProduct("keyboard", productId)}
                 getProductById={getProductById}
                 validCategoryIds={CATEGORY_IDS.keyboard}
+                images={[
+                  ...(allImages.keyboard || []),
+                  ...(allImages.keyboard_logitech || []),
+                  ...(allImages.keyboard_aula || []),
+                  ...(allImages.keyboard_rapoo || []),
+                  ...(allImages.keyboard_asus || []),
+                ]} // Gộp tất cả hình ảnh liên quan đến Keyboard
               />
             </div>
           )}
