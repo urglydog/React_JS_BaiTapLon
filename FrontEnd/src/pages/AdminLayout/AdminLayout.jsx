@@ -306,10 +306,17 @@ export default function ComputerStoreAdminLayout() {
         body: JSON.stringify({ status }),
       });
       if (!response.ok) throw new Error("Failed to update order status");
+  
       const updatedOrder = await response.json();
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.orderId === orderId ? updatedOrder : order))
-      );
+      console.log("Updated order from API:", updatedOrder);
+  
+      // Re-fetch toàn bộ danh sách orders để đảm bảo đồng bộ
+      const ordersResponse = await fetch(`${API_URL}/orders`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!ordersResponse.ok) throw new Error("Failed to fetch updated orders");
+      const ordersData = await ordersResponse.json();
+      setOrders(ordersData);
       return updatedOrder;
     } catch (error) {
       console.error(`Error updating order status for ID ${orderId}:`, error);
@@ -399,6 +406,7 @@ export default function ComputerStoreAdminLayout() {
         });
         if (!orders1Response.ok) throw new Error("Failed to fetch orders data");
         const orders1Data = await orders1Response.json();
+        console.log("Orders data from API:", orders1Data);
         setOrders(orders1Data);
 
         const topSpendersResponse = await fetch(

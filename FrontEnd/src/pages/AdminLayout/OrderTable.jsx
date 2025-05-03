@@ -1,14 +1,21 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { ImageOff, Search } from 'lucide-react';
 
-// OrderTable - Displays a list of orders with search functionality
-const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
+// OrderTable - Displays a list of orders with search and status update functionality
+const OrderTable = memo(({ orders = [], theme = 'dark', updateOrderStatus, getOrderById }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [localOrders, setLocalOrders] = useState(orders); // State nội bộ
+
+  // Đồng bộ localOrders với orders từ props khi orders thay đổi
+  useEffect(() => {
+    setLocalOrders(orders);
+  }, [orders]);
+console.log(getOrderById);
 
   // Filter orders based on search term
   const filteredOrders = searchTerm.trim() === ''
-    ? orders
-    : orders.filter((order) =>
+    ? localOrders
+    : localOrders.filter((order) =>
         (order.orderID?.toString() || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (order.status || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -23,6 +30,7 @@ const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
       secondaryText: 'text-gray-400',
       input: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
       emptyState: 'text-gray-400',
+      select: 'bg-gray-800 border-gray-600 text-gray-200 focus:ring-blue-500',
     },
     light: {
       container: 'bg-white text-gray-800',
@@ -32,6 +40,7 @@ const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
       secondaryText: 'text-gray-600',
       input: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
       emptyState: 'text-gray-500',
+      select: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-400',
     },
   };
 
@@ -64,6 +73,38 @@ const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
     });
   };
 
+  // Handle status change
+  const handleStatusChange = async (orderId, newStatus) => {
+    if (!orderId) {
+      console.error('Order ID is undefined');
+      alert('Không thể cập nhật trạng thái: Order ID không hợp lệ.');
+      return;
+    }
+
+    // Lưu trạng thái hiện tại để rollback nếu cần
+    const previousOrders = [...localOrders];
+
+    // Optimistic update: Cập nhật giao diện ngay lập tức
+    setLocalOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.orderID === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+
+    if (updateOrderStatus) {
+      try {
+        // Gọi API để cập nhật
+        await updateOrderStatus(orderId, newStatus);
+        // Sau khi API thành công, không cần làm gì thêm vì useEffect sẽ đồng bộ với orders từ props
+      } catch (error) {
+        console.error(`Failed to update order ${orderId}:`, error);
+        alert('Cập nhật trạng thái thất bại. Vui lòng thử lại.');
+        // Rollback giao diện về trạng thái trước đó
+        setLocalOrders(previousOrders);
+      }
+    }
+  };
+
   return (
     <div className={`p-6 ${currentTheme.container}`}>
       <div className="flex justify-between items-center mb-6">
@@ -83,21 +124,21 @@ const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
         </div>
       </div>
 
-      {orders.length === 0 && (
+      {localOrders.length === 0 && (
         <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
           <ImageOff className="mr-2" size={24} />
           <span>Không tìm thấy đơn hàng nào.</span>
         </div>
       )}
 
-      {orders.length > 0 && filteredOrders.length === 0 && (
+      {localOrders.length > 0 && filteredOrders.length === 0 && (
         <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
           <ImageOff className="mr-2" size={24} />
           <span>Không tìm thấy đơn hàng phù hợp.</span>
         </div>
       )}
 
-      {orders.length > 0 && filteredOrders.length > 0 && (
+      {localOrders.length > 0 && filteredOrders.length > 0 && (
         <div className="overflow-x-auto rounded-lg shadow-lg">
           <table className={`min-w-full border ${currentTheme.table}`}>
             <thead className={currentTheme.tableHeader}>
@@ -118,13 +159,13 @@ const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
                   className={`transition-colors duration-150 ${currentTheme.tableRow}`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    #{order.orderID}
+                    #{order.orderID || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {order.customerID}
+                    {order.customerID || 'N/A'}
                   </td>
                   <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                    {order.employeeID}
+                    {order.employeeID || 'N/A'}
                   </td>
                   <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
                     {order.voucherID || 'No Use'}
@@ -141,13 +182,17 @@ const OrderTable = memo(({ orders = [], theme = 'dark' }) => {
                       : '0.00'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(
-                        order.status
-                      )} ${currentTheme.secondaryText}`}
+                    <select
+                      value={order.status || 'Pending'}
+                      onChange={(e) => handleStatusChange(order.orderID, e.target.value)}
+                      className={`px-2 py-1 text-xs rounded-full border focus:outline-none focus:ring-2 ${currentTheme.select} ${getStatusColor(order.status)}`}
                     >
-                      {order.status || 'Pending'}
-                    </span>
+                      {['Pending', 'Shipping', 'Completed', 'Canceled'].map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                 </tr>
               ))}
