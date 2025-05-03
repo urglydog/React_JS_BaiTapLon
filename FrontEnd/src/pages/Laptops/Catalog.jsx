@@ -15,7 +15,7 @@ import CompareProducts from "../../components/option/CompareProducts";
 import productImageQR from "../../assets/images/products/product_qr_1.png";
 import Pagination from "../../components/option/Pagination";
 import DescriptionSection from "../../components/option/DescriptionSection";
-import ProductListCatalog from "../../components/product/catalog/ProductListCatalog";
+
 import ProductCard from "../../components/product/catalog/ProductCardGroup";
 import ProductCardList from "../../components/product/catalog/ProductCardList";
 
@@ -30,31 +30,36 @@ export default function Catalog() {
     const fetchProducts = async () => {
       try {
         const response = await fetch(
-          // "http://localhost:4000/api/product/getAllProducts"
           "http://localhost:4000/api/product/getAllProductsWithDetails"
         );
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
+  
         const data = await response.json();
-        setProducts(
-          data.DT.map((item) => ({
-            ...item,
-            inStock: item.availability === "In Stock" ? true : false,
-          }))
-        );
-        setFilteredProducts(
-          data.DT.map((item) => ({
-            ...item,
-            inStock: item.availability === "In Stock" ? true : false,
-          }))
-        );
+  
+        // Đảm bảo luôn có mảng dù chỉ có 1 object
+        const rawProducts = Array.isArray(data.DT)
+          ? data.DT
+          : data.DT
+          ? [data.DT]
+          : [];
+  
+        const formattedProducts = rawProducts.map((item) => ({
+          ...item,
+          inStock: item.availability === "In Stock",
+        }));
+  
+        setProducts(formattedProducts);
+        setFilteredProducts(formattedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
+  
     fetchProducts();
   }, []);
+  
 
   // Trong function Catalog():
   const [filters, setFilters] = useState([
@@ -69,6 +74,9 @@ export default function Catalog() {
   const handleClearFilters = () => {
     setFilters([]);
   };
+console.log(handleClearFilters);
+console.log(handleRemoveFilter);
+
 
   const SupportCard = ({ icon, title, description }) => {
     return (

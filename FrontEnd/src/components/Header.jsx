@@ -97,10 +97,7 @@ const Header = () => {
   const handleClickCart = () => {
     navigate("/shopping_card_item");
   };
-
   const cartQuantity = useSelector((state) => state.cart.carts.length);
-  // console.log(cartQuantity);
-
   return (
     <header className="font-sans">
       {/* Top Black Bar */}
@@ -159,12 +156,12 @@ const Header = () => {
               <Link to={path.repair}> Repairs</Link>
             </li>
 
-            {/* <li className="hover:text-blue-600 cursor-pointer">
+            <li className="hover:text-blue-600 cursor-pointer">
               <Link to={path.productDetail}> ProductDetail</Link>
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
               <Link to={path.productSpeccs}> ProductSpeccs</Link>
-            </li> */}
+            </li>
           </ul>
         </nav>
 
@@ -226,7 +223,9 @@ const Header = () => {
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleMenuItemClick("account")}
                   >
-                    Tài khoản của tôi
+                    <Link to = "/profile">
+                      Tài khoản của tôi
+                    </Link>
                   </li>
                   <li
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"

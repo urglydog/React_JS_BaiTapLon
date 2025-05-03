@@ -27,7 +27,11 @@ import { addItem } from "../../utils/redux/cartSlice";
 import { toast } from "react-toastify";
 
 export default function Product() {
-  const [expanded, setExpanded] = useState(false);
+  console.log(a1);
+  console.log(zip);
+  
+  
+  // const [expanded, setExpanded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const location = useLocation();
   const { id } = useParams();

@@ -140,10 +140,11 @@ function Content() {
         <div className="w-full overflow-x-hidden">
           <div className="grid grid-cols-1">
             <ProductSlider
-              products={products.filter(
-                (item) =>
-                  new Date(item.createdAt).getMonth() === new Date().getMonth()
-              )}
+              // products={products.filter(
+              //   (item) =>
+              //     new Date(item.createdAt).getMonth() === new Date().getMonth()
+              // )}
+              products={products}
               autoPlay={true}
               interval={4000}
               visibleCount={5}

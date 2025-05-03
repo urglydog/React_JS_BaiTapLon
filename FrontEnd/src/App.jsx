@@ -5,12 +5,11 @@ import { UserProvider } from "./context/UserContext";
 import { Provider } from "react-redux";
 import store from "./utils/redux/store";
 import ToastNotification from "./components/option/ToastNotification";
-
 function App() {
   return (
     <div>
       <UserProvider>
-        <Provider store={store}>
+      <Provider store={store}>
           <ToastNotification />
           <AppRouter />
         </Provider>
