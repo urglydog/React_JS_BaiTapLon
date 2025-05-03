@@ -57,6 +57,7 @@ const OrderSummaryPlaceholder = () => {
 function ShoppingCard_CheckOut() {
   const location = useLocation();
   const navigate = useNavigate(); // chỉ dùng để kiếm tra logic trước khi chuyển trang, ví dụ kiểm tra login trước khi navigate đến trang chủ
+console.log(location);
 
   const handleNext = () => {
     navigate("/shopping_card_item");

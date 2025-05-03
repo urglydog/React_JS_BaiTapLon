@@ -1,49 +1,13 @@
-import mariadb from 'mariadb';
-import "dotenv/config";
+import mysql from "mysql2";
 
-// Tạo pool kết nối với MariaDB
-const pool = mariadb.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '22102004',
-  database: process.env.DB_NAME || 'reactproject',
-  port: 3309,
-  connectionLimit: 20,
-  acquireTimeout: 50000,
-  waitForConnections: true,
-});
+// Cấu hình kết nối MySQL và sử dụng promise
+const db = mysql.createPool({
+  host: "localhost",  // Máy chủ cơ sở dữ liệu
+  user: "root",       // Tên người dùng
+  port: 3309,         // Cổng kết nối
+  password: "22102004",   // Mật khẩu
+  database: "reactproject",  // Tên cơ sở dữ liệu
+}).promise();  // Sử dụng .promise() để truy vấn trả về Promise
 
-// Hàm kết nối và kiểm tra kết nối
-const testConnection = async () => {
-  try {
-    const conn = await pool.getConnection();
-    console.log('Đã kết nối thành công với cơ sở dữ liệu MariaDB');
-    conn.release(); // Giải phóng kết nối sau khi sử dụng
-  } catch (err) {
-    console.error('Lỗi kết nối MariaDB: ', err);
-    // Ghi log lỗi nhưng không dừng ứng dụng
-    console.error('Chi tiết lỗi:', err.message);
-  }
-};
-
-// Thực thi kiểm tra kết nối khi module được import
-testConnection();
-
-// Tạo đối tượng db với phương thức query wrapper
-const db = {
-  query: async (sql, params) => {
-    let conn;
-    try {
-      conn = await pool.getConnection();
-      const result = await conn.query(sql, params);
-      return result;
-    } catch (err) {
-      console.error('Lỗi truy vấn:', err);
-      throw err;
-    } finally {
-      if (conn) conn.release(); // Đảm bảo luôn giải phóng kết nối
-    }
-  }
-};
-
+// Export đối tượng db để có thể sử dụng ở các file khác
 export default db;

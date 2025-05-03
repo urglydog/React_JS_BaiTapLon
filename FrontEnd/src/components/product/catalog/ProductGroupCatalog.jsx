@@ -1,5 +1,4 @@
-import ProductCard from "./ProductCardGroup";
-
+import ProductCard from "./ProductCardList";
 import productImage1 from "../../../assets/images/products/product1.png";
 import productImage2 from "../../../assets/images/products/product2.png";
 import productImage3 from "../../../assets/images/products/product3.png";
@@ -7,59 +6,42 @@ import productImage3 from "../../../assets/images/products/product3.png";
 const sampleProducts = [
   {
     id: 1,
-    name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-On...",
-    image: productImage1, // Replace with real image
+    sku: "D5515AI",
+    name: "MSI CREATOR 17 A10SF-240AU i7 UHD 4K HDR Thin Bezel Intel 10th Gen i7 10875H - RTX 2070 SUPER MAX Q - 16GB RAM - 1TB SSD NVME - Windows 10 PRO Laptop",
+    image: productImage1,
     price: 499,
-    oldPrice: 499,
+    oldPrice: 549,
     rating: 4,
     reviews: 4,
     inStock: true,
   },
   {
     id: 2,
-    name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-On...",
+    sku: "A8933XU",
+    name: "HP Spectre x360 14T-EA000 - OLED Touch, Intel EVO i7, 16GB RAM, 1TB SSD, Windows 11 PRO",
     image: productImage2,
-    price: 499,
-    oldPrice: 499,
-    rating: 4,
-    reviews: 4,
+    price: 1199,
+    oldPrice: 1299,
+    rating: 5,
+    reviews: 8,
     inStock: true,
   },
   {
     id: 3,
-    name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-On...",
+    sku: "C2023OP",
+    name: "DELL Inspiron 16 Plus - 16GB RAM, 512GB SSD, RTX 3050, Intel i7-11800H, QHD+ Display",
     image: productImage3,
-    price: 499,
-    oldPrice: 499,
+    price: 899,
+    oldPrice: 999,
     rating: 4,
-    reviews: 4,
-    inStock: true,
-  },
-  {
-    id: 4,
-    name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-On...",
-    image: productImage1,
-    price: 499,
-    oldPrice: 499,
-    rating: 4,
-    reviews: 4,
-    inStock: true,
-  },
-  {
-    id: 5,
-    name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-On...",
-    image: productImage2,
-    price: 499,
-    oldPrice: 499,
-    rating: 4,
-    reviews: 4,
-    inStock: true,
+    reviews: 12,
+    inStock: false,
   },
 ];
 
-export default function ProductGroupCatalog() {
+export default function ProductListCatalog() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="space-y-4">
       {sampleProducts.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

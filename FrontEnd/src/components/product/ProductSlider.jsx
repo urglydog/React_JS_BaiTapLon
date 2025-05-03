@@ -99,7 +99,7 @@ const ProductSlider = ({
         >
           {products.map((product) => (
             <div
-              key={product.id}
+              key={product.productID}
               className={`px-2 ${
                 shouldSlide
                   ? "w-[calc(100%/_" + visibleCount + ")] flex-shrink-0"

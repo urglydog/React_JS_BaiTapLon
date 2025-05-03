@@ -1,16 +1,24 @@
-// src/components/Slideshow.jsx
-import React from "react";
+import React, { useState, useRef } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// Import banner image
-import banner1 from "../assets/images/banner.png"; // Import banner image
-import banner2 from "../assets/images/banner1.webp"; // Import banner image
-import banner3 from "../assets/images/banner2.jpg"; // Import banner image
-import banner4 from "../assets/images/banner3.avif"; // Import banner image
+import banner1 from "../assets/images/banner.png";
+import banner2 from "../assets/images/banner1.webp";
+import banner3 from "../assets/images/banner2.jpg";
+import banner4 from "../assets/images/banner3.avif";
 
 const Slideshow = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const sliderRef = useRef(null);
+
+  const slides = [
+    { id: 1, image: banner1, alt: "Banner 1" },
+    { id: 2, image: banner2, alt: "Banner 2" },
+    { id: 3, image: banner3, alt: "Banner 3" },
+    { id: 4, image: banner4, alt: "Banner 4" },
+  ];
+
   const settings = {
     dots: true,
     infinite: true,
@@ -19,35 +27,21 @@ const Slideshow = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 4000,
-    arrows: true,
+    arrows: false, // tắt mặc định, dùng custom arrow
+    beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex),
   };
 
-  const slides = [
-    {
-      id: 1,
-      image: banner1,
-      alt: "Banner 1",
-    },
-    {
-      id: 2,
-      image: banner2,
-      alt: "Banner 2",
-    },
-    {
-      id: 3,
-      image: banner3,
-      alt: "Banner 3",
-    },
-    {
-      id: 4,
-      image: banner4,
-      alt: "Banner 4",
-    },
-  ];
+  const goToPrev = () => {
+    sliderRef.current?.slickPrev();
+  };
+
+  const goToNext = () => {
+    sliderRef.current?.slickNext();
+  };
 
   return (
-    <div className="w-full max-w-screen-xl mx-auto mt-4 rounded-md overflow-hidden shadow-md">
-      <Slider {...settings}>
+    <div className="w-full max-w-screen-xl mx-auto mt-4 relative rounded-md overflow-hidden shadow-md">
+      <Slider ref={sliderRef} {...settings}>
         {slides.map((slide) => (
           <div key={slide.id}>
             <img
@@ -58,6 +52,50 @@ const Slideshow = () => {
           </div>
         ))}
       </Slider>
+
+      {/* Custom arrows */}
+      <button
+        onClick={goToPrev}
+        className="absolute top-1/2 left-2 z-10 -translate-y-1/2 bg-white p-2 rounded-full shadow hover:bg-gray-100"
+      >
+        <svg
+          className="w-6 h-6 text-gray-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+      <button
+        onClick={goToNext}
+        className="absolute top-1/2 right-2 z-10 -translate-y-1/2 bg-white p-2 rounded-full shadow hover:bg-gray-100"
+      >
+        <svg
+          className="w-6 h-6 text-gray-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+
+      {/* Slide indicator */}
+      <div className="absolute bottom-2 right-4 bg-white/80 text-gray-800 text-sm px-3 py-1 rounded-full shadow">
+        {currentSlide + 1} / {slides.length}
+      </div>
     </div>
   );
 };

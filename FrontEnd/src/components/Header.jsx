@@ -2,9 +2,10 @@ import React from "react";
 import logo from "../assets/images/logo1.svg";
 import { FaSearch, FaShoppingCart, FaFacebookF } from "react-icons/fa";
 import { IoPersonCircle } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import path from "../constant/path";
 import { useEffect, useState, useRef } from "react";
+import { useSelector } from "react-redux";
 const Header = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [showDropdown, setShowDropdown] = useState(false);
@@ -91,6 +92,12 @@ const Header = () => {
     hours = hours ? hours : 12;
     return `${hours}:${minutes}:${seconds} ${ampm}`;
   };
+
+  const navigate = useNavigate();
+  const handleClickCart = () => {
+    navigate("/shopping_card_item");
+  };
+  const cartQuantity = useSelector((state) => state.cart.carts.length);
   return (
     <header className="font-sans">
       {/* Top Black Bar */}
@@ -167,7 +174,18 @@ const Header = () => {
             Our Deals
           </Link>
           <FaSearch className="cursor-pointer text-gray-600 hover:text-black" />
-          <FaShoppingCart className="cursor-pointer text-gray-600 hover:text-black" />
+          <div className="relative">
+            <FaShoppingCart
+              className="cursor-pointer text-gray-600 hover:text-black"
+              onClick={handleClickCart}
+              size={20}
+            />
+            {cartQuantity > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-semibold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {cartQuantity}
+              </span>
+            )}
+          </div>
           <div
             className="relative"
             ref={dropdownRef}

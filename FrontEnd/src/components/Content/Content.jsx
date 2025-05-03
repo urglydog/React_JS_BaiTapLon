@@ -26,84 +26,9 @@ import product1 from "../../assets/images/banner.png";
 import product2 from "../../assets/images/banner.png";
 import TestimonialCard from "../info/TestimonialCard";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 function Content() {
   // const { user } = React.useContext(UserContext);
-
-  // const products = [
-  //   {
-  //     id: 1,
-  //     image: product1,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: true,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 2,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 3,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 4,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 5,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 6,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 7,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   {
-  //     id: 8,
-  //     image: product2,
-  //     name: "EX DISPLAY : MSI Pro 16 Flex-036AU 15.6 MULTITOUCH All-In-One",
-  //     inStock: false,
-  //     reviews: 4,
-  //     oldPrice: 499,
-  //     price: 499,
-  //   },
-  //   // Thêm sản phẩm khác tương tự
-  // ];
 
   const [products, setProducts] = useState([]);
   // Get products from API
@@ -118,7 +43,12 @@ function Content() {
           throw new Error("Failed to fetch products");
         }
         const data = await response.json();
-        setProducts(data.DT.map((item) => ({ ...item, inStock: true })));
+        setProducts(
+          data.DT.map((item) => ({
+            ...item,
+            inStock: item.availability === "In Stock" ? true : false,
+          }))
+        ); // Assuming availability is a string);
         console.log("Fetched products:", data.DT);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -199,6 +129,7 @@ function Content() {
         "Up to 70% off new Products, you can be sure of the best price.",
     },
   ];
+
   return (
     <>
       {/* Banner */}
@@ -209,6 +140,10 @@ function Content() {
         <div className="w-full overflow-x-hidden">
           <div className="grid grid-cols-1">
             <ProductSlider
+              // products={products.filter(
+              //   (item) =>
+              //     new Date(item.createdAt).getMonth() === new Date().getMonth()
+              // )}
               products={products}
               autoPlay={true}
               interval={4000}
@@ -217,9 +152,12 @@ function Content() {
           </div>
         </div>
         <div className="text-right mt-4">
-          <a href="#" className="text-sm text-blue-600 hover:underline">
+          <Link
+            to="/products"
+            className="text-sm text-blue-600 hover:underline"
+          >
             See All New Products
-          </a>
+          </Link>
         </div>
       </div>
       {/* slide */}
@@ -237,9 +175,7 @@ function Content() {
         <div className="w-full overflow-x-hidden">
           <div className="grid grid-cols-1">
             <ProductSlider
-              products={products.filter(
-                (item) => item.categoryName === "Smartphones"
-              )} // Test lấy categoryName là "Smartphones"
+              products={products.filter((item) => item.categoryName === "PC")} // Test lấy categoryName là "Smartphones"
               autoPlay={true}
               interval={4000}
               visibleCount={5}
@@ -249,7 +185,18 @@ function Content() {
       </div>
       {/* MSI Series */}
       <div className="w-full max-w-screen-xl mx-auto mt-4 rounded-md overflow-hidden">
-        <SeriesNav />
+        <SeriesNav
+          series={[
+            ...new Set(
+              products
+                .filter(
+                  (item) =>
+                    item.categoryName === "Laptop" && item.brandName === "MSI"
+                )
+                .map((item) => item.seriesName)
+            ),
+          ]}
+        />
         <div className="flex gap-4 max-w-screen-xl mx-auto py-6">
           {/* Left - CategoriesProduct chiếm 20% hoặc min-w */}
           <div className="w-[20%] min-w-[120px]">
@@ -261,8 +208,9 @@ function Content() {
             <div className="grid grid-cols-1">
               <ProductSlider
                 products={products.filter(
-                  (item) => item.categoryName === "Laptops"
-                )} // Test lấy categoryName là "Laptops"
+                  (item) =>
+                    item.categoryName === "Laptop" && item.brandName === "MSI"
+                )} // Test lấy categoryName là "Laptop"
                 autoPlay={true}
                 interval={4000}
                 visibleCount={5}
@@ -275,10 +223,11 @@ function Content() {
       <div className="w-full max-w-screen-xl mx-auto mt-4 rounded-md overflow-hidden">
         <SeriesNav
           series={[
-            "MSI Infinute Series",
-            "MSI Triden",
-            "MSI GL Series",
-            "MSI Nightblade",
+            ...new Set(
+              products
+                .filter((item) => item.categoryName === "Case")
+                .map((item) => item.seriesName)
+            ),
           ]}
         />
         <div className="flex gap-4 max-w-screen-xl mx-auto py-6">
@@ -291,7 +240,9 @@ function Content() {
           <div className="w-full overflow-x-hidden">
             <div className="grid grid-cols-1">
               <ProductSlider
-                products={products}
+                products={products.filter(
+                  (item) => item.categoryName === "Case"
+                )}
                 autoPlay={true}
                 interval={4000}
                 visibleCount={5}
@@ -312,7 +263,9 @@ function Content() {
           <div className="w-full overflow-x-hidden">
             <div className="grid grid-cols-1">
               <ProductSlider
-                products={products}
+                products={products.filter(
+                  (item) => item.categoryName === "screen"
+                )}
                 autoPlay={true}
                 interval={4000}
                 visibleCount={5}

@@ -5,10 +5,9 @@ import DropdownControls from "../../components/option/DropdownControls";
 import group from "../../assets/svg/group.svg";
 import list from "../../assets/svg/list.svg";
 import SidebarFilters from "../../components/option/SidebarFilters";
-import ProductGroupCatalog from "../../components/product/catalog/ProductGroupCatalog";
 
 import FilterTagsBar from "../../components/product/catalog/FilterTagsBar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BrandFilter from "../../components/option/BrandFilter";
 import WishList from "../../components/option/WishList";
 import CompareProducts from "../../components/option/CompareProducts";
@@ -16,9 +15,52 @@ import CompareProducts from "../../components/option/CompareProducts";
 import productImageQR from "../../assets/images/products/product_qr_1.png";
 import Pagination from "../../components/option/Pagination";
 import DescriptionSection from "../../components/option/DescriptionSection";
-import ProductListCatalog from "../../components/product/catalog/ProductListCatalog";
+
+import ProductCard from "../../components/product/catalog/ProductCardGroup";
+import ProductCardList from "../../components/product/catalog/ProductCardList";
 
 export default function Catalog() {
+  const [products, setProducts] = useState([]);
+
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [viewMode, setViewMode] = useState("grid"); // "grid" hoặc "list"
+
+  // Get products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/product/getAllProductsWithDetails"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+  
+        const data = await response.json();
+  
+        // Đảm bảo luôn có mảng dù chỉ có 1 object
+        const rawProducts = Array.isArray(data.DT)
+          ? data.DT
+          : data.DT
+          ? [data.DT]
+          : [];
+  
+        const formattedProducts = rawProducts.map((item) => ({
+          ...item,
+          inStock: item.availability === "In Stock",
+        }));
+  
+        setProducts(formattedProducts);
+        setFilteredProducts(formattedProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+  
+    fetchProducts();
+  }, []);
+  
+
   // Trong function Catalog():
   const [filters, setFilters] = useState([
     { label: "CUSTOM PCS (24)" },
@@ -32,6 +74,9 @@ export default function Catalog() {
   const handleClearFilters = () => {
     setFilters([]);
   };
+console.log(handleClearFilters);
+console.log(handleRemoveFilter);
+
 
   const SupportCard = ({ icon, title, description }) => {
     return (
@@ -105,10 +150,9 @@ export default function Catalog() {
         "Up to 70% off new Products, you can be sure of the best price.",
     },
   ];
-
   // Pagination
-  const [currentPage, setCurrentPage] = useState(2);
-  const totalPages = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+  // const totalPages = 15;
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -116,6 +160,65 @@ export default function Catalog() {
       // Load dữ liệu tương ứng tại đây
     }
   };
+
+  const [productsPerPage, setProductsPerPage] = useState(10); // Số sản phẩm trên mỗi trang
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  // Xử lý đổi số lượng sản phẩm trên một trang
+  const handleProductsPerPageChange = (event) => {
+    setProductsPerPage(Number(event.target.value));
+    setCurrentPage(1); // Reset về trang đầu tiên khi thay đổi số lượng sản phẩm trên trang
+  };
+
+  const [sortOption, setSortOption] = useState("name-asc");
+  const handleSortOptionChange = (event) => {
+    setSortOption(event.target.value);
+    setCurrentPage(1); // Optional: Reset về page 1 khi đổi sort
+  };
+
+  const getSortedProducts = (filteredProducts, sortOption) => {
+    const sorted = [...filteredProducts]; // Clone mảng gốc để không mutate
+
+    switch (sortOption) {
+      case "name-asc":
+        sorted.sort((a, b) => a.productName.localeCompare(b.productName));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => b.productName.localeCompare(a.productName));
+        break;
+      case "price-asc":
+        sorted.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        break;
+      case "price-desc":
+        sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        break;
+      case "date-desc":
+        sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case "date-asc":
+        sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        break;
+      case "brand-asc":
+        sorted.sort((a, b) => a.brandName.localeCompare(b.brandName));
+        break;
+      case "stock-desc":
+        sorted.sort((a, b) => b.stockQuantity - a.stockQuantity);
+        break;
+      default:
+        break;
+    }
+
+    return sorted;
+  };
+
+  const sortedProducts = getSortedProducts(currentProducts, sortOption);
 
   return (
     <>
@@ -145,14 +248,34 @@ export default function Catalog() {
         </div>
 
         <div className="px-2 py-1 flex justify-items-start text-[#A2A6B0]">
-          Items 1-35 of 61
+          Items {indexOfFirstProduct + 1}-{indexOfLastProduct} of{" "}
+          {filteredProducts.length}
         </div>
 
         <div className="col-span-2 flex justify-end">
-          <DropdownControls />
+          <DropdownControls
+            handleChangePerPage={handleProductsPerPageChange}
+            productsPerPage={productsPerPage}
+            sortOption={sortOption}
+            handleChangeSortOption={handleSortOptionChange}
+          />
           <div className="flex">
-            <img src={group} alt="" />
-            <img src={list} alt="" />
+            <img
+              src={group}
+              alt="Grid view"
+              className={`w-8 h-8 cursor-pointer ${
+                viewMode === "grid" ? "opacity-100" : "opacity-50"
+              }`}
+              onClick={() => setViewMode("grid")}
+            />
+            <img
+              src={list}
+              alt="List view"
+              className={`w-8 h-8 cursor-pointer ${
+                viewMode === "list" ? "opacity-100" : "opacity-50"
+              }`}
+              onClick={() => setViewMode("list")}
+            />
           </div>
         </div>
       </div>
@@ -160,9 +283,21 @@ export default function Catalog() {
       <div className="max-w-screen-xl mx-auto grid grid-cols-4 gap-4">
         {/* Phần filter */}
         <div className="">
-          <SidebarFilters />
+          <SidebarFilters
+            products={filteredProducts}
+            allProducts={products}
+            onApplyFilters={(filteredProducts) => {
+              setFilteredProducts(filteredProducts);
+            }}
+          />
+
           <div className="h-2"></div>
-          <BrandFilter />
+          <BrandFilter
+            allProducts={products}
+            onSelectBrand={(filteredProducts) =>
+              setFilteredProducts(filteredProducts)
+            }
+          />
           <div className="h-2"></div>
           <WishList />
           <div className="h-2"></div>
@@ -172,15 +307,56 @@ export default function Catalog() {
         {/* Phần hiển thị danh sách */}
         <div className="col-span-3 flex flex-col min-h-[80vh]">
           {/* Thanh filter tag */}
-          <FilterTagsBar
+          {/* <FilterTagsBar
             filters={filters}
             onRemove={handleRemoveFilter}
             onClear={handleClearFilters}
-          />
+          /> */}
 
           {/* Danh sách sản phẩm, chiếm chiều cao còn lại */}
           <div className="flex-grow">
-            <ProductGroupCatalog />
+            {/* Dạng Grid */}
+            {viewMode === "grid" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {sortedProducts.length > 0 ? (
+                  sortedProducts.map((product) => (
+                    <ProductCard key={product.productID} product={product} />
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
+                    {/* Icon */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 mb-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9.75 9.75L14.25 14.25M14.25 9.75L9.75 14.25M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"
+                      />
+                    </svg>
+
+                    {/* Thông báo */}
+                    <p className="text-lg font-semibold">
+                      Không tìm thấy sản phẩm nào
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Dạng List */}
+            {viewMode === "list" && (
+              <div className="space-y-4">
+                {sortedProducts.map((product) => (
+                  <ProductCardList key={product.productID} product={product} />
+                ))}
+              </div>
+            )}
             {/* <ProductListCatalog /> */}
           </div>
 
