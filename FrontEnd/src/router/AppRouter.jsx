@@ -234,9 +234,9 @@ const AppRouter = () => {
           <Route
             path="shopping_card_item"
             element={
-              <ProtectedRoute requiredRoles={["customer"]}>
+              // <ProtectedRoute requiredRoles={["customer"]}>
                 <ShoppingCartItem />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />
           {/* Product routes */}
