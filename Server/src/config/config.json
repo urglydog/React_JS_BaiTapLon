@@ -1,10 +1,17 @@
 {
   "development": {
     "username": "root",
+<<<<<<< Updated upstream
     "password": "tung",
     "database": "phattriengiaodien",
     "host": "127.0.0.1",
     "port": 3388,
+=======
+    "password": "root",
+    "database": "phattriengiaodien",
+    "host": "127.0.0.1",
+    "port": 3306,
+>>>>>>> Stashed changes
     "dialect": "mariadb",
     "logging": false,
     "define":{

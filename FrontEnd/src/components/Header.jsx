@@ -156,8 +156,14 @@ const Header = () => {
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleMenuItemClick('account')}
                   >
+<<<<<<< Updated upstream
                     <Link to={path.profile}>Tài khoản của tôi</Link>
 
+=======
+                    <Link to="/profile">
+                      Tài khoản của tôi
+                    </Link>
+>>>>>>> Stashed changes
                   </li>
                   <li
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
