@@ -534,6 +534,7 @@ console.log(deleteProduct);
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredKeyboards.map((keyboard, index) => {
                   const matchingImage = findMatchingImage(keyboard.image);
+console.log(matchingImage);
 
                   return (
                     <tr
@@ -542,7 +543,7 @@ console.log(deleteProduct);
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {matchingImage ? (
+                          {/* {matchingImage ? (
                             <img
                               src={matchingImage.url}
                               alt={keyboard.productName || 'Keyboard'}
@@ -553,7 +554,7 @@ console.log(deleteProduct);
                               className={currentTheme.secondaryText}
                               size={24}
                             />
-                          )}
+                          )} */}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

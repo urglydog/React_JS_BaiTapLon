@@ -537,6 +537,7 @@ const ProcessorsTable = memo(
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredProcessors.map((processor, index) => {
                   const matchingImage = findMatchingImage(processor.image);
+console.log(matchingImage);
 
                   return (
                     <tr
@@ -545,7 +546,7 @@ const ProcessorsTable = memo(
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {matchingImage ? (
+                          {/* {matchingImage ? (
                             <img
                               src={matchingImage.url}
                               alt={processor.productName || 'Processor'}
@@ -556,7 +557,7 @@ const ProcessorsTable = memo(
                               className={currentTheme.secondaryText}
                               size={24}
                             />
-                          )}
+                          )} */}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
