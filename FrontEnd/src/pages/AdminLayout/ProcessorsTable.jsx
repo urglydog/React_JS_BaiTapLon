@@ -15,7 +15,7 @@ const ProcessorForm = ({
   formTitle,
   theme,
   validCategoryIds = [18, 19],
-  images = [], // Add images prop
+  images = [], // Add images prop (array of { url: string })
 }) => {
   const [formData, setFormData] = useState({
     productName: processor?.productName || '',
@@ -23,7 +23,7 @@ const ProcessorForm = ({
     price: processor?.price || '',
     stockQuantity: processor?.stockQuantity || '',
     categoryID: processor?.categoryID || '',
-    image: processor?.image || '', // Store image filename
+    image: processor?.image || '',
     isLoading: false,
     error: null,
   });
@@ -56,7 +56,7 @@ const ProcessorForm = ({
   const handleImageSelect = (image) => {
     setFormData((prev) => ({
       ...prev,
-      image: image.filename, // Store the selected image's filename
+      image: image.url,
     }));
     setShowImagePicker(false);
     setImageSearchTerm('');
@@ -84,7 +84,7 @@ const ProcessorForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
-        image: formData.image || null, // Include image filename (or null if not selected)
+        image: formData.image || null,
       };
 
       await onSave(productData);
@@ -102,7 +102,7 @@ const ProcessorForm = ({
   const filteredImages = imageSearchTerm.trim() === ''
     ? images
     : images.filter((image) =>
-        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+        (image.url || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
       );
 
   const currentTheme = {
@@ -213,17 +213,20 @@ const ProcessorForm = ({
               <div className="relative">
                 <input
                   type="text"
-                  value={formData.image || 'Chọn hình ảnh'}
+                  value={formData.image || 'Chọn hoặc nhập URL hình ảnh'}
                   onClick={() => setShowImagePicker(true)}
-                  readOnly
-                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                  onChange={handleChange}
+                  name="image"
+                  placeholder="Nhập URL hình ảnh"
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
                 />
                 {formData.image && (
                   <div className="mt-2">
                     <img
-                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      src={formData.image}
                       alt="Selected"
                       className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                      onError={(e) => (e.target.src = '')}
                     />
                   </div>
                 )}
@@ -260,16 +263,16 @@ const ProcessorForm = ({
                 {filteredImages.length > 0 ? (
                   filteredImages.map((image) => (
                     <div
-                      key={image.filename}
+                      key={image.url}
                       onClick={() => handleImageSelect(image)}
-                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.url ? 'border-2 border-blue-500' : ''}`}
                     >
                       <img
                         src={image.url}
-                        alt={image.filename}
+                        alt={image.url}
                         className="h-20 w-full object-cover rounded-lg"
                       />
-                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                      <p className="text-xs truncate mt-1">{image.url.split('/').pop()}</p>
                     </div>
                   ))
                 ) : (
@@ -321,7 +324,7 @@ const ProcessorsTable = memo(
     const [error, setError] = useState(null);
     const [formState, setFormState] = useState({
       isOpen: false,
-      formType: null, // 'add' or 'edit'
+      formType: null,
       currentProcessor: null,
     });
     const [localProcessors, setLocalProcessors] = useState(processors);
@@ -350,19 +353,6 @@ const ProcessorsTable = memo(
         style: 'currency',
         currency: 'VND',
       }).format(price);
-    };
-
-    // Hàm tìm ảnh từ danh sách images dựa trên processor.image
-    const findMatchingImage = (imageFilename) => {
-      if (!imageFilename || !images || images.length === 0) {
-        console.log('No image found: invalid filename or empty images', { imageFilename, images });
-        return null;
-      }
-      const foundImage = images.find((img) => img.filename === imageFilename);
-      if (!foundImage) {
-        console.log('No matching image found for filename:', imageFilename);
-      }
-      return foundImage;
     };
 
     const filteredProcessors = searchTerm.trim() === ''
@@ -408,7 +398,6 @@ const ProcessorsTable = memo(
     };
 
     const handleEdit = (processor) => {
-      console.log('Editing processor:', processor);
       setFormState({
         isOpen: true,
         formType: 'edit',
@@ -422,12 +411,11 @@ const ProcessorsTable = memo(
         setIsSynced(false);
         if (formState.formType === 'add') {
           const newProduct = await createProduct(productData);
-          console.log('New product from API:', newProduct);
           setLocalProcessors((prev) => [
             ...prev,
             {
               ...productData,
-              id: newProduct.id || newProduct.productID || productData.productName,
+              id: newProduct.id || newProduct.productocytosisID || productData.productName,
             },
           ]);
         } else {
@@ -435,7 +423,6 @@ const ProcessorsTable = memo(
           if (!productId) {
             throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
           }
-          console.log('Updating product ID:', productId, 'with data:', productData);
           await updateProduct(productId, productData);
           setLocalProcessors((prev) =>
             prev.map((processor) =>
@@ -535,60 +522,56 @@ const ProcessorsTable = memo(
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredProcessors.map((processor, index) => {
-                  const matchingImage = findMatchingImage(processor.image);
-console.log(matchingImage);
-
-                  return (
-                    <tr
-                      key={processor.id || processor.productID || processor.productName || `processor-${index}`}
-                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {/* {matchingImage ? (
-                            <img
-                              src={matchingImage.url}
-                              alt={processor.productName || 'Processor'}
-                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                            />
-                          ) : (
-                            <ImageOff
-                              className={currentTheme.secondaryText}
-                              size={24}
-                            />
-                          )} */}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {processor.productName || 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                        <div className="max-w-xs truncate">{processor.description || 'Không có mô tả'}</div>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {formatPrice(processor.price)}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {processor.stockQuantity !== undefined ? processor.stockQuantity : 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {CATEGORY_BRAND_MAPPING[processor.categoryID] || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEdit(processor)}
-                            className={`transition-colors ${currentTheme.buttonIcon}`}
-                            title="Chỉnh sửa"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredProcessors.map((processor, index) => (
+                  <tr
+                    key={processor.id || processor.productID || processor.productName || `processor-${index}`}
+                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                        {processor.image ? (
+                          <img
+                            src={processor.image}
+                            alt={processor.productName || 'Processor'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            onError={(e) => (e.target.src = '')}
+                          />
+                        ) : (
+                          <ImageOff
+                            className={currentTheme.secondaryText}
+                            size={24}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {processor.productName || 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                      <div className="max-w-xs truncate">{processor.description || 'Không có mô tả'}</div>
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {formatPrice(processor.price)}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {processor.stockQuantity !== undefined ? processor.stockQuantity : 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[processor.categoryID] || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(processor)}
+                          className={`transition-colors ${currentTheme.buttonIcon}`}
+                          title="Chỉnh sửa"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

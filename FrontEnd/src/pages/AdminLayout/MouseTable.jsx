@@ -26,7 +26,7 @@ const MouseForm = ({
     price: mouse?.price || '',
     stockQuantity: mouse?.stockQuantity || '',
     categoryID: mouse?.categoryID || '',
-    image: mouse?.image || '',
+    image: mouse?.image || '', // Store image URL
     isLoading: false,
     error: null,
   });
@@ -59,7 +59,7 @@ const MouseForm = ({
   const handleImageSelect = (image) => {
     setFormData((prev) => ({
       ...prev,
-      image: image.filename,
+      image: image.url, // Store the selected image's URL
     }));
     setShowImagePicker(false);
     setImageSearchTerm('');
@@ -86,7 +86,7 @@ const MouseForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
-        image: formData.image || null,
+        image: formData.image || null, // Include image URL (or null if not selected)
       };
 
       await onSave(productData);
@@ -104,7 +104,7 @@ const MouseForm = ({
   const filteredImages = imageSearchTerm.trim() === ''
     ? images
     : images.filter((image) =>
-        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+        (image.url || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
       );
 
   const currentTheme = {
@@ -217,15 +217,17 @@ const MouseForm = ({
                   type="text"
                   value={formData.image || 'Chọn hình ảnh'}
                   onClick={() => setShowImagePicker(true)}
-                  readOnly
+                  onChange={handleChange}
+                  name="image"
                   className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
                 />
                 {formData.image && (
                   <div className="mt-2">
                     <img
-                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      src={formData.image}
                       alt="Selected"
                       className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                      onError={(e) => (e.target.src = '')}
                     />
                   </div>
                 )}
@@ -262,16 +264,16 @@ const MouseForm = ({
                 {filteredImages.length > 0 ? (
                   filteredImages.map((image) => (
                     <div
-                      key={image.filename}
+                      key={image.url}
                       onClick={() => handleImageSelect(image)}
-                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.url ? 'border-2 border-blue-500' : ''}`}
                     >
                       <img
                         src={image.url}
-                        alt={image.filename}
+                        alt={image.url}
                         className="h-20 w-full object-cover rounded-lg"
                       />
-                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                      <p className="text-xs truncate mt-1">{image.url.split('/').pop()}</p>
                     </div>
                   ))
                 ) : (
@@ -355,14 +357,6 @@ console.log(deleteProduct);
         style: 'currency',
         currency: 'VND',
       }).format(price);
-    };
-
-    const findMatchingImage = (imageFilename) => {
-      if (!imageFilename || !images || images.length === 0) {
-        return null;
-      }
-      const foundImage = images.find((img) => img.filename === imageFilename);
-      return foundImage;
     };
 
     const filteredMouses = searchTerm.trim() === ''
@@ -532,58 +526,54 @@ console.log(deleteProduct);
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredMouses.map((mouse, index) => {
-                  const matchingImage = findMatchingImage(mouse.image);
-console.log(matchingImage);
-
-                  return (
-                    <tr
-                      key={mouse.id || mouse.productID || `mouse-${index}`}
-                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {/* {matchingImage ? (
-                            <img
-                              src={matchingImage.url}
-                              alt={mouse.productName || 'Mouse'}
-                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                            />
-                          ) : (
-                            <ImageOff
-                              className={currentTheme.secondaryText}
-                              size={24}
-                            />
-                          )} */}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {mouse.productName || 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                        <div className="max-w-xs truncate">{mouse.description || 'Không có mô tả'}</div>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {formatPrice(mouse.price)}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {mouse.stockQuantity !== undefined ? mouse.stockQuantity : 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {CATEGORY_BRAND_MAPPING[mouse.categoryID] || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleEdit(mouse)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredMouses.map((mouse, index) => (
+                  <tr
+                    key={mouse.id || mouse.productID || `mouse-${index}`}
+                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                        {mouse.image ? (
+                          <img
+                            src={mouse.image}
+                            alt={mouse.productName || 'Mouse'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            onError={(e) => (e.target.src = '')}
+                          />
+                        ) : (
+                          <ImageOff
+                            className={currentTheme.secondaryText}
+                            size={24}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {mouse.productName || 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                      <div className="max-w-xs truncate">{mouse.description || 'Không có mô tả'}</div>
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {formatPrice(mouse.price)}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {mouse.stockQuantity !== undefined ? mouse.stockQuantity : 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[mouse.categoryID] || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => handleEdit(mouse)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
