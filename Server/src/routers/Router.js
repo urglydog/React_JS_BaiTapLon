@@ -7,6 +7,7 @@ import {
 } from "../controller/ProductController.js";
 import { handleGetOrdersWithDetails } from "../controller/orderController.js";
 import { handleUpdateCustomerInfo, handleGetCustomerById, handleLoginCustomer, getUserByIDAndPassword, handleChangePassword } from '../controller/CustomerController.js' // Import các hàm controller của customer
+import { handleGetAllVouchers, handleCheckVoucher } from "../controller/VoucherController.js";
 
 const router = express.Router();
 
@@ -39,6 +40,10 @@ const initApiRoutes = (app) => {
   router.post("/customer/login", handleLoginCustomer);
   router.get("/customer/loginWithId/:customerID/:password", getUserByIDAndPassword);
   router.post("/customer/change-password", handleChangePassword);
+
+  //voucherController
+  router.get("/voucher/getAllVouchers",handleGetAllVouchers);
+  router.post("/voucher/check", handleCheckVoucher); // Route để kiểm tra mã voucher
   return app.use("/api/", router);
 };
 
