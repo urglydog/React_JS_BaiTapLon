@@ -26,6 +26,7 @@ import {
   FaPlug,
   FaTabletAlt,
   FaGamepad,
+  FaCalendar,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -60,7 +61,7 @@ import Storage from "./Storage";
 import Cases from "./Cases";
 import TabletTable from "./TabletTable";
 import GamingGearTable from "./GamingGearTable";
-
+import { useNavigate } from "react-router-dom"; // Add this
 const API_URL = "http://localhost:4000/api/admin";
 
 // Định nghĩa danh sách categoryID cho từng danh mục
@@ -141,6 +142,7 @@ export default function ComputerStoreAdminLayout() {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
+  const navigate = useNavigate(); // Add this
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
@@ -548,6 +550,13 @@ export default function ComputerStoreAdminLayout() {
         <header className={`flex items-center justify-between p-4 border-b ${borderColor}`}>
           <div className="flex items-center">
             <div className="flex items-center px-2">
+            <button 
+                onClick={() => navigate("/calendar")}
+                className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20"
+                title="View Calendar"
+              >
+                <FaCalendar size={18} />
+              </button>
               <button className="mr-2">
                 <FaEllipsisH size={16} />
               </button>

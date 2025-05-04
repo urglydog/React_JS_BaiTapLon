@@ -158,7 +158,7 @@ import Admin from "../pages/AdminLayout/AdminLayout";
 import ProductAbout from "../components/product/ProductAbout";
 import Product from "../components/product/Product";
 import ScrollToTop from "../components/option/ScrollToTop";
-
+import VIPCalendar from "../pages/Calendar/VIPCalendar";
 const AppRouter = () => {
   const { getUserRole, loading } = useContext(UserContext);
 
@@ -186,6 +186,15 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requiredRoles={["manager"]}>
               <Admin />
+            </ProtectedRoute>
+          }
+          
+        />
+      <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute requiredRoles={["manager"]}>
+              <VIPCalendar />
             </ProtectedRoute>
           }
         />
