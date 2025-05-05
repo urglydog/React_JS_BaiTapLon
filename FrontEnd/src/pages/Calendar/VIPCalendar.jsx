@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Plus,
   Search,
-  Settings,
   Menu,
   Clock,
   MapPin,
@@ -48,14 +47,16 @@ function VIPCalendar() {
           const startTime = startDateTime.toTimeString().slice(0, 5);
           const endTime = endDateTime.toTimeString().slice(0, 5);
           console.log(index);
-          
+
           return {
             id: appointment.appointmentID,
             title: `${appointment.serviceType} - ${appointment.deviceCategory}`,
             startTime,
             endTime,
             color: `bg-${getColorForServiceType(appointment.serviceType)}-500`,
+            statusColor: getColorForStatus(appointment.status), // Thêm màu cho status
             day: dayOfWeek,
+            status: appointment.status, // Thêm status vào event
             description: appointment.notes || "No notes provided",
             location: appointment.serviceLocation,
             attendees: [appointment.customerName, appointment.employeeName].filter(Boolean),
@@ -99,13 +100,23 @@ function VIPCalendar() {
     return colorMap[serviceType] || 'gray';
   };
 
+  // Helper function to assign colors based on status
+  const getColorForStatus = (status) => {
+    const statusColorMap = {
+      pending: 'bg-yellow-500',
+      confirmed: 'bg-green-500',
+      in_progress: 'bg-blue-500',
+      completed: 'bg-gray-500',
+      cancelled: 'bg-red-500',
+    };
+    return statusColorMap[status] || 'bg-gray-500';
+  };
+
   // Update week dates and current month/date when currentWeekStart changes
   useEffect(() => {
-    // Calculate the start of the week (Sunday)
     const startOfWeek = new Date(currentWeekStart);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
-    // Generate the dates for the week
     const newWeekDates = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
@@ -114,7 +125,6 @@ function VIPCalendar() {
 
     setWeekDates(newWeekDates);
 
-    // Update current month and date
     const monthNames = [
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
@@ -174,7 +184,6 @@ function VIPCalendar() {
     setSelectedEvent(event);
   };
 
-  // Navigation for previous/next week
   const handlePreviousWeek = () => {
     const newWeekStart = new Date(currentWeekStart);
     newWeekStart.setDate(newWeekStart.getDate() - 7);
@@ -191,7 +200,6 @@ function VIPCalendar() {
     setCurrentWeekStart(new Date());
   };
 
-  // Filter events for the current week
   const getEventsForCurrentWeek = () => {
     const startOfWeek = new Date(currentWeekStart);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
@@ -204,7 +212,6 @@ function VIPCalendar() {
     });
   };
 
-  // Calculate mini calendar days and highlight days with appointments
   const daysInMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), 1).getDay();
   const miniCalendarDays = Array.from(
@@ -212,7 +219,6 @@ function VIPCalendar() {
     (_, i) => (i < firstDayOfMonth ? null : i - firstDayOfMonth + 1)
   );
 
-  // Find days with appointments
   const daysWithAppointments = events.reduce((acc, event) => {
     const eventDate = new Date(event.date);
     if (eventDate.getMonth() === currentWeekStart.getMonth() && eventDate.getFullYear() === currentWeekStart.getFullYear()) {
@@ -225,11 +231,8 @@ function VIPCalendar() {
   const timeSlots = Array.from({ length: 9 }, (_, i) => i + 8); // 8 AM to 4 PM
 
   const calculateEventStyle = (startTime, endTime) => {
-    const start =
-      parseInt(startTime.split(":")[0]) +
-      parseInt(startTime.split(":")[1]) / 60;
-    const end =
-      parseInt(endTime.split(":")[0]) + parseInt(endTime.split(":")[1]) / 60;
+    const start = parseInt(startTime.split(":")[0]) + parseInt(startTime.split(":")[1]) / 60;
+    const end = parseInt(endTime.split(":")[0]) + parseInt(endTime.split(":")[1]) / 60;
     const top = (start - 8) * 80; // 80px per hour
     const height = (end - start) * 80;
     return { top: `${top}px`, height: `${height}px` };
@@ -297,8 +300,6 @@ function VIPCalendar() {
           style={{ transitionDelay: "0.4s" }}
         >
           <div>
-            
-
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-medium">{currentMonth}</h3>
@@ -367,8 +368,6 @@ function VIPCalendar() {
               </div>
             </div>
           </div>
-
-        
         </div>
 
         <div
@@ -491,7 +490,7 @@ function VIPCalendar() {
                         return (
                           <div
                             key={i}
-                            className={`absolute ${event.color} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg`}
+                            className={`absolute ${event.statusColor} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg`}
                             style={{
                               ...eventStyle,
                               left: "4px",
@@ -501,6 +500,7 @@ function VIPCalendar() {
                           >
                             <div className="font-medium">{event.title}</div>
                             <div className="opacity-80 text-[10px] mt-1">{`${event.startTime} - ${event.endTime}`}</div>
+                            <div className="text-[10px] opacity-70">{`Status: ${event.status}`}</div> {/* Hiển thị status */}
                           </div>
                         );
                       })}
@@ -560,7 +560,7 @@ function VIPCalendar() {
         {selectedEvent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div
-              className={`${selectedEvent.color} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}
+              className={`${selectedEvent.statusColor} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}
             >
               <h3 className="text-2xl font-bold mb-4 text-white">
                 {selectedEvent.title}
@@ -593,6 +593,9 @@ function VIPCalendar() {
                 </p>
                 <p>
                   <strong>Description:</strong> {selectedEvent.description}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedEvent.status} {/* Hiển thị status trong popup */}
                 </p>
               </div>
               <div className="mt-6 flex justify-end">
