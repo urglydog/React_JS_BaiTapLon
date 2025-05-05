@@ -13,9 +13,9 @@ const getAllAppointments = async () => {
         a.deviceCategory,
         a.notes,
         a.estimatedCost,
-        COALESCE(a.guestName, c.name) AS customerName,
-        COALESCE(a.guestPhone, c.phone) AS customerPhone,
-        e.name AS employeeName
+        COALESCE(a.guestName, c.fullName) AS customerName,
+        COALESCE(a.guestPhone, c.phoneNumber) AS customerPhone,
+        e.fullName AS employeeName
       FROM appointments a
       LEFT JOIN customers c ON a.customerID = c.customerID
       LEFT JOIN employees e ON a.employeeID = e.employeeID

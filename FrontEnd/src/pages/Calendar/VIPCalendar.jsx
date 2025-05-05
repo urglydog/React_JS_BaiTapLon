@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useState, useEffect } from "react";
 import {
   ChevronLeft,
@@ -16,40 +15,130 @@ import {
   X,
 } from "lucide-react";
 import "./taro.css";
-import { useNavigate } from "react-router-dom"; // Add this
+import { useNavigate } from "react-router-dom";
+
 function VIPCalendar() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showAIPopup, setShowAIPopup] = useState(false);
   const [typedText, setTypedText] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentView, setCurrentView] = useState("week");
-  const [currentMonth, setCurrentMonth] = useState("March 2025");
-  const [currentDate, setCurrentDate] = useState("March 5");
+  const [currentMonth, setCurrentMonth] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
-  console.log(setCurrentDate);
-  console.log(setCurrentMonth);
-  const navigate = useNavigate(); // Add this
+  const [events, setEvents] = useState([]);
+  const [weekDates, setWeekDates] = useState([]);
+  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+  const navigate = useNavigate();
+
+  // Fetch appointments and set up the calendar
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/order/getAllAppointments');
+        const data = await response.json();
+        const appointments = data.DT; // Extract the DT array
+
+        // Map appointments to events
+        const mappedEvents = appointments.map((appointment, index) => {
+          const startDateTime = new Date(appointment.appointmentDateTime);
+          const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000);
+
+          const dayOfWeek = startDateTime.getDay() + 1; // getDay() returns 0-6 (Sun-Sat), adjust to 1-7
+          const startTime = startDateTime.toTimeString().slice(0, 5);
+          const endTime = endDateTime.toTimeString().slice(0, 5);
+          console.log(index);
+          
+          return {
+            id: appointment.appointmentID,
+            title: `${appointment.serviceType} - ${appointment.deviceCategory}`,
+            startTime,
+            endTime,
+            color: `bg-${getColorForServiceType(appointment.serviceType)}-500`,
+            day: dayOfWeek,
+            description: appointment.notes || "No notes provided",
+            location: appointment.serviceLocation,
+            attendees: [appointment.customerName, appointment.employeeName].filter(Boolean),
+            organizer: appointment.employeeName || "Unassigned",
+            date: startDateTime, // Store the full date for filtering
+          };
+        });
+
+        setEvents(mappedEvents);
+
+        // Set the current week to the week of the first appointment, or current week if none
+        if (mappedEvents.length > 0) {
+          const firstAppointmentDate = new Date(mappedEvents[0].date);
+          setCurrentWeekStart(firstAppointmentDate);
+        } else {
+          setCurrentWeekStart(new Date());
+        }
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  // Helper function to assign colors based on service type
+  const getColorForServiceType = (serviceType) => {
+    const colorMap = {
+      repair: 'blue',
+      assembly: 'green',
+      installation: 'purple',
+      purchase: 'yellow',
+      consultation: 'indigo',
+      maintenance: 'pink',
+      upgrade: 'teal',
+      data_recovery: 'cyan',
+      warranty_service: 'orange',
+      software_installation: 'red',
+      other: 'gray',
+    };
+    return colorMap[serviceType] || 'gray';
+  };
+
+  // Update week dates and current month/date when currentWeekStart changes
+  useEffect(() => {
+    // Calculate the start of the week (Sunday)
+    const startOfWeek = new Date(currentWeekStart);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    // Generate the dates for the week
+    const newWeekDates = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      return date.getDate();
+    });
+
+    setWeekDates(newWeekDates);
+
+    // Update current month and date
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    setCurrentMonth(`${monthNames[startOfWeek.getMonth()]} ${startOfWeek.getFullYear()}`);
+    setCurrentDate(`${monthNames[startOfWeek.getMonth()]} ${newWeekDates[0]}`);
+  }, [currentWeekStart]);
 
   // Set isLoaded to true when component mounts - with cleanup
   useEffect(() => {
-    // Set a flag to track if the component is still mounted
     let isMounted = true;
 
-    // Set isLoaded to true after a short delay
     const loadTimer = setTimeout(() => {
       if (isMounted) {
         setIsLoaded(true);
       }
     }, 100);
 
-    // Show AI popup after initial load
     const popupTimer = setTimeout(() => {
       if (isMounted) {
         setShowAIPopup(true);
       }
     }, 3000);
 
-    // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;
       clearTimeout(loadTimer);
@@ -85,196 +174,56 @@ function VIPCalendar() {
     setSelectedEvent(event);
   };
 
-  // Updated sample calendar events with all events before 4 PM
-  const events = [
-    {
-      id: 1,
-      title: "Team Meeting",
-      startTime: "09:00",
-      endTime: "10:00",
-      color: "bg-blue-500",
-      day: 1,
-      description: "Weekly team sync-up",
-      location: "Conference Room A",
-      attendees: ["John Doe", "Jane Smith", "Bob Johnson"],
-      organizer: "Alice Brown",
-    },
-    {
-      id: 2,
-      title: "Lunch with Sarah",
-      startTime: "12:30",
-      endTime: "13:30",
-      color: "bg-green-500",
-      day: 1,
-      description: "Discuss project timeline",
-      location: "Cafe Nero",
-      attendees: ["Sarah Lee"],
-      organizer: "You",
-    },
-    {
-      id: 3,
-      title: "Project Review",
-      startTime: "14:00",
-      endTime: "15:30",
-      color: "bg-purple-500",
-      day: 3,
-      description: "Q2 project progress review",
-      location: "Meeting Room 3",
-      attendees: ["Team Alpha", "Stakeholders"],
-      organizer: "Project Manager",
-    },
-    {
-      id: 4,
-      title: "Client Call",
-      startTime: "10:00",
-      endTime: "11:00",
-      color: "bg-yellow-500",
-      day: 2,
-      description: "Quarterly review with major client",
-      location: "Zoom Meeting",
-      attendees: ["Client Team", "Sales Team"],
-      organizer: "Account Manager",
-    },
-    {
-      id: 5,
-      title: "Team Brainstorm",
-      startTime: "13:00",
-      endTime: "14:30",
-      color: "bg-indigo-500",
-      day: 4,
-      description: "Ideation session for new product features",
-      location: "Creative Space",
-      attendees: ["Product Team", "Design Team"],
-      organizer: "Product Owner",
-    },
-    {
-      id: 6,
-      title: "Product Demo",
-      startTime: "11:00",
-      endTime: "12:00",
-      color: "bg-pink-500",
-      day: 5,
-      description: "Showcase new features to stakeholders",
-      location: "Demo Room",
-      attendees: ["Stakeholders", "Dev Team"],
-      organizer: "Tech Lead",
-    },
-    {
-      id: 7,
-      title: "Marketing Meeting",
-      startTime: "13:00",
-      endTime: "14:00",
-      color: "bg-teal-500",
-      day: 6,
-      description: "Discuss Q3 marketing strategy",
-      location: "Marketing Office",
-      attendees: ["Marketing Team"],
-      organizer: "Marketing Director",
-    },
-    {
-      id: 8,
-      title: "Code Review",
-      startTime: "15:00",
-      endTime: "16:00",
-      color: "bg-cyan-500",
-      day: 7,
-      description: "Review pull requests for new feature",
-      location: "Dev Area",
-      attendees: ["Dev Team"],
-      organizer: "Senior Developer",
-    },
-    {
-      id: 9,
-      title: "Morning Standup",
-      startTime: "08:30",
-      endTime: "09:30",
-      color: "bg-blue-400",
-      day: 2,
-      description: "Daily team standup",
-      location: "Slack Huddle",
-      attendees: ["Development Team"],
-      organizer: "Scrum Master",
-    },
-    {
-      id: 10,
-      title: "Design Review",
-      startTime: "14:30",
-      endTime: "15:45",
-      color: "bg-purple-400",
-      day: 5,
-      description: "Review new UI designs",
-      location: "Design Lab",
-      attendees: ["UX Team", "Product Manager"],
-      organizer: "Lead Designer",
-    },
-    {
-      id: 11,
-      title: "Investor Meeting",
-      startTime: "10:30",
-      endTime: "12:00",
-      color: "bg-red-400",
-      day: 7,
-      description: "Quarterly investor update",
-      location: "Board Room",
-      attendees: ["Executive Team", "Investors"],
-      organizer: "CEO",
-    },
-    {
-      id: 12,
-      title: "Team Training",
-      startTime: "09:30",
-      endTime: "11:30",
-      color: "bg-green-400",
-      day: 4,
-      description: "New tool onboarding session",
-      location: "Training Room",
-      attendees: ["All Departments"],
-      organizer: "HR",
-    },
-    {
-      id: 13,
-      title: "Budget Review",
-      startTime: "13:30",
-      endTime: "15:00",
-      color: "bg-yellow-400",
-      day: 3,
-      description: "Quarterly budget analysis",
-      location: "Finance Office",
-      attendees: ["Finance Team", "Department Heads"],
-      organizer: "CFO",
-    },
-    {
-      id: 14,
-      title: "Client Presentation",
-      startTime: "11:00",
-      endTime: "12:30",
-      color: "bg-orange-400",
-      day: 6,
-      description: "Present new project proposal",
-      location: "Client Office",
-      attendees: ["Sales Team", "Client Representatives"],
-      organizer: "Account Executive",
-    },
-    {
-      id: 15,
-      title: "Product Planning",
-      startTime: "14:00",
-      endTime: "15:30",
-      color: "bg-pink-400",
-      day: 1,
-      description: "Roadmap discussion for Q3",
-      location: "Strategy Room",
-      attendees: ["Product Team", "Engineering Leads"],
-      organizer: "Product Manager",
-    },
-  ];
+  // Navigation for previous/next week
+  const handlePreviousWeek = () => {
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(newWeekStart.getDate() - 7);
+    setCurrentWeekStart(newWeekStart);
+  };
 
-  // Sample calendar days for the week view
+  const handleNextWeek = () => {
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(newWeekStart.getDate() + 7);
+    setCurrentWeekStart(newWeekStart);
+  };
+
+  const handleToday = () => {
+    setCurrentWeekStart(new Date());
+  };
+
+  // Filter events for the current week
+  const getEventsForCurrentWeek = () => {
+    const startOfWeek = new Date(currentWeekStart);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+    return events.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate >= startOfWeek && eventDate <= endOfWeek;
+    });
+  };
+
+  // Calculate mini calendar days and highlight days with appointments
+  const daysInMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), 1).getDay();
+  const miniCalendarDays = Array.from(
+    { length: daysInMonth + firstDayOfMonth },
+    (_, i) => (i < firstDayOfMonth ? null : i - firstDayOfMonth + 1)
+  );
+
+  // Find days with appointments
+  const daysWithAppointments = events.reduce((acc, event) => {
+    const eventDate = new Date(event.date);
+    if (eventDate.getMonth() === currentWeekStart.getMonth() && eventDate.getFullYear() === currentWeekStart.getFullYear()) {
+      acc.add(eventDate.getDate());
+    }
+    return acc;
+  }, new Set());
+
   const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  const weekDates = [3, 4, 5, 6, 7, 8, 9];
   const timeSlots = Array.from({ length: 9 }, (_, i) => i + 8); // 8 AM to 4 PM
 
-  // Helper function to calculate event position and height
   const calculateEventStyle = (startTime, endTime) => {
     const start =
       parseInt(startTime.split(":")[0]) +
@@ -286,15 +235,6 @@ function VIPCalendar() {
     return { top: `${top}px`, height: `${height}px` };
   };
 
-  // Sample calendar for mini calendar
-  const daysInMonth = 31;
-  const firstDayOffset = 5; // Friday is the first day of the month in this example
-  const miniCalendarDays = Array.from(
-    { length: daysInMonth + firstDayOffset },
-    (_, i) => (i < firstDayOffset ? null : i - firstDayOffset + 1)
-  );
-
-  // Sample my calendars
   const myCalendars = [
     { name: "My Calendar", color: "bg-blue-500" },
     { name: "Work", color: "bg-green-500" },
@@ -304,17 +244,14 @@ function VIPCalendar() {
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
-    // Here you would typically also control the actual audio playback
   };
 
-  // Define the animation classes once to avoid inconsistencies
   const fadeInClass = isLoaded
     ? "opacity-100 transition-opacity duration-500 ease-out"
     : "opacity-0";
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -323,7 +260,6 @@ function VIPCalendar() {
         }}
       />
 
-      {/* Navigation */}
       <header
         className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-8 py-6 ${fadeInClass}`}
         style={{ transitionDelay: "0.2s" }}
@@ -331,7 +267,7 @@ function VIPCalendar() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/admin")}
-            className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded-2xl hover:bg-blue-600 transition-colors "
+            className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded-2xl hover:bg-blue-600 transition-colors"
             title="Back to Admin"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -355,28 +291,36 @@ function VIPCalendar() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="relative h-screen w-full pt-20 flex">
-        {/* Sidebar */}
         <div
           className={`w-64 h-full bg-white/10 backdrop-blur-lg p-4 shadow-xl border-r border-white/20 rounded-tr-3xl ${fadeInClass} flex flex-col justify-between`}
           style={{ transitionDelay: "0.4s" }}
         >
           <div>
-            <button className="mb-6 flex items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-3 text-white w-full">
-              <Plus className="h-5 w-5" />
-              <span>Create</span>
-            </button>
+            
 
-            {/* Mini Calendar */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-medium">{currentMonth}</h3>
                 <div className="flex gap-1">
-                  <button className="p-1 rounded-full hover:bg-white/20">
+                  <button
+                    onClick={() => {
+                      const newDate = new Date(currentWeekStart);
+                      newDate.setMonth(newDate.getMonth() - 1);
+                      setCurrentWeekStart(newDate);
+                    }}
+                    className="p-1 rounded-full hover:bg-white/20"
+                  >
                     <ChevronLeft className="h-4 w-4 text-white" />
                   </button>
-                  <button className="p-1 rounded-full hover:bg-white/20">
+                  <button
+                    onClick={() => {
+                      const newDate = new Date(currentWeekStart);
+                      newDate.setMonth(newDate.getMonth() + 1);
+                      setCurrentWeekStart(newDate);
+                    }}
+                    className="p-1 rounded-full hover:bg-white/20"
+                  >
                     <ChevronRight className="h-4 w-4 text-white" />
                   </button>
                 </div>
@@ -396,8 +340,12 @@ function VIPCalendar() {
                   <div
                     key={i}
                     className={`text-xs rounded-full w-7 h-7 flex items-center justify-center ${
-                      day === 5
+                      day && daysWithAppointments.has(day)
                         ? "bg-blue-500 text-white"
+                        : day === new Date().getDate() &&
+                          new Date().getMonth() === currentWeekStart.getMonth() &&
+                          new Date().getFullYear() === currentWeekStart.getFullYear()
+                        ? "bg-gray-500 text-white"
                         : "text-white hover:bg-white/20"
                     } ${!day ? "invisible" : ""}`}
                   >
@@ -407,7 +355,6 @@ function VIPCalendar() {
               </div>
             </div>
 
-            {/* My Calendars */}
             <div>
               <h3 className="text-white font-medium mb-3">My calendars</h3>
               <div className="space-y-2">
@@ -421,28 +368,32 @@ function VIPCalendar() {
             </div>
           </div>
 
-          {/* New position for the big plus button */}
-          <button className="mt-6 flex items-center justify-center gap-2 rounded-full bg-blue-500 p-4 text-white w-14 h-14 self-start">
-            <Plus className="h-6 w-6" />
-          </button>
+        
         </div>
 
-        {/* Calendar View */}
         <div
           className={`flex-1 flex flex-col ${fadeInClass}`}
           style={{ transitionDelay: "0.6s" }}
         >
-          {/* Calendar Controls */}
           <div className="flex items-center justify-between p-4 border-b border-white/20">
             <div className="flex items-center gap-4">
-              <button className="px-4 py-2 text-white bg-blue-500 rounded-md">
+              <button
+                onClick={handleToday}
+                className="px-4 py-2 text-white bg-blue-500 rounded-md"
+              >
                 Today
               </button>
               <div className="flex">
-                <button className="p-2 text-white hover:bg-white/10 rounded-l-md">
+                <button
+                  onClick={handlePreviousWeek}
+                  className="p-2 text-white hover:bg-white/10 rounded-l-md"
+                >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <button className="p-2 text-white hover:bg-white/10 rounded-r-md">
+                <button
+                  onClick={handleNextWeek}
+                  className="p-2 text-white hover:bg-white/10 rounded-r-md"
+                >
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
@@ -479,10 +430,8 @@ function VIPCalendar() {
             </div>
           </div>
 
-          {/* Week View */}
           <div className="flex-1 overflow-auto p-4">
             <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full">
-              {/* Week Header */}
               <div className="grid grid-cols-8 border-b border-white/20">
                 <div className="p-2 text-center text-white/50 text-xs"></div>
                 {weekDays.map((day, i) => (
@@ -495,7 +444,9 @@ function VIPCalendar() {
                     </div>
                     <div
                       className={`text-lg font-medium mt-1 text-white ${
-                        weekDates[i] === 5
+                        weekDates[i] === new Date().getDate() &&
+                        new Date().getMonth() === currentWeekStart.getMonth() &&
+                        new Date().getFullYear() === currentWeekStart.getFullYear()
                           ? "bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center mx-auto"
                           : ""
                       }`}
@@ -506,9 +457,7 @@ function VIPCalendar() {
                 ))}
               </div>
 
-              {/* Time Grid */}
               <div className="grid grid-cols-8">
-                {/* Time Labels */}
                 <div className="text-white/70">
                   {timeSlots.map((time, i) => (
                     <div
@@ -520,7 +469,6 @@ function VIPCalendar() {
                   ))}
                 </div>
 
-                {/* Days Columns */}
                 {Array.from({ length: 7 }).map((_, dayIndex) => (
                   <div
                     key={dayIndex}
@@ -533,8 +481,7 @@ function VIPCalendar() {
                       ></div>
                     ))}
 
-                    {/* Events */}
-                    {events
+                    {getEventsForCurrentWeek()
                       .filter((event) => event.day === dayIndex + 1)
                       .map((event, i) => {
                         const eventStyle = calculateEventStyle(
@@ -564,7 +511,6 @@ function VIPCalendar() {
           </div>
         </div>
 
-        {/* AI Popup */}
         {showAIPopup && (
           <div className="fixed bottom-8 right-8 z-20">
             <div className="w-[450px] relative bg-gradient-to-br from-blue-400/30 via-blue-500/30 to-blue-600/30 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-blue-300/30 text-white">
@@ -611,7 +557,6 @@ function VIPCalendar() {
           </div>
         )}
 
-        {/* Event Details Modal */}
         {selectedEvent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div
@@ -632,7 +577,7 @@ function VIPCalendar() {
                 <p className="flex items-center">
                   <Calendar className="mr-2 h-5 w-5" />
                   {`${weekDays[selectedEvent.day - 1]}, ${
-                    weekDates[selectedEvent.day - 1]
+                    new Date(selectedEvent.date).getDate()
                   } ${currentMonth}`}
                 </p>
                 <p className="flex items-start">
