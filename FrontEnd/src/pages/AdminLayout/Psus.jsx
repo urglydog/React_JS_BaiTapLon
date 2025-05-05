@@ -17,7 +17,7 @@ const PsuForm = ({
   formTitle,
   theme,
   validCategoryIds = [23, 24, 25, 26],
-  images = [], // Add images prop
+  images = [],
 }) => {
   const [formData, setFormData] = useState({
     productName: psu?.productName || '',
@@ -25,7 +25,7 @@ const PsuForm = ({
     price: psu?.price || '',
     stockQuantity: psu?.stockQuantity || '',
     categoryID: psu?.categoryID || '',
-    image: psu?.image || '', // Store image filename
+    image: psu?.image || '', // Store image URL
     isLoading: false,
     error: null,
   });
@@ -58,7 +58,7 @@ const PsuForm = ({
   const handleImageSelect = (image) => {
     setFormData((prev) => ({
       ...prev,
-      image: image.filename, // Store the selected image's filename
+      image: image.url, // Store the selected image's URL
     }));
     setShowImagePicker(false);
     setImageSearchTerm('');
@@ -69,7 +69,6 @@ const PsuForm = ({
     setFormData((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Validation
       if (!formData.categoryID || !validCategoryIds.includes(parseInt(formData.categoryID))) {
         throw new Error('Vui lòng chọn một hãng hợp lệ');
       }
@@ -86,7 +85,7 @@ const PsuForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
-        image: formData.image || null, // Include image filename (or null if not selected)
+        image: formData.image || null, // Include image URL (or null if not selected)
       };
 
       await onSave(productData);
@@ -104,7 +103,7 @@ const PsuForm = ({
   const filteredImages = imageSearchTerm.trim() === ''
     ? images
     : images.filter((image) =>
-        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+        (image.url || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
       );
 
   const currentTheme = {
@@ -217,15 +216,17 @@ const PsuForm = ({
                   type="text"
                   value={formData.image || 'Chọn hình ảnh'}
                   onClick={() => setShowImagePicker(true)}
-                  readOnly
+                  onChange={handleChange}
+                  name="image"
                   className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
                 />
                 {formData.image && (
                   <div className="mt-2">
                     <img
-                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      src={formData.image}
                       alt="Selected"
                       className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                      onError={(e) => (e.target.src = '')}
                     />
                   </div>
                 )}
@@ -262,16 +263,16 @@ const PsuForm = ({
                 {filteredImages.length > 0 ? (
                   filteredImages.map((image) => (
                     <div
-                      key={image.filename}
+                      key={image.url}
                       onClick={() => handleImageSelect(image)}
-                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.url ? 'border-2 border-blue-500' : ''}`}
                     >
                       <img
                         src={image.url}
-                        alt={image.filename}
+                        alt={image.url}
                         className="h-20 w-full object-cover rounded-lg"
                       />
-                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                      <p className="text-xs truncate mt-1">{image.url.split('/').pop()}</p>
                     </div>
                   ))
                 ) : (
@@ -318,7 +319,7 @@ const Psus = memo(
     getProductById,
     loading,
     validCategoryIds = [23, 24, 25, 26],
-    images = [], // Add images prop
+    images = [],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -355,15 +356,6 @@ console.log(getProductById);
         style: 'currency',
         currency: 'VND',
       }).format(price);
-    };
-
-    // Hàm tìm ảnh từ danh sách images dựa trên psu.image
-    const findMatchingImage = (imageFilename) => {
-      if (!imageFilename || !images || images.length === 0) {
-        return null;
-      }
-      const foundImage = images.find((img) => img.filename === imageFilename);
-      return foundImage;
     };
 
     const filteredPsus = searchTerm.trim() === ''
@@ -533,57 +525,54 @@ console.log(getProductById);
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredPsus.map((psuItem, index) => {
-                  const matchingImage = findMatchingImage(psuItem.image);
-
-                  return (
-                    <tr
-                      key={psuItem.id || psuItem.productID || `psu-${index}`}
-                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {matchingImage ? (
-                            <img
-                              src={matchingImage.url}
-                              alt={psuItem.productName || 'PSU'}
-                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                            />
-                          ) : (
-                            <ImageOff
-                              className={currentTheme.secondaryText}
-                              size={24}
-                            />
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {psuItem.productName || 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                        <div className="max-w-xs truncate">{psuItem.description || 'Không có mô tả'}</div>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {formatPrice(psuItem.price)}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {psuItem.stockQuantity !== undefined ? psuItem.stockQuantity : 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {CATEGORY_BRAND_MAPPING[psuItem.categoryID] || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleEdit(psuItem)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredPsus.map((psuItem, index) => (
+                  <tr
+                    key={psuItem.id || psuItem.productID || `psu-${index}`}
+                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                        {psuItem.image ? (
+                          <img
+                            src={psuItem.image}
+                            alt={psuItem.productName || 'PSU'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            onError={(e) => (e.target.src = '')}
+                          />
+                        ) : (
+                          <ImageOff
+                            className={currentTheme.secondaryText}
+                            size={24}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {psuItem.productName || 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                      <div className="max-w-xs truncate">{psuItem.description || 'Không có mô tả'}</div>
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {formatPrice(psuItem.price)}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {psuItem.stockQuantity !== undefined ? psuItem.stockQuantity : 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[psuItem.categoryID] || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => handleEdit(psuItem)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -597,7 +586,7 @@ console.log(getProductById);
             formTitle={formState.formType === 'add' ? 'Thêm nguồn máy tính mới' : 'Chỉnh sửa nguồn máy tính'}
             theme={theme}
             validCategoryIds={validCategoryIds}
-            images={images} // Pass images prop to PsuForm
+            images={images}
           />
         )}
       </div>

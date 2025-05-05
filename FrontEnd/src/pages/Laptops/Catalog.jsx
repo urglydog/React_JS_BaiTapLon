@@ -18,6 +18,7 @@ import DescriptionSection from "../../components/option/DescriptionSection";
 
 import ProductCard from "../../components/product/catalog/ProductCardGroup";
 import ProductCardList from "../../components/product/catalog/ProductCardList";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Catalog() {
   const [products, setProducts] = useState([]);
@@ -25,8 +26,20 @@ export default function Catalog() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // "grid" hoặc "list"
 
+  const { search } = useLocation(); // Lấy search từ URL, ví dụ: ?search=query
+  const queryParams = new URLSearchParams(search);
+  const textSearch = queryParams.get("search"); // Lấy giá trị của tham số 'search'
+  const navigate = useNavigate();
   // Get products from API
   useEffect(() => {
+    const removeVietnameseTones = (str) => {
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D");
+    };
+
     const fetchProducts = async () => {
       try {
         const response = await fetch(
@@ -35,31 +48,44 @@ export default function Catalog() {
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
-  
+
         const data = await response.json();
-  
-        // Đảm bảo luôn có mảng dù chỉ có 1 object
+
         const rawProducts = Array.isArray(data.DT)
           ? data.DT
           : data.DT
           ? [data.DT]
           : [];
-  
+
         const formattedProducts = rawProducts.map((item) => ({
           ...item,
           inStock: item.availability === "In Stock",
         }));
-  
+
+        const filteredProducts = formattedProducts.filter((product) => {
+          if (!textSearch) return true;
+
+          const search = removeVietnameseTones(textSearch.toLowerCase());
+
+          const productName = removeVietnameseTones(
+            product.productName.toLowerCase()
+          );
+          const catalogName = removeVietnameseTones(
+            product.categoryName.toLowerCase()
+          );
+
+          return productName.includes(search) || catalogName.includes(search);
+        });
+
         setProducts(formattedProducts);
-        setFilteredProducts(formattedProducts);
+        setFilteredProducts(filteredProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
-  
+
     fetchProducts();
-  }, []);
-  
+  }, [textSearch]);
 
   // Trong function Catalog():
   const [filters, setFilters] = useState([
@@ -74,9 +100,8 @@ export default function Catalog() {
   const handleClearFilters = () => {
     setFilters([]);
   };
-console.log(handleClearFilters);
-console.log(handleRemoveFilter);
-
+  console.log(handleClearFilters);
+  console.log(handleRemoveFilter);
 
   const SupportCard = ({ icon, title, description }) => {
     return (
@@ -225,24 +250,39 @@ console.log(handleRemoveFilter);
       {" "}
       <div className="py-6 max-w-screen-xl mx-auto">
         <img src={banner1} alt="" className="mb-2" />
-        <Breadcrumb
+        {/* <Breadcrumb
           items={[
             { label: "Trang chủ", url: "/" },
             { label: "Sản phẩm", url: "/products" },
             { label: "MSI WS Series", url: "/products/msi-ws-series" },
           ]}
-        />
+        /> */}
       </div>
-      <div className="py-6 max-w-screen-xl mx-auto">
+      {/* <div className="py-6 max-w-screen-xl mx-auto">
         <p className="text-4xl font-bold">MSI PS Series (20)</p>
-      </div>
+      </div> */}
       {/* Phần header danh sách */}
       <div className="py-6 max-w-screen-xl mx-auto grid grid-cols-4 items-center gap-4">
         <div className="">
           <button
             type="button"
-            className=" w-full text-2xl font-bold cursor-pointer"
+            className="w-full py-3 px-6 text-xl font-semibold text-gray-400 hover:text-black
+            transition-all duration-300 ease-in-out flex items-center justify-start
+            hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 cursor-pointer"
+            onClick={() => navigate("/")}
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
             Back
           </button>
         </div>

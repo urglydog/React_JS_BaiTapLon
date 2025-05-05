@@ -16,7 +16,7 @@ const MainboardForm = ({
   formTitle,
   theme,
   validCategoryIds = [20, 21, 22],
-  images = [], // Add images prop
+  images = [],
 }) => {
   const [formData, setFormData] = useState({
     productName: mainboard?.productName || '',
@@ -24,7 +24,7 @@ const MainboardForm = ({
     price: mainboard?.price || '',
     stockQuantity: mainboard?.stockQuantity || '',
     categoryID: mainboard?.categoryID || '',
-    image: mainboard?.image || '', // Store image filename
+    image: mainboard?.image || '', // Store image URL
     isLoading: false,
     error: null,
   });
@@ -57,7 +57,7 @@ const MainboardForm = ({
   const handleImageSelect = (image) => {
     setFormData((prev) => ({
       ...prev,
-      image: image.filename, // Store the selected image's filename
+      image: image.url, // Store the selected image's URL
     }));
     setShowImagePicker(false);
     setImageSearchTerm('');
@@ -85,7 +85,7 @@ const MainboardForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: parseInt(formData.categoryID),
-        image: formData.image || null, // Include image filename (or null if not selected)
+        image: formData.image || null, // Include image URL (or null if not selected)
       };
 
       await onSave(productData);
@@ -103,7 +103,7 @@ const MainboardForm = ({
   const filteredImages = imageSearchTerm.trim() === ''
     ? images
     : images.filter((image) =>
-        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+        (image.url || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
       );
 
   const currentTheme = {
@@ -216,15 +216,17 @@ const MainboardForm = ({
                   type="text"
                   value={formData.image || 'Chọn hình ảnh'}
                   onClick={() => setShowImagePicker(true)}
-                  readOnly
+                  onChange={handleChange}
+                  name="image"
                   className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
                 />
                 {formData.image && (
                   <div className="mt-2">
                     <img
-                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      src={formData.image}
                       alt="Selected"
                       className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                      onError={(e) => (e.target.src = '')}
                     />
                   </div>
                 )}
@@ -261,16 +263,16 @@ const MainboardForm = ({
                 {filteredImages.length > 0 ? (
                   filteredImages.map((image) => (
                     <div
-                      key={image.filename}
+                      key={image.url}
                       onClick={() => handleImageSelect(image)}
-                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.url ? 'border-2 border-blue-500' : ''}`}
                     >
                       <img
                         src={image.url}
-                        alt={image.filename}
+                        alt={image.url}
                         className="h-20 w-full object-cover rounded-lg"
                       />
-                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                      <p className="text-xs truncate mt-1">{image.url.split('/').pop()}</p>
                     </div>
                   ))
                 ) : (
@@ -317,7 +319,7 @@ const Mainboard = memo(
     getProductById,
     loading,
     validCategoryIds = [20, 21, 22],
-    images = [], // Add images prop
+    images = [],
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -354,15 +356,6 @@ console.log(getProductById);
         style: 'currency',
         currency: 'VND',
       }).format(price);
-    };
-
-    // Hàm tìm ảnh từ danh sách images dựa trên mainboard.image
-    const findMatchingImage = (imageFilename) => {
-      if (!imageFilename || !images || images.length === 0) {
-        return null;
-      }
-      const foundImage = images.find((img) => img.filename === imageFilename);
-      return foundImage;
     };
 
     const filteredMainboards = searchTerm.trim() === ''
@@ -533,7 +526,8 @@ console.log(getProductById);
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
                 {filteredMainboards.map((mainboard, index) => {
-                  const matchingImage = findMatchingImage(mainboard.image);
+                  let matchingImage;
+console.log(matchingImage);
 
                   return (
                     <tr
@@ -542,11 +536,12 @@ console.log(getProductById);
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {matchingImage ? (
+                          {mainboard.image ? (
                             <img
-                              src={matchingImage.url}
+                              src={mainboard.image}
                               alt={mainboard.productName || 'Mainboard'}
                               className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                              onError={(e) => (e.target.src = '')}
                             />
                           ) : (
                             <ImageOff
@@ -596,7 +591,7 @@ console.log(getProductById);
             formTitle={formState.formType === 'add' ? 'Thêm bo mạch chủ mới' : 'Chỉnh sửa bo mạch chủ'}
             theme={theme}
             validCategoryIds={validCategoryIds}
-            images={images} // Pass images prop to MainboardForm
+            images={images}
           />
         )}
       </div>

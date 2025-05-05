@@ -9,7 +9,7 @@ const CATEGORY_BRAND_MAPPING = {
   4: 'Asus',
 };
 
-// Form component for adding/editing keyboards
+// Form component for adding/editing Keyboards
 const KeyboardForm = ({
   keyboard = {},
   onSave,
@@ -58,7 +58,7 @@ const KeyboardForm = ({
   const handleImageSelect = (image) => {
     setFormData((prev) => ({
       ...prev,
-      image: image.filename,
+      image: image.url,
     }));
     setShowImagePicker(false);
     setImageSearchTerm('');
@@ -91,11 +91,11 @@ const KeyboardForm = ({
       await onSave(productData);
       setFormData((prev) => ({ ...prev, isLoading: false }));
     } catch (error) {
-      console.error('Error saving keyboard:', error);
+      console.error('Error saving Bàn Phím:', error);
       setFormData((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Không thể lưu bàn phím',
+        error: error.message || 'Không thể lưu Bàn Phím',
       }));
     }
   };
@@ -103,7 +103,7 @@ const KeyboardForm = ({
   const filteredImages = imageSearchTerm.trim() === ''
     ? images
     : images.filter((image) =>
-        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+        (image.url || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
       );
 
   const currentTheme = {
@@ -214,17 +214,20 @@ const KeyboardForm = ({
               <div className="relative">
                 <input
                   type="text"
-                  value={formData.image || 'Chọn hình ảnh'}
+                  value={formData.image || 'Chọn hoặc nhập URL hình ảnh'}
                   onClick={() => setShowImagePicker(true)}
-                  readOnly
-                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input} cursor-pointer`}
+                  onChange={handleChange}
+                  name="image"
+                  placeholder="Nhập URL hình ảnh"
+                  className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
                 />
                 {formData.image && (
                   <div className="mt-2">
                     <img
-                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      src={formData.image}
                       alt="Selected"
                       className="h-20 w-20 object-cover rounded-lg shadow-sm"
+                      onError={(e) => (e.target.src = '')}
                     />
                   </div>
                 )}
@@ -261,16 +264,16 @@ const KeyboardForm = ({
                 {filteredImages.length > 0 ? (
                   filteredImages.map((image) => (
                     <div
-                      key={image.filename}
+                      key={image.url}
                       onClick={() => handleImageSelect(image)}
-                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.url ? 'border-2 border-blue-500' : ''}`}
                     >
                       <img
                         src={image.url}
-                        alt={image.filename}
+                        alt={image.url}
                         className="h-20 w-full object-cover rounded-lg"
                       />
-                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                      <p className="text-xs truncate mt-1">{image.url.split('/').pop()}</p>
                     </div>
                   ))
                 ) : (
@@ -306,8 +309,8 @@ const KeyboardForm = ({
   );
 };
 
-// Wrap component with React.memo to prevent unnecessary re-renders
-const KeyboardTable = memo(
+// Keyboards component
+const Keyboards = memo(
   ({
     activeMenu,
     keyboards = [],
@@ -356,19 +359,11 @@ console.log(deleteProduct);
       }).format(price);
     };
 
-    const findMatchingImage = (imageFilename) => {
-      if (!imageFilename || !images || images.length === 0) {
-        return null;
-      }
-      const foundImage = images.find((img) => img.filename === imageFilename);
-      return foundImage;
-    };
-
     const filteredKeyboards = searchTerm.trim() === ''
       ? localKeyboards
-      : localKeyboards.filter((keyboard) =>
-          (keyboard?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (keyboard?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+      : localKeyboards.filter((item) =>
+          (item?.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item?.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
 
     const themeClasses = {
@@ -406,11 +401,11 @@ console.log(deleteProduct);
       });
     };
 
-    const handleEdit = (keyboard) => {
+    const handleEdit = (item) => {
       setFormState({
         isOpen: true,
         formType: 'edit',
-        currentKeyboard: keyboard,
+        currentKeyboard: item,
       });
     };
 
@@ -447,8 +442,11 @@ console.log(deleteProduct);
         setFormState((prev) => ({ ...prev, isOpen: false }));
         setIsLoading(false);
       } catch (error) {
-        console.error('Error saving keyboard:', error);
-        setError(error.message || 'Không thể lưu bàn phím');
+        console.error('Error saving Bàn Phím:', error);
+        const errorMessage = error.message.includes('Product not found')
+          ? 'Sản phẩm không tồn tại hoặc đã bị xóa'
+          : error.message || 'Không thể lưu Bàn Phím';
+        setError(errorMessage);
         setIsLoading(false);
         throw error;
       }
@@ -483,7 +481,7 @@ console.log(deleteProduct);
             <div className="relative w-64">
               <input
                 type="text"
-                placeholder="Tìm kiếm bàn phím..."
+                placeholder="Tìm kiếm Bàn Phím..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 ${currentTheme.input}`}
@@ -506,14 +504,14 @@ console.log(deleteProduct);
         {!loading && !isLoading && localKeyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
-            <span>Không tìm thấy bàn phím nào.</span>
+            <span>Không tìm thấy Bàn Phím nào.</span>
           </div>
         )}
 
         {!loading && !isLoading && localKeyboards.length > 0 && filteredKeyboards.length === 0 && (
           <div className={`flex justify-center items-center h-64 ${currentTheme.emptyState}`}>
             <ImageOff className="mr-2" size={24} />
-            <span>Không tìm thấy bàn phím phù hợp.</span>
+            <span>Không tìm thấy Bàn Phím phù hợp.</span>
           </div>
         )}
 
@@ -532,57 +530,54 @@ console.log(deleteProduct);
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredKeyboards.map((keyboard, index) => {
-                  const matchingImage = findMatchingImage(keyboard.image);
-
-                  return (
-                    <tr
-                      key={keyboard.id || keyboard.productID || `keyboard-${index}`}
-                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {matchingImage ? (
-                            <img
-                              src={matchingImage.url}
-                              alt={keyboard.productName || 'Keyboard'}
-                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                            />
-                          ) : (
-                            <ImageOff
-                              className={currentTheme.secondaryText}
-                              size={24}
-                            />
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {keyboard.productName || 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                        <div className="max-w-xs truncate">{keyboard.description || 'Không có mô tả'}</div>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {formatPrice(keyboard.price)}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {keyboard.stockQuantity !== undefined ? keyboard.stockQuantity : 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {CATEGORY_BRAND_MAPPING[keyboard.categoryID] || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleEdit(keyboard)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredKeyboards.map((item, index) => (
+                  <tr
+                    key={item.id || item.productID || `keyboard-${index}`}
+                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.productName || 'Keyboard'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                            onError={(e) => (e.target.src = '')}
+                          />
+                        ) : (
+                          <ImageOff
+                            className={currentTheme.secondaryText}
+                            size={24}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {item.productName || 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                      <div className="max-w-xs truncate">{item.description || 'Không có mô tả'}</div>
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {formatPrice(item.price)}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {item.stockQuantity !== undefined ? item.stockQuantity : 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {CATEGORY_BRAND_MAPPING[item.categoryID] || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -604,4 +599,4 @@ console.log(deleteProduct);
   }
 );
 
-export default KeyboardTable;
+export default Keyboards;

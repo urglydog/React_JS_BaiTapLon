@@ -7,13 +7,13 @@ import {
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { FaHeadset, FaUserCircle, FaPercentage } from "react-icons/fa";
 
-import a1 from "../../assets/images/ProductDetail/a1.png";
-import a2 from "../../assets/images/ProductDetail/a2.png";
-import a3 from "../../assets/images/ProductDetail/a3.png";
-import a4 from "../../assets/images/ProductDetail/a4.png";
-import a5 from "../../assets/images/ProductDetail/a5.png";
-import a6 from "../../assets/images/ProductDetail/a6.png";
-import a7 from "../../assets/images/ProductDetail/a7.png";
+// import a1 from "../../assets/images/ProductDetail/a1.png";
+// import a2 from "../../assets/images/ProductDetail/a2.png";
+// import a3 from "../../assets/images/ProductDetail/a3.png";
+// import a4 from "../../assets/images/ProductDetail/a4.png";
+// import a5 from "../../assets/images/ProductDetail/a5.png";
+// import a6 from "../../assets/images/ProductDetail/a6.png";
+// import a7 from "../../assets/images/ProductDetail/a7.png";
 import zip from "../../assets/images/ProductDetail/zip.png";
 import { FaPaypal } from "react-icons/fa";
 import axiosInstance from "../../custom/axios";
@@ -112,7 +112,7 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex-1 flex justify-center">
-                <img src={a1} alt="MSI MPG Trident 3" className="mx-auto" />
+                <img src={product.image} alt={product.productName} className="mx-auto" />
               </div>
             </div>
 

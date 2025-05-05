@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useContext } from "react";
 import {
   FaChartPie,
   FaDesktop,
@@ -26,6 +26,7 @@ import {
   FaPlug,
   FaTabletAlt,
   FaGamepad,
+  FaCalendar,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -60,7 +61,7 @@ import Storage from "./Storage";
 import Cases from "./Cases";
 import TabletTable from "./TabletTable";
 import GamingGearTable from "./GamingGearTable";
-
+import { useNavigate } from "react-router-dom"; // Add this
 const API_URL = "http://localhost:4000/api/admin";
 
 // Định nghĩa danh sách categoryID cho từng danh mục
@@ -102,7 +103,7 @@ const CATEGORY_STATE_MAP = {
   headphone: "headphones",
   mousepad: "mousepads",
 };
-
+import { UserContext } from "../../context/UserContext";
 export default function ComputerStoreAdminLayout() {
   const [darkMode, setDarkMode] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -137,11 +138,20 @@ export default function ComputerStoreAdminLayout() {
   const [spendersTimeframe, setSpendersTimeframe] = useState("last7days");
   const [allImages, setAllImages] = useState({});
   const toggleDarkMode = () => setDarkMode(!darkMode);
+
+  const { user, logout } = useContext(UserContext);
+  const navigate = useNavigate();
+
   const handleLogoutConfirm = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
+    logout(); // Call logout from UserContext
+    localStorage.removeItem("authToken");
+    navigate("/login");
+    setShowModal(false);
   };
+  
   useEffect(() => {
+
+    
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
@@ -149,7 +159,7 @@ export default function ComputerStoreAdminLayout() {
   
         // Fetch all images from Cloudinary
         const imagesResponse = await fetch(`${API_URL}/images/all`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
         });
         if (!imagesResponse.ok) throw new Error("Failed to fetch images");
         const imagesData = await imagesResponse.json();
@@ -205,7 +215,7 @@ export default function ComputerStoreAdminLayout() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
           body: JSON.stringify(productData),
         });
@@ -214,7 +224,7 @@ export default function ComputerStoreAdminLayout() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
           body: JSON.stringify(productData),
         });
@@ -222,7 +232,7 @@ export default function ComputerStoreAdminLayout() {
         response = await fetch(`${API_URL}/products/${productId}`, {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
         });
       }
@@ -269,7 +279,7 @@ export default function ComputerStoreAdminLayout() {
     try {
       const response = await fetch(`${API_URL}/products/${productId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
       if (!response.ok) throw new Error("Failed to get product");
@@ -284,7 +294,7 @@ export default function ComputerStoreAdminLayout() {
     try {
       const response = await fetch(`${API_URL}/orders/${orderId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
       if (!response.ok) throw new Error("Failed to get order");
@@ -301,15 +311,22 @@ export default function ComputerStoreAdminLayout() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ status }),
       });
       if (!response.ok) throw new Error("Failed to update order status");
+  
       const updatedOrder = await response.json();
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.orderId === orderId ? updatedOrder : order))
-      );
+      console.log("Updated order from API:", updatedOrder);
+  
+      // Re-fetch toàn bộ danh sách orders để đảm bảo đồng bộ
+      const ordersResponse = await fetch(`${API_URL}/orders`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+      });
+      if (!ordersResponse.ok) throw new Error("Failed to fetch updated orders");
+      const ordersData = await ordersResponse.json();
+      setOrders(ordersData);
       return updatedOrder;
     } catch (error) {
       console.error(`Error updating order status for ID ${orderId}:`, error);
@@ -320,10 +337,11 @@ export default function ComputerStoreAdminLayout() {
   // Fetch dashboard data (giữ nguyên logic hiện tại)
   useEffect(() => {
     const fetchDashboardData = async () => {
+      
       setLoading(true);
       try {
         const statsResponse = await fetch(`${API_URL}/dashboard/stats`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
         });
         if (!statsResponse.ok) throw new Error("Failed to fetch dashboard stats");
         const statsData = await statsResponse.json();
@@ -331,21 +349,21 @@ export default function ComputerStoreAdminLayout() {
 
         const salesResponse = await fetch(
           `${API_URL}/dashboard/sales-performance?timeframe=${timeframe}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } }
         );
         if (!salesResponse.ok) throw new Error("Failed to fetch sales performance data");
         const salesData = await salesResponse.json();
         setSalesData(salesData);
 
         const deviceResponse = await fetch(`${API_URL}/dashboard/device-usage`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
         });
         if (!deviceResponse.ok) throw new Error("Failed to fetch device usage data");
         const deviceData = await deviceResponse.json();
         setDeviceUsage(deviceData);
 
         const categoryResponse = await fetch(`${API_URL}/dashboard/category-sales`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
         });
         if (!categoryResponse.ok) throw new Error("Failed to fetch category sales data");
         const categoryData = await categoryResponse.json();
@@ -361,7 +379,7 @@ export default function ComputerStoreAdminLayout() {
         // Fetch data cho từng danh mục
         const fetchCategoryData = async (category, setter) => {
           const response = await fetch(`${API_URL}/products/${category}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+            headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
           });
           if (!response.ok) throw new Error(`Failed to fetch ${category} data`);
           const data = await response.json();
@@ -399,6 +417,7 @@ export default function ComputerStoreAdminLayout() {
         });
         if (!orders1Response.ok) throw new Error("Failed to fetch orders data");
         const orders1Data = await orders1Response.json();
+        console.log("Orders data from API:", orders1Data);
         setOrders(orders1Data);
 
         const topSpendersResponse = await fetch(
@@ -506,40 +525,52 @@ export default function ComputerStoreAdminLayout() {
             </ul>
           </nav>
         </div>
+       
         <div className={`p-4 flex items-center border-t ${borderColor}`}>
-          <div className="mr-3">
-            <FaUserCircle size={24} className="text-gray-400" />
-          </div>
-          <div>
-            <div className="font-medium">Admin User</div>
-            <div
-  onClick={() => setShowModal(true)}
-  className={`text-xs ${secondaryTextColor} cursor-pointer hover:underline`}
->
-  Đăng xuất
-</div>
+          
+        <div className="mr-3">
+          
+          <FaUserCircle size={24} className="text-gray-400" />
+        </div>
+        <div>
+        <div className="text-center"></div>
+          <div className="font-medium">{user ? user.fullName : "Admin User"}</div>
+         
+          <div
+            onClick={() => setShowModal(true)}
+            className={`text-xs ${secondaryTextColor} cursor-pointer hover:underline`}
+          >
+            Đăng xuất
           </div>
         </div>
-        {showModal && (
-          <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-[9999]">
-            <div className="bg-white text-amber-500 p-6 rounded-xl shadow-lg text-center w-80">
-              <h2 className="text-lg font-semibold mb-4">Bạn có chắc muốn đăng xuất không?</h2>
-              <div className="flex justify-center gap-4">
-                <button onClick={handleLogoutConfirm} className="px-4 py-2 bg-red-500 text-black rounded hover:bg-red-600">
-                  Có
-                </button>
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                  Hủy
-                </button>
-              </div>
+      </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-[9999]">
+          <div className="bg-white text-amber-500 p-6 rounded-xl shadow-lg text-center w-80">
+            <h2 className="text-lg font-semibold mb-4">Bạn có chắc muốn đăng xuất không?</h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleLogoutConfirm}
+                className="px-4 py-2 bg-red-500 text-black rounded hover:bg-red-600"
+              >
+                Có
+              </button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Hủy
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className={`flex items-center justify-between p-4 border-b ${borderColor}`}>
           <div className="flex items-center">
             <div className="flex items-center px-2">
+          
               <button className="mr-2">
                 <FaEllipsisH size={16} />
               </button>
@@ -549,6 +580,13 @@ export default function ComputerStoreAdminLayout() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+          <button 
+                onClick={() => navigate("/admin/calendar")}
+                className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20"
+                title="View Calendar"
+              >
+                <FaCalendar size={18} />
+              </button>
             <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20">
               {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
             </button>

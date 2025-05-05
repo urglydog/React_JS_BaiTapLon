@@ -7,7 +7,7 @@ import {
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { FaHeadset, FaUserCircle, FaPercentage } from "react-icons/fa";
 
-import a1 from "../../assets/images/ProductDetail/a1.png";
+// import a1 from "../../assets/images/ProductDetail/a1.png";
 // import a2 from "../../assets/images/ProductDetail/a2.png";
 // import a3 from "../../assets/images/ProductDetail/a3.png";
 // import a4 from "../../assets/images/ProductDetail/a4.png";
@@ -113,7 +113,7 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex-1 flex justify-center">
-                <img src={a1} alt="MSI MPG Trident 3" className="mx-auto" />
+                <img src={product.image} alt={product.productName} className="mx-auto" />
               </div>
             </div>
 

@@ -1,16 +1,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Loader2, AlertCircle, ImageOff, Search, Pencil, Plus } from 'lucide-react';
 
-// Ánh xạ subCategoryID với tên hãng cho danh mục Cases
-const CATEGORY_BRAND_MAPPING = {
-  1: 'Xigmatek',
-  2: 'Cougar',
-  3: 'Corsair',
-  4: 'Cooler Master',
-  5: 'NZXT',
-  6: 'Thermaltake',
-};
-
 // Form component for adding/editing cases
 const CaseForm = ({
   caseItem = {},
@@ -18,16 +8,14 @@ const CaseForm = ({
   onCancel,
   formTitle,
   theme,
-  validSubCategoryIds = [1, 2, 3, 4, 5, 6],
-  images = [], // Add images prop
+  images = [], // Add images prop (array of { url: string })
 }) => {
   const [formData, setFormData] = useState({
     productName: caseItem?.productName || '',
     description: caseItem?.description || '',
     price: caseItem?.price || '',
     stockQuantity: caseItem?.stockQuantity || '',
-    subCategoryID: caseItem?.subCategoryID || '',
-    image: caseItem?.image || '', // Store image filename
+    image: caseItem?.image || '',
     isLoading: false,
     error: null,
   });
@@ -51,8 +39,6 @@ const CaseForm = ({
       [name]:
         name === 'price' || name === 'stockQuantity'
           ? parseFloat(value) || value
-          : name === 'subCategoryID'
-          ? value === '' ? '' : parseInt(value)
           : value,
     }));
   };
@@ -60,7 +46,7 @@ const CaseForm = ({
   const handleImageSelect = (image) => {
     setFormData((prev) => ({
       ...prev,
-      image: image.filename, // Store the selected image's filename
+      image: image.url, // Store the selected image's URL
     }));
     setShowImagePicker(false);
     setImageSearchTerm('');
@@ -72,8 +58,8 @@ const CaseForm = ({
 
     try {
       // Validation
-      if (!formData.subCategoryID || !validSubCategoryIds.includes(parseInt(formData.subCategoryID))) {
-        throw new Error('Vui lòng chọn một hãng hợp lệ');
+      if (!formData.productName) {
+        throw new Error('Tên sản phẩm là bắt buộc');
       }
       if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
         throw new Error('Giá phải là số dương');
@@ -88,10 +74,10 @@ const CaseForm = ({
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity),
         categoryID: 17, // categoryID cố định cho Cases
-        subCategoryID: parseInt(formData.subCategoryID),
-        image: formData.image || null, // Include image filename (or null if not selected)
+        image: formData.image || null, // Include image URL (or null if not selected)
       };
 
+      console.log('Submitting productData:', productData); // Add logging
       await onSave(productData);
       setFormData((prev) => ({ ...prev, isLoading: false }));
     } catch (error) {
@@ -107,7 +93,7 @@ const CaseForm = ({
   const filteredImages = imageSearchTerm.trim() === ''
     ? images
     : images.filter((image) =>
-        (image.filename || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
+        (image.url || '').toLowerCase().includes(imageSearchTerm.toLowerCase())
       );
 
   const currentTheme = {
@@ -196,24 +182,6 @@ const CaseForm = ({
             </div>
 
             <div>
-              <label className="block mb-1">Hãng</label>
-              <select
-                name="subCategoryID"
-                value={formData.subCategoryID}
-                onChange={handleChange}
-                className={`w-full rounded-lg border px-4 py-2 ${currentTheme.input}`}
-                required
-              >
-                <option value="">Chọn hãng</option>
-                {validSubCategoryIds.map((id) => (
-                  <option key={id} value={id}>
-                    {CATEGORY_BRAND_MAPPING[id] || `Hãng ${id}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
               <label className="block mb-1">Hình ảnh</label>
               <div className="relative">
                 <input
@@ -226,7 +194,7 @@ const CaseForm = ({
                 {formData.image && (
                   <div className="mt-2">
                     <img
-                      src={images.find((img) => img.filename === formData.image)?.url || ''}
+                      src={formData.image}
                       alt="Selected"
                       className="h-20 w-20 object-cover rounded-lg shadow-sm"
                     />
@@ -265,16 +233,16 @@ const CaseForm = ({
                 {filteredImages.length > 0 ? (
                   filteredImages.map((image) => (
                     <div
-                      key={image.filename}
+                      key={image.url}
                       onClick={() => handleImageSelect(image)}
-                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.filename ? 'border-2 border-blue-500' : ''}`}
+                      className={`cursor-pointer p-1 rounded-lg hover:bg-gray-600 ${formData.image === image.url ? 'border-2 border-blue-500' : ''}`}
                     >
                       <img
                         src={image.url}
-                        alt={image.filename}
+                        alt={image.url}
                         className="h-20 w-full object-cover rounded-lg"
                       />
-                      <p className="text-xs truncate mt-1">{image.filename}</p>
+                      <p className="text-xs truncate mt-1">{image.url.split('/').pop()}</p>
                     </div>
                   ))
                 ) : (
@@ -319,8 +287,7 @@ const Cases = memo(
     createProduct,
     updateProduct,
     getProductById,
-    validSubCategoryIds = [1, 2, 3, 4, 5, 6],
-    images = [], // Add images prop
+    images = [], // Add images prop (array of { url: string })
   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -332,7 +299,7 @@ const Cases = memo(
     });
     const [localCases, setLocalCases] = useState(cases);
     const [isSynced, setIsSynced] = useState(true);
-console.log(getProductById);
+    console.log(getProductById);
 
     useEffect(() => {
       if (isSynced) {
@@ -357,19 +324,6 @@ console.log(getProductById);
         style: 'currency',
         currency: 'VND',
       }).format(price);
-    };
-
-    // Hàm tìm ảnh từ danh sách images dựa trên caseItem.image
-    const findMatchingImage = (imageFilename) => {
-      if (!imageFilename || !images || images.length === 0) {
-        console.log('No image found: invalid filename or empty images', { imageFilename, images });
-        return null;
-      }
-      const foundImage = images.find((img) => img.filename === imageFilename);
-      if (!foundImage) {
-        console.log('No matching image found for filename:', imageFilename);
-      }
-      return foundImage;
     };
 
     const filteredCases = searchTerm.trim() === ''
@@ -427,6 +381,7 @@ console.log(getProductById);
       try {
         setIsLoading(true);
         setIsSynced(false);
+        console.log('Saving productData:', productData);
         if (formState.formType === 'add') {
           const newProduct = await createProduct(productData);
           if (!newProduct.id && !newProduct.productID) {
@@ -444,6 +399,7 @@ console.log(getProductById);
           if (!productId) {
             throw new Error('Không tìm thấy ID sản phẩm để cập nhật');
           }
+          console.log('Updating product with ID:', productId); // Add logging
           await updateProduct(productId, productData);
           setLocalCases((prev) =>
             prev.map((item) =>
@@ -535,62 +491,58 @@ console.log(getProductById);
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mô tả</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Giá</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tồn kho</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hãng</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Danh mục</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Hành động</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-300'}`}>
-                {filteredCases.map((caseItem, index) => {
-                  const matchingImage = findMatchingImage(caseItem.image);
-
-                  return (
-                    <tr
-                      key={caseItem.id || caseItem.productID || `case-${index}`}
-                      className={`transition-colors duration-150 ${currentTheme.tableRow}`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                          {matchingImage ? (
-                            <img
-                              src={matchingImage.url}
-                              alt={caseItem.productName || 'Case'}
-                              className="h-12 w-12 object-cover rounded-lg shadow-sm"
-                            />
-                          ) : (
-                            <ImageOff
-                              className={currentTheme.secondaryText}
-                              size={24}
-                            />
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {caseItem.productName || 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
-                        <div className="max-w-xs truncate">{caseItem.description || 'Không có mô tả'}</div>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {formatPrice(caseItem.price)}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {caseItem.stockQuantity !== undefined ? caseItem.stockQuantity : 'N/A'}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
-                        {CATEGORY_BRAND_MAPPING[caseItem.subCategoryID] || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleEdit(caseItem)}
-                          className={`transition-colors ${currentTheme.buttonIcon}`}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredCases.map((caseItem, index) => (
+                  <tr
+                    key={caseItem.id || caseItem.productID || `case-${index}`}
+                    className={`transition-colors duration-150 ${currentTheme.tableRow}`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                        {caseItem.image ? (
+                          <img
+                            src={caseItem.image}
+                            alt={caseItem.productName || 'Case'}
+                            className="h-12 w-12 object-cover rounded-lg shadow-sm"
+                          />
+                        ) : (
+                          <ImageOff
+                            className={currentTheme.secondaryText}
+                            size={24}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {caseItem.productName || 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 text-sm ${currentTheme.secondaryText}`}>
+                      <div className="max-w-xs truncate">{caseItem.description || 'Không có mô tả'}</div>
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {formatPrice(caseItem.price)}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      {caseItem.stockQuantity !== undefined ? caseItem.stockQuantity : 'N/A'}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.secondaryText}`}>
+                      Hãng case
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => handleEdit(caseItem)}
+                        className={`transition-colors ${currentTheme.buttonIcon}`}
+                        title="Chỉnh sửa"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -603,7 +555,6 @@ console.log(getProductById);
             onCancel={() => setFormState((prev) => ({ ...prev, isOpen: false }))}
             formTitle={formState.formType === 'add' ? 'Thêm vỏ máy tính mới' : 'Chỉnh sửa vỏ máy tính'}
             theme={theme}
-            validSubCategoryIds={validSubCategoryIds}
             images={images} // Pass images prop to CaseForm
           />
         )}

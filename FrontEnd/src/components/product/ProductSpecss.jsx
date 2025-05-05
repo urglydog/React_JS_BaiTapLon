@@ -7,7 +7,7 @@ import {
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { FaHeadset, FaUserCircle, FaPercentage } from "react-icons/fa";
 
-import a1 from "../../assets/images/ProductDetail/a1.png";
+// import a1 from "../../assets/images/ProductDetail/a1.png";
 // import a2 from "../../assets/images/ProductDetail/a2.png";
 // import a3 from "../../assets/images/ProductDetail/a3.png";
 // import a4 from "../../assets/images/ProductDetail/a4.png";
@@ -143,8 +143,8 @@ export default function ProductSpeccs() {
                 {" "}
                 {/* Thêm items-center */}
                 <img
-                  src={a1} // Sử dụng biến đã import
-                  alt="MSI MPG Trident 3"
+                  src={product.image} // Sử dụng biến đã import
+                  alt={product.productName}
                   className="max-w-full h-auto object-contain" // Đảm bảo ảnh vừa vặn
                 />
               </div>

@@ -85,35 +85,57 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  // Check auth status on mount
+  const refreshToken = async () => {
+    try {
+      const response = await axiosInstance.post('/refresh', {
+        refreshToken: localStorage.getItem("refreshToken"),
+      });
+      const { token } = response.data;
+      localStorage.setItem("authToken", token);
+      return token;
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      setUser(null);
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("refreshToken");
+      throw error;
+    }
+  };
+  
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("authToken");
-        if (token) {
-          const response = await axiosInstance.get('/me');
-          
+        const savedUser = localStorage.getItem("user");
+        if (token && savedUser) {
+          let response = await axiosInstance.get('/me');
+          if (response.status === 401) {
+            const newToken = await refreshToken();
+            axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+            response = await axiosInstance.get('/auth/me');
+          }
           if (response.data?.success && response.data?.user) {
             setUser(response.data.user);
             localStorage.setItem("user", JSON.stringify(response.data.user));
           } else {
-            // Clear invalid data
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            setUser(null);
+            throw new Error("Invalid user data");
           }
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error("Auto-login error:", error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-        setUser(null);
+        if (error.response?.status === 401) {
+          setUser(null);
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
+        }
       } finally {
         setLoading(false);
       }
     };
-
     checkAuth();
   }, []);
 
