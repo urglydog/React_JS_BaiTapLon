@@ -565,13 +565,7 @@ export default function ComputerStoreAdminLayout() {
         <header className={`flex items-center justify-between p-4 border-b ${borderColor}`}>
           <div className="flex items-center">
             <div className="flex items-center px-2">
-            <button 
-                onClick={() => navigate("/admin/calendar")}
-                className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20"
-                title="View Calendar"
-              >
-                <FaCalendar size={18} />
-              </button>
+          
               <button className="mr-2">
                 <FaEllipsisH size={16} />
               </button>
@@ -581,6 +575,13 @@ export default function ComputerStoreAdminLayout() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+          <button 
+                onClick={() => navigate("/admin/calendar")}
+                className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20"
+                title="View Calendar"
+              >
+                <FaCalendar size={18} />
+              </button>
             <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-20">
               {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
             </button>

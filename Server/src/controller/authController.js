@@ -96,7 +96,7 @@ const refreshToken = async (req, res) => {
       return res.status(401).json({ success: false, message: "No refresh token provided" });
     }
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await user.findById(decoded.id);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
