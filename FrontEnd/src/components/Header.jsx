@@ -406,7 +406,7 @@ const Header = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Tìm kiếm sản phẩm..."
+                placeholder="Search for products..."
                 value={searchTerm}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
@@ -454,7 +454,7 @@ const Header = () => {
                   ))
                 ) : (
                   <div className="p-3 text-gray-500 text-center">
-                    Không tìm thấy sản phẩm phù hợp
+                    No matching products found
                   </div>
                 )}
               </div>
@@ -489,8 +489,8 @@ const Header = () => {
                 <div className="p-3 border-b">
                   <p className="text-sm text-gray-500">
                     {user
-                      ? `Xin chào, ${user.fullName}`
-                      : "Xin chào, vui lòng đăng nhập"}
+                      ? `Hello, ${user.fullName}`
+                      : "Hello, please log in"}
                   </p>
                 </div>
                 <ul className="py-1">
@@ -502,7 +502,7 @@ const Header = () => {
                           className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                           onClick={() => handleMenuItemClick("profile")}
                         >
-                          <Link to="/profile">Tài khoản của tôi</Link>
+                          <Link to="/profile">My account</Link>
                         </li>
                       )}
                       {/* Show admin link for managers */}
@@ -511,7 +511,7 @@ const Header = () => {
                           className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                           onClick={() => handleMenuItemClick("admin")}
                         >
-                          <Link to="/admin">Quản lý</Link>
+                          <Link to="/admin">Manage</Link>
                         </li>
                       )}
                       {/* Show employee link for employees */}
@@ -520,20 +520,20 @@ const Header = () => {
                           className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                           onClick={() => handleMenuItemClick("employee")}
                         >
-                          <Link to="/employee">Nhân viên</Link>
+                          <Link to="/employee">Staff</Link>
                         </li>
                       )}
                       <li
                         className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                         onClick={() => handleMenuItemClick("orders")}
                       >
-                        Đơn hàng
+                        Order
                       </li>
                       <li
                         className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                         onClick={handleLogoutConfirm}
                       >
-                        Đăng xuất
+                        Sign out
                       </li>
                     </>
                   ) : (
@@ -547,7 +547,7 @@ const Header = () => {
                           window.scrollTo({ top: 0, behavior: "smooth" })
                         }
                       >
-                        Đăng nhập/Đăng Kí
+                        Login/Register
                       </Link>
                     </li>
                   )}
@@ -555,7 +555,7 @@ const Header = () => {
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleMenuItemClick("help")}
                   >
-                    Trợ giúp
+                    Help
                   </li>
                 </ul>
               </div>

@@ -525,12 +525,17 @@ export default function ComputerStoreAdminLayout() {
             </ul>
           </nav>
         </div>
+       
         <div className={`p-4 flex items-center border-t ${borderColor}`}>
+          
         <div className="mr-3">
+          
           <FaUserCircle size={24} className="text-gray-400" />
         </div>
         <div>
+        <div className="text-center"></div>
           <div className="font-medium">{user ? user.fullName : "Admin User"}</div>
+         
           <div
             onClick={() => setShowModal(true)}
             className={`text-xs ${secondaryTextColor} cursor-pointer hover:underline`}
