@@ -36,17 +36,15 @@ function VIPCalendar() {
       try {
         const response = await fetch('http://localhost:4000/api/order/getAllAppointments');
         const data = await response.json();
-        const appointments = data.DT; // Extract the DT array
+        const appointments = data.DT;
 
-        // Map appointments to events
-        const mappedEvents = appointments.map((appointment, index) => {
+        const mappedEvents = appointments.map((appointment) => {
           const startDateTime = new Date(appointment.appointmentDateTime);
           const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000);
 
-          const dayOfWeek = startDateTime.getDay() + 1; // getDay() returns 0-6 (Sun-Sat), adjust to 1-7
+          const dayOfWeek = startDateTime.getDay() + 1; // Adjust to 1-7
           const startTime = startDateTime.toTimeString().slice(0, 5);
           const endTime = endDateTime.toTimeString().slice(0, 5);
-          console.log(index);
 
           return {
             id: appointment.appointmentID,
@@ -54,22 +52,21 @@ function VIPCalendar() {
             startTime,
             endTime,
             color: `bg-${getColorForServiceType(appointment.serviceType)}-500`,
-            statusColor: getColorForStatus(appointment.status), // Thêm màu cho status
+            statusColor: getColorForStatus(appointment.status),
             day: dayOfWeek,
-            status: appointment.status, // Thêm status vào event
+            status: appointment.status,
             description: appointment.notes || "No notes provided",
             location: appointment.serviceLocation,
             attendees: [appointment.customerName, appointment.employeeName].filter(Boolean),
             organizer: appointment.employeeName || "Unassigned",
-            date: startDateTime, // Store the full date for filtering
+            date: startDateTime,
           };
         });
 
         setEvents(mappedEvents);
 
-        // Set the current week to the week of the first appointment, or current week if none
         if (mappedEvents.length > 0) {
-          const firstAppointmentDate = new Date(mappedEvents[0].date);
+          const firstAppointmentDate = new Date(Math.min(...mappedEvents.map(e => new Date(e.date))));
           setCurrentWeekStart(firstAppointmentDate);
         } else {
           setCurrentWeekStart(new Date());
@@ -112,6 +109,18 @@ function VIPCalendar() {
     return statusColorMap[status] || 'bg-gray-500';
   };
 
+  // Define all possible statuses and their colors for My calendars
+  const allStatuses = [
+    { name: 'pending', color: getColorForStatus('pending') },
+    { name: 'confirmed', color: getColorForStatus('confirmed') },
+    { name: 'in_progress', color: getColorForStatus('in_progress') },
+    { name: 'completed', color: getColorForStatus('completed') },
+    { name: 'cancelled', color: getColorForStatus('cancelled') },
+  ];
+
+  const [myCalendars, setMyCalendars] = useState(allStatuses);
+console.log(setMyCalendars);
+
   // Update week dates and current month/date when currentWeekStart changes
   useEffect(() => {
     const startOfWeek = new Date(currentWeekStart);
@@ -138,15 +147,11 @@ function VIPCalendar() {
     let isMounted = true;
 
     const loadTimer = setTimeout(() => {
-      if (isMounted) {
-        setIsLoaded(true);
-      }
+      if (isMounted) setIsLoaded(true);
     }, 100);
 
     const popupTimer = setTimeout(() => {
-      if (isMounted) {
-        setShowAIPopup(true);
-      }
+      if (isMounted) setShowAIPopup(true);
     }, 3000);
 
     return () => {
@@ -159,8 +164,7 @@ function VIPCalendar() {
   // Handle AI popup typing animation
   useEffect(() => {
     if (showAIPopup) {
-      const text =
-        "Looks like you don't have that many meetings today. Shall I play some Hans Zimmer essentials to help you get into your Flow State?";
+      const text = "Looks like you don't have that many meetings today. Shall I play some Hans Zimmer essentials to help you get into your Flow State?";
       let i = 0;
       let isMounted = true;
 
@@ -168,9 +172,7 @@ function VIPCalendar() {
         if (i < text.length && isMounted) {
           setTypedText((prev) => prev + text.charAt(i));
           i++;
-        } else {
-          clearInterval(typingInterval);
-        }
+        } else clearInterval(typingInterval);
       }, 50);
 
       return () => {
@@ -180,9 +182,7 @@ function VIPCalendar() {
     }
   }, [showAIPopup]);
 
-  const handleEventClick = (event) => {
-    setSelectedEvent(event);
-  };
+  const handleEventClick = (event) => setSelectedEvent(event);
 
   const handlePreviousWeek = () => {
     const newWeekStart = new Date(currentWeekStart);
@@ -196,9 +196,7 @@ function VIPCalendar() {
     setCurrentWeekStart(newWeekStart);
   };
 
-  const handleToday = () => {
-    setCurrentWeekStart(new Date());
-  };
+  const handleToday = () => setCurrentWeekStart(new Date());
 
   const getEventsForCurrentWeek = () => {
     const startOfWeek = new Date(currentWeekStart);
@@ -233,125 +231,63 @@ function VIPCalendar() {
   const calculateEventStyle = (startTime, endTime) => {
     const start = parseInt(startTime.split(":")[0]) + parseInt(startTime.split(":")[1]) / 60;
     const end = parseInt(endTime.split(":")[0]) + parseInt(endTime.split(":")[1]) / 60;
-    const top = (start - 8) * 80; // 80px per hour
+    const top = (start - 8) * 80;
     const height = (end - start) * 80;
     return { top: `${top}px`, height: `${height}px` };
   };
 
-  const myCalendars = [
-    { name: "My Calendar", color: "bg-blue-500" },
-    { name: "Work", color: "bg-green-500" },
-    { name: "Personal", color: "bg-purple-500" },
-    { name: "Family", color: "bg-orange-500" },
-  ];
+  const togglePlay = () => setIsPlaying(!isPlaying);
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const fadeInClass = isLoaded
-    ? "opacity-100 transition-opacity duration-500 ease-out"
-    : "opacity-0";
+  const fadeInClass = isLoaded ? "opacity-100 transition-opacity duration-500 ease-out" : "opacity-0";
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop')",
-        }}
-      />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop')" }} />
 
-      <header
-        className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-8 py-6 ${fadeInClass}`}
-        style={{ transitionDelay: "0.2s" }}
-      >
+      <header className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-8 py-6 ${fadeInClass}`} style={{ transitionDelay: "0.2s" }}>
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/admin")}
-            className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded-2xl hover:bg-blue-600 transition-colors"
-            title="Back to Admin"
-          >
+          <button onClick={() => navigate("/admin")} className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded-2xl hover:bg-blue-600 transition-colors" title="Back to Admin">
             <ChevronLeft className="h-5 w-5" />
             <span>Back to Admin</span>
           </button>
           <Menu className="h-6 w-6 text-white" />
-          <span className="text-2xl font-semibold text-white drop-shadow-lg">
-            Appointments
-          </span>
+          <span className="text-2xl font-semibold text-white drop-shadow-lg">Appointments</span>
         </div>
-
         <div className="flex items-center gap-4">
-          <div className="relative">
+          {/* <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-            <input
-              type="text"
-              placeholder="Search"
-              className="rounded-full bg-white/10 backdrop-blur-sm pl-10 pr-4 py-2 text-white placeholder-white/70 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
-            />
-          </div>
+            <input type="text" placeholder="Search" className="rounded-full bg-white/10 backdrop-blur-sm pl-10 pr-4 py-2 text-white placeholder-white/70 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30" />
+          </div> */}
         </div>
       </header>
 
       <main className="relative h-screen w-full pt-20 flex">
-        <div
-          className={`w-64 h-full bg-white/10 backdrop-blur-lg p-4 shadow-xl border-r border-white/20 rounded-tr-3xl ${fadeInClass} flex flex-col justify-between`}
-          style={{ transitionDelay: "0.4s" }}
-        >
+        <div className={`w-64 h-full bg-white/10 backdrop-blur-lg p-4 shadow-xl border-r border-white/20 rounded-tr-3xl ${fadeInClass} flex flex-col justify-between`} style={{ transitionDelay: "0.4s" }}>
           <div>
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-medium">{currentMonth}</h3>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => {
-                      const newDate = new Date(currentWeekStart);
-                      newDate.setMonth(newDate.getMonth() - 1);
-                      setCurrentWeekStart(newDate);
-                    }}
-                    className="p-1 rounded-full hover:bg-white/20"
-                  >
+                  <button onClick={() => { const newDate = new Date(currentWeekStart); newDate.setMonth(newDate.getMonth() - 1); setCurrentWeekStart(newDate); }} className="p-1 rounded-full hover:bg-white/20">
                     <ChevronLeft className="h-4 w-4 text-white" />
                   </button>
-                  <button
-                    onClick={() => {
-                      const newDate = new Date(currentWeekStart);
-                      newDate.setMonth(newDate.getMonth() + 1);
-                      setCurrentWeekStart(newDate);
-                    }}
-                    className="p-1 rounded-full hover:bg-white/20"
-                  >
+                  <button onClick={() => { const newDate = new Date(currentWeekStart); newDate.setMonth(newDate.getMonth() + 1); setCurrentWeekStart(newDate); }} className="p-1 rounded-full hover:bg-white/20">
                     <ChevronRight className="h-4 w-4 text-white" />
                   </button>
                 </div>
               </div>
-
               <div className="grid grid-cols-7 gap-1 text-center">
                 {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
-                  <div
-                    key={i}
-                    className="text-xs text-white/70 font-medium py-1"
-                  >
-                    {day}
-                  </div>
+                  <div key={i} className="text-xs text-white/70 font-medium py-1">{day}</div>
                 ))}
-
                 {miniCalendarDays.map((day, i) => (
-                  <div
-                    key={i}
-                    className={`text-xs rounded-full w-7 h-7 flex items-center justify-center ${
-                      day && daysWithAppointments.has(day)
-                        ? "bg-blue-500 text-white"
-                        : day === new Date().getDate() &&
-                          new Date().getMonth() === currentWeekStart.getMonth() &&
-                          new Date().getFullYear() === currentWeekStart.getFullYear()
-                        ? "bg-gray-500 text-white"
-                        : "text-white hover:bg-white/20"
-                    } ${!day ? "invisible" : ""}`}
-                  >
-                    {day}
-                  </div>
+                  <div key={i} className={`text-xs rounded-full w-7 h-7 flex items-center justify-center ${
+                    day && daysWithAppointments.has(day)
+                      ? "bg-blue-500 text-white"
+                      : day === new Date().getDate() && new Date().getMonth() === currentWeekStart.getMonth() && new Date().getFullYear() === currentWeekStart.getFullYear()
+                      ? "bg-gray-500 text-white"
+                      : "text-white hover:bg-white/20"
+                  } ${!day ? "invisible" : ""}`}>{day}</div>
                 ))}
               </div>
             </div>
@@ -370,184 +306,103 @@ function VIPCalendar() {
           </div>
         </div>
 
-        <div
-          className={`flex-1 flex flex-col ${fadeInClass}`}
-          style={{ transitionDelay: "0.6s" }}
-        >
+        <div className={`flex-1 flex flex-col ${fadeInClass}`} style={{ transitionDelay: "0.6s" }}>
           <div className="flex items-center justify-between p-4 border-b border-white/20">
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleToday}
-                className="px-4 py-2 text-white bg-blue-500 rounded-md"
-              >
-                Today
-              </button>
+              <button onClick={handleToday} className="px-4 py-2 text-white bg-blue-500 rounded-md">Today</button>
               <div className="flex">
-                <button
-                  onClick={handlePreviousWeek}
-                  className="p-2 text-white hover:bg-white/10 rounded-l-md"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={handleNextWeek}
-                  className="p-2 text-white hover:bg-white/10 rounded-r-md"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
+                <button onClick={handlePreviousWeek} className="p-2 text-white hover:bg-white/10 rounded-l-md"><ChevronLeft className="h-5 w-5" /></button>
+                <button onClick={handleNextWeek} className="p-2 text-white hover:bg-white/10 rounded-r-md"><ChevronRight className="h-5 w-5" /></button>
               </div>
-              <h2 className="text-xl font-semibold text-white">
-                {currentDate}
-              </h2>
+              <h2 className="text-xl font-semibold text-white">{currentDate}</h2>
             </div>
-
             <div className="flex items-center gap-2 rounded-md p-1">
-              <button
-                onClick={() => setCurrentView("day")}
-                className={`px-3 py-1 rounded ${
-                  currentView === "day" ? "bg-white/20" : ""
-                } text-white text-sm`}
-              >
-                Day
-              </button>
-              <button
-                onClick={() => setCurrentView("week")}
-                className={`px-3 py-1 rounded ${
-                  currentView === "week" ? "bg-white/20" : ""
-                } text-white text-sm`}
-              >
-                Week
-              </button>
-              <button
-                onClick={() => setCurrentView("month")}
-                className={`px-3 py-1 rounded ${
-                  currentView === "month" ? "bg-white/20" : ""
-                } text-white text-sm`}
-              >
-                Month
-              </button>
+              <button onClick={() => setCurrentView("week")} className={`px-3 py-1 rounded ${currentView === "week" ? "bg-white/20" : ""} text-white text-sm`}>Week</button>
             </div>
           </div>
 
           <div className="flex-1 overflow-auto p-4">
-            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full">
-              <div className="grid grid-cols-8 border-b border-white/20">
-                <div className="p-2 text-center text-white/50 text-xs"></div>
-                {weekDays.map((day, i) => (
-                  <div
-                    key={i}
-                    className="p-2 text-center border-l border-white/20"
-                  >
-                    <div className="text-xs text-white/70 font-medium">
-                      {day}
-                    </div>
-                    <div
-                      className={`text-lg font-medium mt-1 text-white ${
-                        weekDates[i] === new Date().getDate() &&
-                        new Date().getMonth() === currentWeekStart.getMonth() &&
-                        new Date().getFullYear() === currentWeekStart.getFullYear()
-                          ? "bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center mx-auto"
-                          : ""
-                      }`}
-                    >
-                      {weekDates[i]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-8">
-                <div className="text-white/70">
-                  {timeSlots.map((time, i) => (
-                    <div
-                      key={i}
-                      className="h-20 border-b border-white/10 pr-2 text-right text-xs"
-                    >
-                      {time > 12 ? `${time - 12} PM` : `${time} AM`}
+            {currentView === "week" && (
+              <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full">
+                <div className="grid grid-cols-8 border-b border-white/20">
+                  <div className="p-2 text-center text-white/50 text-xs"></div>
+                  {weekDays.map((day, i) => (
+                    <div key={i} className="p-2 text-center border-l border-white/20">
+                      <div className="text-xs text-white/70 font-medium">{day}</div>
+                      <div className={`text-lg font-medium mt-1 text-white ${weekDates[i] === new Date().getDate() && new Date().getMonth() === currentWeekStart.getMonth() && new Date().getFullYear() === currentWeekStart.getFullYear() ? "bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center mx-auto" : ""}`}>
+                        {weekDates[i]}
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                {Array.from({ length: 7 }).map((_, dayIndex) => (
-                  <div
-                    key={dayIndex}
-                    className="border-l border-white/20 relative"
-                  >
-                    {timeSlots.map((_, timeIndex) => (
-                      <div
-                        key={timeIndex}
-                        className="h-20 border-b border-white/10"
-                      ></div>
+                <div className="grid grid-cols-8">
+                  <div className="text-white/70">
+                    {timeSlots.map((time, i) => (
+                      <div key={i} className="h-20 border-b border-white/10 pr-2 text-right text-xs">
+                        {time > 12 ? `${time - 12} PM` : `${time} AM`}
+                      </div>
                     ))}
-
-                    {getEventsForCurrentWeek()
-                      .filter((event) => event.day === dayIndex + 1)
-                      .map((event, i) => {
-                        const eventStyle = calculateEventStyle(
-                          event.startTime,
-                          event.endTime
-                        );
-                        return (
-                          <div
-                            key={i}
-                            className={`absolute ${event.statusColor} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg`}
-                            style={{
-                              ...eventStyle,
-                              left: "4px",
-                              right: "4px",
-                            }}
-                            onClick={() => handleEventClick(event)}
-                          >
-                            <div className="font-medium">{event.title}</div>
-                            <div className="opacity-80 text-[10px] mt-1">{`${event.startTime} - ${event.endTime}`}</div>
-                            <div className="text-[10px] opacity-70">{`Status: ${event.status}`}</div> {/* Hiển thị status */}
-                          </div>
-                        );
-                      })}
                   </div>
-                ))}
+
+                  {Array.from({ length: 7 }).map((_, dayIndex) => (
+                    <div key={dayIndex} className="border-l border-white/20 relative">
+                      {timeSlots.map((_, timeIndex) => (
+                        <div key={timeIndex} className="h-20 border-b border-white/10"></div>
+                      ))}
+
+                      {getEventsForCurrentWeek()
+                        .filter((event) => event.day === dayIndex + 1)
+                        .map((event, i) => {
+                          const eventStyle = calculateEventStyle(event.startTime, event.endTime);
+                          return (
+                            <div
+                              key={i}
+                              className={`absolute ${event.statusColor} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg`}
+                              style={{ ...eventStyle, left: "4px", right: "4px" }}
+                              onClick={() => handleEventClick(event)}
+                            >
+                              <div className="font-medium">{event.title}</div>
+                              <div className="opacity-80 text-[10px] mt-1">{`${event.startTime} - ${event.endTime}`}</div>
+                              <div className="text-[10px] opacity-70">{`Status: ${event.status}`}</div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+            {currentView === "day" && (
+              <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full text-white text-center p-4">
+                Day view not fully implemented yet. Click "Week" to see events.
+              </div>
+            )}
+            {currentView === "month" && (
+              <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full text-white text-center p-4">
+                Month view not fully implemented yet. Click "Week" to see events.
+              </div>
+            )}
           </div>
         </div>
 
         {showAIPopup && (
           <div className="fixed bottom-8 right-8 z-20">
             <div className="w-[450px] relative bg-gradient-to-br from-blue-400/30 via-blue-500/30 to-blue-600/30 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-blue-300/30 text-white">
-              <button
-                onClick={() => setShowAIPopup(false)}
-                className="absolute top-2 right-2 text-white/70 hover:text-white transition-colors"
-              >
+              <button onClick={() => setShowAIPopup(false)} className="absolute top-2 right-2 text-white/70 hover:text-white transition-colors">
                 <X className="h-5 w-5" />
               </button>
               <div className="flex gap-3">
-                <div className="flex-shrink-0">
-                  <Sparkles className="h-5 w-5 text-blue-300" />
-                </div>
-                <div className="min-h-[80px]">
-                  <p className="text-base font-light">{typedText}</p>
-                </div>
+                <div className="flex-shrink-0"><Sparkles className="h-5 w-5 text-blue-300" /></div>
+                <div className="min-h-[80px]"><p className="text-base font-light">{typedText}</p></div>
               </div>
               <div className="mt-6 flex gap-3">
-                <button
-                  onClick={togglePlay}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm transition-colors font-medium"
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={() => setShowAIPopup(false)}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm transition-colors font-medium"
-                >
-                  No
-                </button>
+                <button onClick={togglePlay} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm transition-colors font-medium">Yes</button>
+                <button onClick={() => setShowAIPopup(false)} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm transition-colors font-medium">No</button>
               </div>
               {isPlaying && (
                 <div className="mt-4 flex items-center justify-between">
-                  <button
-                    className="flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-white text-sm hover:bg-white/20 transition-colors"
-                    onClick={togglePlay}
-                  >
+                  <button className="flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-white text-sm hover:bg-white/20 transition-colors" onClick={togglePlay}>
                     <Pause className="h-4 w-4" />
                     <span>Pause Hans Zimmer</span>
                   </button>
@@ -558,53 +413,20 @@ function VIPCalendar() {
         )}
 
         {selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div
-              className={`${selectedEvent.statusColor} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}
-            >
-              <h3 className="text-2xl font-bold mb-4 text-white">
-                {selectedEvent.title}
-              </h3>
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className={`${selectedEvent.statusColor} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
+              <h3 className="text-2xl font-bold mb-4 text-white">{selectedEvent.title}</h3>
               <div className="space-y-3 text-white">
-                <p className="flex items-center">
-                  <Clock className="mr-2 h-5 w-5" />
-                  {`${selectedEvent.startTime} - ${selectedEvent.endTime}`}
-                </p>
-                <p className="flex items-center">
-                  <MapPin className="mr-2 h-5 w-5" />
-                  {selectedEvent.location}
-                </p>
-                <p className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5" />
-                  {`${weekDays[selectedEvent.day - 1]}, ${
-                    new Date(selectedEvent.date).getDate()
-                  } ${currentMonth}`}
-                </p>
-                <p className="flex items-start">
-                  <Users className="mr-2 h-5 w-5 mt-1" />
-                  <span>
-                    <strong>Attendees:</strong>
-                    <br />
-                    {selectedEvent.attendees.join(", ") || "No attendees"}
-                  </span>
-                </p>
-                <p>
-                  <strong>Organizer:</strong> {selectedEvent.organizer}
-                </p>
-                <p>
-                  <strong>Description:</strong> {selectedEvent.description}
-                </p>
-                <p>
-                  <strong>Status:</strong> {selectedEvent.status} {/* Hiển thị status trong popup */}
-                </p>
+                <p className="flex items-center"><Clock className="mr-2 h-5 w-5" />{`${selectedEvent.startTime} - ${selectedEvent.endTime}`}</p>
+                <p className="flex items-center"><MapPin className="mr-2 h-5 w-5" />{selectedEvent.location}</p>
+                <p className="flex items-center"><Calendar className="mr-2 h-5 w-5" />{`${weekDays[selectedEvent.day - 1]}, ${new Date(selectedEvent.date).getDate()} ${currentMonth}`}</p>
+                <p className="flex items-start"><Users className="mr-2 h-5 w-5 mt-1" /><span><strong>Attendees:</strong><br />{selectedEvent.attendees.join(", ") || "No attendees"}</span></p>
+                <p><strong>Organizer:</strong> {selectedEvent.organizer}</p>
+                <p><strong>Description:</strong> {selectedEvent.description}</p>
+                <p><strong>Status:</strong> {selectedEvent.status}</p>
               </div>
               <div className="mt-6 flex justify-end">
-                <button
-                  className="bg-white text-gray-800 px-4 py-2 rounded hover:bg-gray-100 transition-colors"
-                  onClick={() => setSelectedEvent(null)}
-                >
-                  Close
-                </button>
+                <button className="bg-white text-gray-800 px-4 py-2 rounded hover:bg-gray-100 transition-colors" onClick={() => setSelectedEvent(null)}>Close</button>
               </div>
             </div>
           </div>
