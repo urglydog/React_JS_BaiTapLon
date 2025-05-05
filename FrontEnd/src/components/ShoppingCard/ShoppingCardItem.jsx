@@ -22,6 +22,7 @@ function CartItem({ item, onQuantityChange, onRemove }) {
           src={item.image}
           alt={item.productName}
           className="w-full h-full object-cover rounded-lg"
+          style={{ objectFit: "contain" }}
         />
       </div>
 

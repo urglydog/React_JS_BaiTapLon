@@ -10,7 +10,7 @@ export default function ProductCardList({ product }) {
     // Dispatch action to add product to cart
     dispatch(addItem({ ...product, quantity: 1 }));
     console.log("Product added to cart:", product);
-    toast.success("Product added to cart successfully!");
+    toast.success("Thêm sản phẩm thành công!");
   };
 
   const navigate = useNavigate();
@@ -48,11 +48,11 @@ export default function ProductCardList({ product }) {
         <div className="mb-2">
           {product?.oldPrice !== product.price && (
             <span className="line-through text-sm text-gray-400 mr-2">
-              ${parseFloat(product?.price).toFixed(2)}
+              {parseInt(product?.price).toLocaleString("vi-VN")}₫
             </span>
           )}
           <span className="text-lg font-bold text-black">
-            ${parseFloat(product?.price).toFixed(2)}
+          {parseInt(product?.price).toLocaleString("vi-VN")}₫
           </span>
         </div>
 

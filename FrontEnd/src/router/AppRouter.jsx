@@ -127,7 +127,7 @@
 
 // export default AppRouter;
 import React, { useContext } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate,Outlet  } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import ProtectedRoute from "../services/ProtectedRoute";
 
@@ -180,25 +180,18 @@ const AppRouter = () => {
         {/* Public routes */}
         <Route path="/login" element={<LoginWave />} />
 
-        {/* Admin routes */}
         <Route
           path="/admin"
           element={
             <ProtectedRoute requiredRoles={["manager"]}>
-              <Admin />
+              <Outlet /> {/* Chỉ cần Outlet ở đây để render các route con */}
             </ProtectedRoute>
           }
-          
-        />
-      <Route
-          path="/calendar"
-          element={
-            <ProtectedRoute requiredRoles={["manager"]}>
-              <VIPCalendar />
-            </ProtectedRoute>
-          }
-        />
-
+        >
+          <Route index element={<Admin />} /> {/* /admin */}
+          <Route path="calendar" element={<VIPCalendar />} />{" "}
+          {/* /admin/calendar */}
+        </Route>
         {/* Customer/public routes */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Content />} />
@@ -244,7 +237,7 @@ const AppRouter = () => {
             path="shopping_card_item"
             element={
               // <ProtectedRoute requiredRoles={["customer"]}>
-                <ShoppingCartItem />
+              <ShoppingCartItem />
               // </ProtectedRoute>
             }
           />

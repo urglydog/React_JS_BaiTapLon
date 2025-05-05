@@ -89,6 +89,22 @@ const logout = (req, res) => {
     message: 'Đăng xuất thành công'
   });
 };
-
+const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: "No refresh token provided" });
+    }
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    const newToken = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
+    res.json({ success: true, token: newToken });
+  } catch (error) {
+    res.status(401).json({ success: false, message: "Invalid refresh token" });
+  }
+};
 // Export all functions
-export { login, register, getCurrentUser, logout };
+export { login, register, getCurrentUser, logout,refreshToken };

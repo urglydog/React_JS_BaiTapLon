@@ -4,16 +4,19 @@ import { FaSearch, FaShoppingCart, FaFacebookF } from "react-icons/fa";
 import { IoPersonCircle } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import path from "../constant/path";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { UserContext } from "../context/UserContext";
+import { fetchProducts } from "../utils/redux/fetchProductsSlice";
 
 const Header = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false);
 
   // Access UserContext
-  const { user, logout, isCustomer, isManager, isEmployee } = useContext(UserContext);
+  const { user, logout, isCustomer, isManager, isEmployee } =
+    useContext(UserContext);
 
   // Define navigate
   const navigate = useNavigate();
@@ -64,8 +67,29 @@ const Header = () => {
   }, []);
 
   const getFormattedDate = () => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
 
     const day = days[currentDateTime.getDay()];
     const date = currentDateTime.getDate();
@@ -90,6 +114,93 @@ const Header = () => {
   };
   const cartQuantity = useSelector((state) => state.cart.carts.length);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useDispatch();
+
+  // Lấy danh sách sản phẩm từ Redux store
+  const { products, loading, error } = useSelector((state) => state.products);
+
+  // Hàm loại bỏ dấu tiếng Việt
+  const removeVietnameseTones = (str) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  };
+
+  // Lọc sản phẩm theo từ khóa tìm kiếm (theo productName và catalogName, không dấu)
+  const filteredProducts = products.filter((product) => {
+    const normalizedSearch = removeVietnameseTones(searchTerm.toLowerCase());
+    const productName = removeVietnameseTones(
+      product.productName.toLowerCase()
+    );
+    const catalogName = removeVietnameseTones(
+      product.categoryName.toLowerCase()
+    );
+
+    return (
+      productName.includes(normalizedSearch) ||
+      catalogName.includes(normalizedSearch)
+    );
+  });
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-64">Loading...</div>
+    );
+  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
+
+  // Khi người dùng nhập
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    setShowProductSuggestions(true); // bật dropdown
+  };
+
+  // Khi nhấn Enter
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSearch();
+      setShowProductSuggestions(false); // ẩn dropdown
+    }
+  };
+
+  // Khi click sản phẩm
+  const handleProductClick = (productID) => {
+    navigate(`/product/${productID}/productAbout`);
+    setShowProductSuggestions(false); // ẩn dropdown
+  };
+
+  // Khi click vào icon tìm kiếm
+  const handleSearch = () => {
+    if (searchTerm.trim() !== "") {
+      navigate(`/products?search=${searchTerm}`);
+      setShowProductSuggestions(false); // ẩn dropdown
+    }
+  };
+
+  // Khi focus vào input tìm kiếm và text không rỗng
+  const handleFocus = () => {
+    if (searchTerm.trim() !== "") {
+      setShowProductSuggestions(true); // bật dropdown
+    }
+  };
+  // Khi blur khỏi input tìm kiếm
+  const handleBlur = () => {
+    setTimeout(() => {
+      setShowProductSuggestions(false); // ẩn dropdown
+    }, 100);
+  };
+
   return (
     <header className="font-sans">
       {/* Top Black Bar */}
@@ -99,8 +210,12 @@ const Header = () => {
           <span>{formatTime()}</span>
         </div>
         <div>
-          Visit our Shop at 123 Hung Vuong street, Tuy Hoa City, Phu Yen, Group01{" "}
-          <Link to="/contact" className="underline cursor-pointer text-gray-300 hover:text-white">
+          Visit our Shop at 123 Hung Vuong street, Tuy Hoa City, Phu Yen,
+          Group01{" "}
+          <Link
+            to="/contact"
+            className="underline cursor-pointer text-gray-300 hover:text-white"
+          >
             Contact Us
           </Link>
         </div>
@@ -124,7 +239,7 @@ const Header = () => {
               <Link to={path.home}> Home</Link>
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.laptops}> Laptops</Link>
+              <Link to="/products?search=laptop"> Laptops</Link>
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
               <Link to={path.desktops}>Desktop PCs</Link>
@@ -134,7 +249,6 @@ const Header = () => {
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
               <Link to={path.printer_scanner}>Printers & Scanners</Link>
-
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
               <Link to={path.pc_parts}>PC Parts</Link>
@@ -145,24 +259,78 @@ const Header = () => {
             <li className="hover:text-blue-600 cursor-pointer">
               <Link to={path.repair}> Repairs</Link>
             </li>
-            <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.productDetail}> ProductDetail</Link>
-            </li>
-            <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.productSpeccs}> ProductSpeccs</Link>
-            </li>
           </ul>
         </nav>
 
         {/* Right Side Icons & Button */}
         <div className="flex items-center space-x-4">
-          <Link
+          {/* <Link
             to="/our_deal"
             className="border border-blue-600 text-blue-600 px-4 py-1 rounded-full hover:bg-blue-600 hover:text-white text-sm"
           >
             Our Deals
-          </Link>
-          <FaSearch className="cursor-pointer text-gray-600 hover:text-black" />
+          </Link> */}
+
+          <div className="relative">
+            {/* Input tìm kiếm với icon */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm sản phẩm..."
+                value={searchTerm}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className="border border-gray-300 rounded-lg p-2 w-[200px] lg:w-[200px] xl:w-[270px] pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <FaSearch
+                className="absolute left-3 top-3 text-gray-400 cursor-pointer"
+                onClick={handleSearch}
+              />
+            </div>
+
+            {/* Dropdown kết quả tìm kiếm */}
+            {showProductSuggestions && searchTerm.length > 0 && (
+              <div className="absolute w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <div
+                      key={product.productID}
+                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150 flex items-center"
+                      onClick={() => handleProductClick(product.productID)}
+                    >
+                      {/* Ảnh sản phẩm thu nhỏ */}
+                      <div className="w-10 h-10 bg-gray-100 rounded mr-3 flex-shrink-0">
+                        <img
+                          src={product.image}
+                          alt={product.productName}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          {product.productName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {product.price
+                            ? `${parseFloat(product.price).toLocaleString(
+                                "vi-VN"
+                              )}₫`
+                            : "Liên hệ"}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-3 text-gray-500 text-center">
+                    Không tìm thấy sản phẩm phù hợp
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="relative">
             <FaShoppingCart
               className="cursor-pointer text-gray-600 hover:text-black"
@@ -190,7 +358,9 @@ const Header = () => {
               <div className="absolute right-0 w-48 mt-2 bg-white border rounded shadow-lg z-10">
                 <div className="p-3 border-b">
                   <p className="text-sm text-gray-500">
-                    {user ? `Xin chào, ${user.fullName}` : "Xin chào, vui lòng đăng nhập"}
+                    {user
+                      ? `Xin chào, ${user.fullName}`
+                      : "Xin chào, vui lòng đăng nhập"}
                   </p>
                 </div>
                 <ul className="py-1">
@@ -243,7 +413,9 @@ const Header = () => {
                     >
                       <Link
                         to="/login"
-                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        onClick={() =>
+                          window.scrollTo({ top: 0, behavior: "smooth" })
+                        }
                       >
                         Đăng nhập/Đăng Kí
                       </Link>
