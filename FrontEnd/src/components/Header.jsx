@@ -7,7 +7,7 @@ import path from "../constant/path";
 import { useDispatch, useSelector } from "react-redux";
 import { UserContext } from "../context/UserContext";
 import { fetchProducts } from "../utils/redux/fetchProductsSlice";
-
+import { FaChevronDown } from "react-icons/fa";
 const Header = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [showDropdown, setShowDropdown] = useState(false);
@@ -241,24 +241,154 @@ const Header = () => {
             <li className="hover:text-blue-600 cursor-pointer">
               <Link to="/products?search=laptop"> Laptops</Link>
             </li>
-            <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.desktops}>Desktop PCs</Link>
+            {/* <li className="hover:text-blue-600 cursor-pointer">
+              <Link to="/products?search=mouse">Mouses</Link>
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.networking_devices}>Networking Devices</Link>
+              <Link to="/products?search=BanPhim">KeyBoard</Link>
             </li>
             <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.printer_scanner}>Printers & Scanners</Link>
+              <Link to="/products?search=GamingGear">GameGear</Link>
+            </li> */}
+            <li className="relative group">
+              <div className="flex items-center gap-1 hover:text-blue-600 cursor-pointer">
+                <span>Gaming Gear</span>
+                <FaChevronDown size={16} />
+              </div>
+
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-20 invisible group-hover:visible transition-all duration-300 opacity-0 group-hover:opacity-100">
+                <a
+                  href="/products?search=mouse"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  Mouse
+                </a>
+                <a
+                  href="/products?search=BanPhim"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  KeyBoard
+                </a>
+
+                <a
+                  href="/products?search=GamingGear"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  Game Gear
+                </a>
+              </div>
             </li>
-            <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.pc_parts}>PC Parts</Link>
+            <li className="relative group">
+              <div className="flex items-center gap-1 hover:text-blue-600 cursor-pointer">
+                <span>PC Parts</span>
+                <FaChevronDown size={16} />
+              </div>
+
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-20 invisible group-hover:visible transition-all duration-300 opacity-0 group-hover:opacity-100">
+                <a
+                  href="/products?search=screen"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  Monitors screen
+                </a>
+                <a
+                  href="/products?search=Case"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  Case
+                </a>
+                <a
+                  href="/products?search=CPU"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  CPU
+                </a>
+                <a
+                  href="/products?search=Main"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  MainBoard
+                </a>
+                <a
+                  href="/products?search=PSU"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  PSU Power
+                </a>
+                <a
+                  href="/products?search=HDD"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  HDD Hard Drive
+                </a>
+                <a
+                  href="/products?search=RAM"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                >
+                  RAM
+                </a>
+              </div>
             </li>
-            <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.all_products}>All Other Products</Link>
-            </li>
-            <li className="hover:text-blue-600 cursor-pointer">
-              <Link to={path.repair}> Repairs</Link>
-            </li>
+            <li 
+                className="relative group"
+              >
+                <div className="flex items-center gap-1 hover:text-blue-600 cursor-pointer">
+                  <span>All Other Products</span>
+                  <FaChevronDown size={16} />
+                </div>
+                
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-20 invisible group-hover:visible transition-all duration-300 opacity-0 group-hover:opacity-100">
+                  <a 
+                    href="/products?search=Mousepad" 
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    Mouse Pad
+                  </a>
+                  <a 
+                    href="/products?search=Headphone" 
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    Head Phone
+                  </a>
+                </div>
+              </li>
+            
+              <li 
+                className="relative group"
+              >
+                <div className="flex items-center gap-1 hover:text-blue-600 cursor-pointer">
+                  <span>
+                  Smart Device</span>
+                  <FaChevronDown size={16} />
+                </div>
+                
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-20 invisible group-hover:visible transition-all duration-300 opacity-0 group-hover:opacity-100">
+                  <a 
+                    href="/products?search=iPhone" 
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    IPhone
+                  </a>
+                  <a 
+                    href="/products?search=SamSung Galaxy" 
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                  >
+                   SamSung
+                  </a>
+                  <a 
+                    href="/products?search=Xiaomi" 
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                  >
+                  Xiaomi
+                  </a>
+                  <a 
+                    href="/products?search=iPad" 
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    iPad
+                  </a>
+                </div>
+              </li>
           </ul>
         </nav>
 
