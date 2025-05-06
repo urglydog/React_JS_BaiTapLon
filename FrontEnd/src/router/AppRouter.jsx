@@ -228,9 +228,10 @@ const AppRouter = () => {
           <Route
             path="shopping_card_checkout"
             element={
-              <ProtectedRoute requiredRoles={["customer"]}>
-                <ShoppingCard_CheckOut />
-              </ProtectedRoute>
+              // <ProtectedRoute requiredRoles={["customer"]}>
+              // </ProtectedRoute>
+              <ShoppingCard_CheckOut />
+
             }
           />
           <Route

@@ -110,7 +110,7 @@ const Header = () => {
   };
 
   const handleClickCart = () => {
-    navigate("/shopping_card_item");
+    navigate("/shopping_card_checkout");
   };
   const cartQuantity = useSelector((state) => state.cart.carts.length);
 

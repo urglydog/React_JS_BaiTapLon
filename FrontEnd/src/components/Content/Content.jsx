@@ -22,8 +22,8 @@ import logo7 from "../../assets/images/logo/logo_gigabytes.svg";
 import CardNews from "../info/CardNews";
 import TestimonialSlider from "../info/TestimonialSlider";
 
-import product1 from "../../assets/images/banner.png";
-import product2 from "../../assets/images/banner.png";
+// import product1 from "../../assets/images/banner.png";
+// import product2 from "../../assets/images/banner.png";
 import TestimonialCard from "../info/TestimonialCard";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -291,78 +291,95 @@ function Content() {
       {/* Follow us on Instagram for News, Offers & More */}
       <div className="w-full max-w-screen-xl mx-auto mt-4 rounded-md overflow-hidden">
         <h2 className="text-xl font-bold mb-4">
-          Follow us on Instagram for News, Offers & More
+          Latest Tech News in Computer Hardware
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
-          <CardNews
-            title="Your Custom Title"
-            excerpt="Your custom excerpt text here..."
-            date="15.10.2023"
-            imageUrl={monitors}
-          />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-2">
+          {[
+            {
+              title: "NVIDIA Unveils RTX 5090",
+              excerpt:
+                "The next-gen GPU promises unmatched performance for gaming...",
+              date: "2025-04-20",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2022/09/2022-09-20-image-29.jpg", // NVIDIA RTX 4090 image
+              url: "https://www.anandtech.com/show/21369/nvidia-geforce-rtx-5090",
+            },
+            {
+              title: "AMD Ryzen 9 9950X Review",
+              excerpt:
+                "A powerhouse CPU for gamers and creators with 16 cores...",
+              date: "2025-04-15",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2023/02/2023-02-27-image-5.jpg", // AMD Ryzen 7000 series CPU image
+              url: "https://www.tomshardware.com/reviews/amd-ryzen-9-9950x",
+            },
+            {
+              title: "DDR6 Memory Standards Announced",
+              excerpt:
+                "Next-gen RAM set to boost PC performance with higher bandwidth...",
+              date: "2025-04-10",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2023/10/2023-10-25-image-12.jpg", // DDR5 memory image (already working)
+              url: "https://www.techradar.com/news/ddr6-memory",
+            },
+            {
+              title: "Intel Arc B580 GPU Launched",
+              excerpt:
+                "Affordable graphics for budget gamers with ray tracing support...",
+              date: "2025-04-05",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2022/10/2022-10-12-image-5.jpg", // Intel Arc A770 GPU image
+              url: "https://www.anandtech.com/show/21370/intel-arc-b580",
+            },
+            {
+              title: "New PCIe 6.0 SSDs Hit the Market",
+              excerpt:
+                "Blazing-fast storage for enthusiasts with unprecedented speeds...",
+              date: "2025-04-01",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2023/08/2023-08-23-image-11.jpg", // Samsung 990 Pro SSD image
+              url: "https://www.tomshardware.com/news/pcie-6-ssd",
+            },
+            {
+              title: "ASUS ROG Z790 Motherboard Review",
+              excerpt:
+                "Top-tier features for high-end builds with Wi-Fi 7 support...",
+              date: "2025-03-28",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2022/10/2022-10-20-image-6.jpg", // ASUS ROG Z690 motherboard image (similar to Z790)
+              url: "https://www.techradar.com/reviews/asus-rog-z790",
+            },
+            {
+              title: "Liquid Cooling Trends in 2025",
+              excerpt: "AIO coolers dominate the market with sleek designs...",
+              date: "2025-03-25",
+              imageUrl:
+                "https://www.techspot.com/images2/news/bigimage/2023/05/2023-05-30-image-7.jpg", // AIO liquid cooler image
+              url: "https://www.anandtech.com/show/21371/liquid-cooling-2025",
+            },
+          ].map((article, index) => (
+            <a
+              key={index}
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <CardNews
+                title={article.title}
+                excerpt={article.excerpt}
+                date={article.date}
+                imageUrl={
+                  article.imageUrl ||
+                  "https://via.placeholder.com/300x200?text=Fallback+Image"
+                }
+              />
+            </a>
+          ))}
         </div>
       </div>
       {/*FeedBack  */}
       <div className="w-full max-w-screen-xl mx-auto mt-4 rounded-md overflow-hidden">
-        {/* <TestimonialCard
-          testimonial="My first order arrived today in perfect condition.  From the time I sent a question about the item to making the purchase, to the shipping and now the delivery, your company, Tecs, has stayed in touch.  Such great service.  I look forward to shopping on your site in the future and would highly recommend it."
-          author="Trương Thanh Tùng"
-          buttonText="Viết đánh giá"
-          onButtonClick={() => console.log("Clicked review button")}
-        /> */}
-
-        <TestimonialSlider
-          testimonials={[
-            {
-              id: 1,
-              text: "Đánh giá 1...",
-              author: "Người dùng 1",
-            },
-            {
-              id: 2,
-              text: "Đánh giá 2...",
-              author: "Người dùng 2",
-            },
-          ]}
-          autoPlay={true}
-          interval={3000} // 3 giây
-        />
+        <TestimonialSlider autoPlay={true} interval={3000} />
       </div>
       {/* Support */}
       <div className="py-12 px-4 bg-white">

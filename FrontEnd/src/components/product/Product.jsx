@@ -65,10 +65,21 @@ export default function Product() {
   const dispatch = useDispatch();
 
   const handleClickAddToCart = (product) => {
+    console.log(product);
+    
     // Thêm hàm xử lý sự kiện khi nhấn nút
-    toast.success("Thêm sản phẩm vào giỏ hàng thành công!");
+    toast.success("Add to cart successfully!");
     console.log("Thêm sản phẩm vào giỏ hàng:", product);
-    dispatch(addItem(product));
+    dispatch(
+      addItem({
+        productID: product.productID,
+        productName: product.productName,
+        price: product.price,
+        quantity: 1,
+        description: product.description,
+        image: product.image, // Truyền link ảnh
+      })
+    );
   };
 
   //   Hàm tăng giảm số lượng sản phẩm
