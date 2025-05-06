@@ -1,36 +1,40 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import path from "../../constant/path"
-import DiscountModal from "../../components/DiscountModal"
-import { UserContext } from "../../context/UserContext"
-import CreateOrder from "../../components/order/create-order"
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import path from "../../constant/path";
+import DiscountModal from "../../components/DiscountModal";
+import { UserContext } from "../../context/UserContext";
+import CreateOrder from "../../components/order/create-order";
 import CartItem from "../../components/ShoppingCard/ShoppingCardItem";
 import {
   removeItem,
   updateItemQuantity,
   clearCart,
 } from "../../utils/redux/cartSlice";
+import { toast } from "react-toastify";
+import { addOrder } from "../../utils/redux/orderSlice";
+import axios from "axios";
 const ShoppingCardItem = () => {
-  const cartItems = useSelector((state) => state.cart.carts)
+  const cartItems = useSelector((state) => state.cart.carts);
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   // const { user } = useContext(UserContext)
 
-  const selectedShippingCost = Number.parseInt(localStorage.getItem("selectedShippingCost")) || 0
+  const selectedShippingCost =
+    Number.parseInt(localStorage.getItem("selectedShippingCost")) || 0;
 
-  const [showDiscountModal, setShowDiscountModal] = useState(false)
-  const [enteredDiscountCode, setEnteredDiscountCode] = useState("")
-  const [discountValue, setDiscountValue] = useState(0)
-  const [appliedVoucher, setAppliedVoucher] = useState(null)
-  const [vouchers, setVouchers] = useState([])
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [enteredDiscountCode, setEnteredDiscountCode] = useState("");
+  const [discountValue, setDiscountValue] = useState(0);
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [vouchers, setVouchers] = useState([]);
   // const [loadingVouchers, setLoadingVouchers] = useState(true)
   // const [errorVouchers, setErrorVouchers] = useState(null)
-  const [paymentMethod, setPaymentMethod] = useState("")
-  const [isPaymentOptionsOpen, setIsPaymentOptionsOpen] = useState(false)
-  const [customerInfo, setCustomerInfo] = useState(null)
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [isPaymentOptionsOpen, setIsPaymentOptionsOpen] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState(null);
 
   const availablePaymentMethods = [
     { id: 4, name: "Apple Pay" },
@@ -40,29 +44,31 @@ const ShoppingCardItem = () => {
     { id: 6, name: "Gift Card" },
     { id: 3, name: "Google Pay" },
     { id: 2, name: "PayPal" },
-    { id: 8, name: "Store Credit" },
-  ]
+    { id: 8, name: "VNPAY" },
+  ];
 
   // Fetch customer info from checkout page
   useEffect(() => {
     // In a real app, you would get this from an API or context
     // For now, we'll simulate it with localStorage
-    const savedCustomerInfo = localStorage.getItem("customerInfo")
+    const savedCustomerInfo = localStorage.getItem("customerInfo");
     if (savedCustomerInfo) {
-      setCustomerInfo(JSON.parse(savedCustomerInfo))
+      setCustomerInfo(JSON.parse(savedCustomerInfo));
     }
-  }, [])
+  }, []);
 
   const fetchVouchers = async () => {
     // setLoadingVouchers(true)
     try {
-      const response = await fetch("http://localhost:4000/api/voucher/getAllVouchers")
+      const response = await fetch(
+        "http://localhost:4000/api/voucher/getAllVouchers"
+      );
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json()
+      const data = await response.json();
       if (data && data.EC === 1) {
-        setVouchers(data.DT)
+        setVouchers(data.DT);
       } else {
         // setErrorVouchers(new Error(data?.EM || "Lỗi khi tải voucher"))
       }
@@ -70,64 +76,78 @@ const ShoppingCardItem = () => {
     } catch (error) {
       // setErrorVouchers(error)
       // setLoadingVouchers(false)
-      console.error("Lỗi khi tải voucher:", error)
+      console.error("Lỗi khi tải voucher:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchVouchers()
-  }, [])
+    fetchVouchers();
+  }, []);
 
   const handleSelectVoucherFromList = (voucherCode) => {
-    const voucher = vouchers.find((v) => v.code === voucherCode && new Date(v.expirationDate) >= new Date())
+    const voucher = vouchers.find(
+      (v) => v.code === voucherCode && new Date(v.expirationDate) >= new Date()
+    );
     if (voucher && voucher.discount) {
-      const discountAmount = (orderTotalBeforeDiscount * voucher.discount) / 100
-      setDiscountValue(discountAmount)
-      setAppliedVoucher({ id: voucher.voucherID, code: voucher.code, expired: false })
+      const discountAmount =
+        (orderTotalBeforeDiscount * voucher.discount) / 100;
+      setDiscountValue(discountAmount);
+      setAppliedVoucher({
+        id: voucher.voucherID,
+        code: voucher.code,
+        discount: voucher.discount,
+        expired: false,
+      });
     }
-    setShowDiscountModal(false)
-  }
+    setShowDiscountModal(false);
+  };
 
   const handleCloseDiscountModal = () => {
-    setShowDiscountModal(false)
-  }
+    setShowDiscountModal(false);
+  };
 
   const handlePaymentMethodChange = (event) => {
-    setPaymentMethod(event.target.value)
-    setIsPaymentOptionsOpen(false)
-  }
+    setPaymentMethod(event.target.value);
+    setIsPaymentOptionsOpen(false);
+  };
 
   const togglePaymentOptions = () => {
-    setIsPaymentOptionsOpen(!isPaymentOptionsOpen)
-  }
+    setIsPaymentOptionsOpen(!isPaymentOptionsOpen);
+  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
-    }).format(value)
-  }
+    }).format(value);
+  };
 
-  const taxRate = 0.1
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const tax = subtotal * taxRate
-  const orderTotalBeforeDiscount = subtotal + selectedShippingCost + tax
-  const discountedTotal = Math.max(orderTotalBeforeDiscount - discountValue, 0)
+  const taxRate = 0.1;
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const tax = subtotal * taxRate;
+  const orderTotalBeforeDiscount = subtotal + selectedShippingCost + tax;
+  const discountedTotal = Math.max(orderTotalBeforeDiscount - discountValue, 0);
 
   const getDisplayedPaymentMethods = () => {
     if (selectedShippingCost === 0) {
-      return availablePaymentMethods.filter((method) => method.name !== "Cash on Delivery")
+      return availablePaymentMethods.filter(
+        (method) => method.name !== "Cash on Delivery"
+      );
     }
-    return availablePaymentMethods.filter((method) => method.name !== "Cash on Pickup")
-  }
+    return availablePaymentMethods.filter(
+      (method) => method.name !== "Cash on Pickup"
+    );
+  };
 
-  const selectedPaymentMethodDisplay = paymentMethod || "Select Payment Method"
+  const selectedPaymentMethodDisplay = paymentMethod || "Select Payment Method";
 
   const handleOrderCreated = (order) => {
     // You can add additional logic here if needed
-    console.log("Order created:", order)
-
-  }
+    console.log("Order created:", order);
+  };
 
   const handleCompleteOrder = async () => {
     // Kiểm tra nếu giỏ hàng trống
@@ -137,7 +157,9 @@ const ShoppingCardItem = () => {
     }
 
     // Hiển thị thông báo xác nhận thanh toán
-    const confirmPayment = window.confirm("Bạn có chắc chắn muốn thanh toán đơn hàng này?");
+    const confirmPayment = window.confirm(
+      "Bạn có chắc chắn muốn thanh toán đơn hàng này?"
+    );
     if (!confirmPayment) {
       return; // Nếu người dùng không xác nhận, dừng lại
     }
@@ -166,12 +188,6 @@ const ShoppingCardItem = () => {
 
       const data = await response.json();
       console.log("Order created successfully:", data);
-
-      // Hiển thị thông báo đặt hàng thành công
-      alert("Đặt hàng thành công!");
-
-      // Điều hướng về trang chủ
-      navigate(path.home);
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.");
@@ -191,10 +207,11 @@ const ShoppingCardItem = () => {
     }
   };
 
-
   // xóa từng sản phẩm
   const handleRemoveItem = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
+    if (
+      window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")
+    ) {
       dispatch(removeItem({ id }));
     }
   };
@@ -204,6 +221,84 @@ const ShoppingCardItem = () => {
     if (newQuantity < 1) return;
     dispatch(updateItemQuantity({ id, newQuantity }));
   };
+
+  // Thanh toán qua VNPAY
+  const handleVNPAYPayment = async (e) => {
+    e.preventDefault();
+
+    // Kiểm tra điều kiện
+    if (cartItems.length === 0) return toast.error("Giỏ hàng trống!");
+    if (!customerInfo?.id) return toast.error("Thiếu thông tin khách hàng!");
+    if (paymentMethod !== "VNPAY") return toast.error("Vui lòng chọn VNPAY!");
+    if (discountedTotal <= 0) return toast.error("Tổng tiền không hợp lệ!");
+
+    try {
+      // 1. Chuẩn bị dữ liệu đơn hàng
+      const orderData = {
+        customerID: Number(customerInfo.id),
+        employeeID: null,
+        voucherID: appliedVoucher?.id || null,
+        totalAmount: Number(discountedTotal),
+        status: "Shipping",
+        cartItems: cartItems.map((item) => ({
+          productID: Number(item.productID),
+          quantity: Number(item.quantity),
+          price: Number(item.price),
+        })),
+      };
+
+      // 2. Gửi yêu cầu tạo đơn hàng
+      const response = await axios.post(
+        "http://localhost:4000/api/order/add",
+        orderData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.data.EC !== 1) {
+        throw new Error(response.data.EM || "Tạo đơn hàng thất bại");
+      }
+
+      const orderID = response.data.DT.orderID;
+
+      // 3. Lưu đơn hàng vào localStorage và Redux (nếu dùng)
+      const order = {
+        orderID,
+        orderDate: new Date().toISOString(),
+        customer: customerInfo,
+        items: cartItems,
+        subtotal,
+        tax,
+        shippingCost: selectedShippingCost,
+        discount: parseFloat(appliedVoucher?.discount) / 100 || 0,
+        total: discountedTotal,
+        paymentMethod,
+        shippingMethod:
+          selectedShippingCost === 0
+            ? "Pickup from store"
+            : "Standard Shipping",
+        status: "Processing",
+      };
+
+      localStorage.setItem("orders", JSON.stringify(order));
+      dispatch(addOrder(order)); // Nếu bạn dùng Redux
+
+      // 4. Xác nhận thanh toán
+      const confirmPayment = window.confirm(
+        "Bạn có chắc chắn muốn thanh toán đơn hàng này?"
+      );
+      if (!confirmPayment) return;
+
+      // 5. Chuyển hướng đến VNPAY
+      const vnpayURL = `http://localhost:8888/order/create_payment_url?amount=${discountedTotal}&orderId=${orderID}`;
+      window.location.href = vnpayURL;
+    } catch (error) {
+      console.error("Chi tiết lỗi:", error.response?.data || error.message);
+      toast.error(error.response?.data?.EM || "Lỗi khi xử lý thanh toán");
+    }
+  };
+
   return (
     <div className="container mx-auto p-6">
       <div className="mt-2 flex items-center text-sm text-gray-500">
@@ -255,13 +350,16 @@ const ShoppingCardItem = () => {
           {/* Order Summary */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Order Summary</h2>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                Order Summary
+              </h2>
               {cartItems.length === 0 ? (
-                <div className="text-center text-gray-500 py-4">Your cart is empty</div>
+                <div className="text-center text-gray-500 py-4">
+                  Your cart is empty
+                </div>
               ) : (
                 <div className="space-y-4">
                   {cartItems.map((item) => (
-
                     // <div key={item.productID} className="flex items-center border-b pb-4">
                     //   <div className="w-16 h-16 bg-gray-200 rounded-md mr-4">
                     //     {item.image && item.image.length > 0 && (
@@ -307,7 +405,9 @@ const ShoppingCardItem = () => {
             </div>
 
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Shipping Information</h2>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                Shipping Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Name:</p>
@@ -334,11 +434,16 @@ const ShoppingCardItem = () => {
           {/* Payment Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Payment Summary</h2>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                Payment Summary
+              </h2>
 
               {/* Payment Method Selection */}
               <div className="mb-4 relative">
-                <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="paymentMethod"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Payment Method
                 </label>
                 <button
@@ -356,7 +461,11 @@ const ShoppingCardItem = () => {
                         key={method.id}
                         type="button"
                         className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:outline-none"
-                        onClick={() => handlePaymentMethodChange({ target: { value: method.name } })}
+                        onClick={() =>
+                          handlePaymentMethodChange({
+                            target: { value: method.name },
+                          })
+                        }
                       >
                         {method.name}
                       </button>
@@ -390,11 +499,15 @@ const ShoppingCardItem = () => {
               <div className="space-y-2 pt-4 border-t">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">{formatCurrency(subtotal)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(subtotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping:</span>
-                  <span className="font-medium">{formatCurrency(selectedShippingCost)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(selectedShippingCost)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax (10%):</span>
@@ -408,19 +521,21 @@ const ShoppingCardItem = () => {
                 )}
                 <div className="flex justify-between pt-4 border-t text-lg font-bold">
                   <span>Total:</span>
-                  <span className="text-indigo-600">{formatCurrency(discountedTotal)}</span>
+                  <span className="text-indigo-600">
+                    {formatCurrency(discountedTotal)}
+                  </span>
                 </div>
               </div>
 
               {/* Create Order Button */}
-              {paymentMethod ? (
+              {paymentMethod && paymentMethod !== "VNPAY" ? (
                 cartItems.length > 0 ? (
                   <CreateOrder
                     customerInfo={customerInfo}
                     cartItems={cartItems}
                     paymentMethod={paymentMethod}
                     shippingCost={selectedShippingCost}
-                    voucher={appliedVoucher}
+                    voucher={appliedVoucher || { discount: 0 }}
                     onOrderCreated={handleOrderCreated}
                   />
                 ) : (
@@ -439,7 +554,11 @@ const ShoppingCardItem = () => {
                   Select Payment Method to Continue
                 </button>
               )}
-              <button className="w-full bg-yellow-400 text-black p-3 mt-2 rounded-4xl hover:bg-yellow-500">
+              <button
+                className="w-full bg-yellow-400 text-black p-3 mt-2 rounded-4xl hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={paymentMethod !== "VNPAY"}
+                onClick={handleVNPAYPayment}
+              >
                 Thanh toán qua VNPAY
               </button>
             </div>
@@ -447,7 +566,7 @@ const ShoppingCardItem = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ShoppingCardItem
+export default ShoppingCardItem;

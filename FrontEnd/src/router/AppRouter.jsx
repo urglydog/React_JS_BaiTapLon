@@ -127,7 +127,13 @@
 
 // export default AppRouter;
 import React, { useContext } from "react";
-import { BrowserRouter, Routes, Route, Navigate,Outlet  } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import ProtectedRoute from "../services/ProtectedRoute";
 
@@ -159,6 +165,7 @@ import ProductAbout from "../components/product/ProductAbout";
 import Product from "../components/product/Product";
 import ScrollToTop from "../components/option/ScrollToTop";
 import VIPCalendar from "../pages/Calendar/VIPCalendar";
+import ThankYouPage from "../pages/ShoppingCard/ThankForShopping";
 const AppRouter = () => {
   const { getUserRole, loading } = useContext(UserContext);
 
@@ -207,6 +214,7 @@ const AppRouter = () => {
           <Route path="all_products" element={<All_Product />} />
           <Route path="repair" element={<Repair />} />
           <Route path="our_deal" element={<Our_Deal />} />
+          <Route path="thank_for_shopping" element={<ThankYouPage />} />
 
           {/* Protected customer routes */}
           <Route
@@ -231,7 +239,6 @@ const AppRouter = () => {
               // <ProtectedRoute requiredRoles={["customer"]}>
               // </ProtectedRoute>
               <ShoppingCard_CheckOut />
-
             }
           />
           <Route

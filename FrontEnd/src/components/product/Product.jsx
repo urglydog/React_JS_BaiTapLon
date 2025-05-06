@@ -29,8 +29,7 @@ import { toast } from "react-toastify";
 export default function Product() {
   console.log(a1);
   console.log(zip);
-  
-  
+
   // const [expanded, setExpanded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const location = useLocation();
@@ -66,16 +65,13 @@ export default function Product() {
 
   const handleClickAddToCart = (product) => {
     console.log(product);
-    
+
     // Thêm hàm xử lý sự kiện khi nhấn nút
     toast.success("Add to cart successfully!");
     console.log("Thêm sản phẩm vào giỏ hàng:", product);
     dispatch(
       addItem({
-        productID: product.productID,
-        productName: product.productName,
-        price: product.price,
-        quantity: 1,
+        ...product,
         description: product.description,
         image: product.image, // Truyền link ảnh
       })

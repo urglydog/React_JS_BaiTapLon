@@ -15,6 +15,7 @@ const path = {
   shopping_card_item: "/shopping_card_item",
   productDetail: "/productDetail",
   productSpeccs: "/productSpeccs",
+  thank_you_shopping: "/thank_you_shopping",
 };
 
 export default path;

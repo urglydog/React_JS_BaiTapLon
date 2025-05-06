@@ -3,19 +3,31 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { clearCart } from "../../utils/redux/cartSlice";
 import path from "../../constant/path";
-import axios from 'axios';
+import axios from "axios";
 import { addOrder } from "../../utils/redux/orderSlice";
-const CreateOrder = ({ customerInfo, cartItems, shippingCost, voucher }) => {
+import { toast } from "react-toastify";
+const CreateOrder = ({
+  customerInfo,
+  cartItems,
+  paymentMethod,
+  shippingCost,
+  voucher,
+}) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // Calculate order totals
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
   const taxRate = 0.1;
   const tax = subtotal * taxRate;
-  const discount = 0; // You can add discount logic here if needed
-  const total = subtotal + tax + shippingCost - discount;
+  const discount = voucher.discount / 100; // You can add discount logic here if needed
+  console.log("voucher", voucher);
 
+  const total = (subtotal + tax + shippingCost) * (1 - discount);
+  console.log("total", total);
 
   // const handleCreateOrder = () => {
   //   // Create the order object
@@ -33,8 +45,6 @@ const CreateOrder = ({ customerInfo, cartItems, shippingCost, voucher }) => {
   //     shippingMethod: shippingCost === 0 ? "Pickup from store" : "Standard Shipping",
   //     status: "Processing",
   //   };
-
-
 
   //   // Save the order to localStorage (in a real app, you would send this to a server)
   //   const existingOrders = JSON.parse(localStorage.getItem("orders") || "[]");
@@ -109,40 +119,55 @@ const CreateOrder = ({ customerInfo, cartItems, shippingCost, voucher }) => {
     };
 
     try {
-      const response = await axios.post('http://localhost:4000/api/order/add', orderData); // Sử dụng axios.post
+      const response = await axios.post(
+        "http://localhost:4000/api/order/add",
+        orderData
+      ); // Sử dụng axios.post
 
       if (response.data.EC === 1) {
-        console.log('Đơn hàng đã được lưu thành công, Order ID:', response.data.DT.orderID);
-        // Dispatch action để lưu đơn hàng vào Redux store
-        dispatch(
-          addOrder({
-            orderID: response.data.DT.orderID,
-            orderDate: new Date().toISOString(),
-            items: cartItems,
-            totalAmount: total,
-            status: "Shipping",
-          })
+        console.log(
+          "Đơn hàng đã được lưu thành công, Order ID:",
+          response.data.DT.orderID
         );
+        // Dispatch action để lưu đơn hàng vào Redux store
+        // Tạo đối tượng order để lưu vào Redux
+        const order = {
+          orderID: response.data.DT.orderID,
+          orderDate: new Date().toISOString(),
+          customer: customerInfo,
+          items: cartItems,
+          subtotal,
+          tax,
+          shippingCost,
+          discount: discount,
+          total,
+          paymentMethod,
+          shippingMethod:
+            shippingCost === 0 ? "Pickup from store" : "Standard Shipping",
+          status: "Processing",
+        };
+        localStorage.setItem("orders", JSON.stringify(order));
+        console.log(order);
+
+        dispatch(addOrder(order));
         // Hiển thị thông báo xác nhận thanh toán
-        const confirmPayment = window.confirm("Bạn có chắc chắn muốn thanh toán đơn hàng này?");
+        const confirmPayment = window.confirm(
+          "Bạn có chắc chắn muốn thanh toán đơn hàng này?"
+        );
         if (!confirmPayment) {
           return; // Nếu người dùng không xác nhận, dừng lại
         }
 
-        // Hiển thị thông báo đặt hàng thành công
-        alert("Đặt hàng thành công!");
-
-        // Xóa giỏ hàng sau khi đặt hàng thành công
-        dispatch(clearCart());
-
-        // Điều hướng về trang chủ
-        navigate(path.home);
+        // Điều hướng về trang cảm ơn
+        navigate(`/thank_for_shopping?code=00&amount=${total * 100}`); // Navigate to thank you page with parameters
+        // navigate(path.home);
+        toast.success("Đặt hàng thành công!");
       } else {
-        console.error('Lỗi khi lưu đơn hàng:', response.data.EM);
+        console.error("Lỗi khi lưu đơn hàng:", response.data.EM);
         alert("Đã xảy ra lỗi khi lưu đơn hàng. Vui lòng thử lại.");
       }
     } catch (error) {
-      console.error('Lỗi khi gọi API lưu đơn hàng:', error);
+      console.error("Lỗi khi gọi API lưu đơn hàng:", error);
       alert("Đã xảy ra lỗi khi kết nối đến máy chủ. Vui lòng thử lại.");
     }
   };

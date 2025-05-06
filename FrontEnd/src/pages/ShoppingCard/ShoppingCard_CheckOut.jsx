@@ -1,27 +1,36 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import Support from "../../components/Support/Support"
-import { Link, useNavigate } from "react-router-dom"
-import path from "../../constant/path"
-import { useSelector } from "react-redux"
-import { UserContext } from "../../context/UserContext" // Đảm bảo đường dẫn chính xác
+import { useState, useContext } from "react";
+import Support from "../../components/Support/Support";
+import { Link, useNavigate } from "react-router-dom";
+import path from "../../constant/path";
+import { useSelector } from "react-redux";
+import { UserContext } from "../../context/UserContext"; // Đảm bảo đường dẫn chính xác
 
 // Component tượng trưng cho Order Summary (đã chỉnh sửa để nhận prop và hiển thị dữ liệu thật)
 const OrderSummary = ({ cartItems, selectedShippingCost }) => {
-  console.log("Cart Items in OrderSummary:", cartItems) // Kiểm tra dữ liệu cartItems
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const total = subtotal + selectedShippingCost
+  console.log("Cart Items in OrderSummary:", cartItems); // Kiểm tra dữ liệu cartItems
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const total = subtotal + selectedShippingCost;
 
   return (
     <div className="bg-white rounded-md shadow-md p-4">
-      <h2 className="text-lg font-semibold text-gray-700 mb-3">Order Summary</h2>
+      <h2 className="text-lg font-semibold text-gray-700 mb-3">
+        Order Summary
+      </h2>
       <div className="space-y-3">
         {cartItems.length === 0 ? (
           <p className="text-sm text-gray-500">Giỏ hàng trống.</p>
         ) : (
           cartItems.map((item) => (
-            <div className="flex items-center justify-between" key={item.productID} style={{ width: "100%" }}>
+            <div
+              className="flex items-center justify-between"
+              key={item.productID}
+              style={{ width: "100%" }}
+            >
               {" "}
               {/* Thêm inline style */}
               <div className="flex items-center" style={{ flexGrow: 1 }}>
@@ -39,14 +48,17 @@ const OrderSummary = ({ cartItems, selectedShippingCost }) => {
                 <div style={{ flexGrow: 1 }}>
                   {" "}
                   {/* Thêm inline style */}
-                  <h6 className="text-sm font-medium text-gray-800">{item.productName}</h6>
+                  <h6 className="text-sm font-medium text-gray-800">
+                    {item.productName}
+                  </h6>
                   <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                 </div>
               </div>
               <span className="text-sm font-semibold text-gray-800">
-                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-                  item.price * item.quantity,
-                )}
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(item.price * item.quantity)}
               </span>
             </div>
           ))
@@ -55,13 +67,19 @@ const OrderSummary = ({ cartItems, selectedShippingCost }) => {
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Subtotal</span>
             <span className="text-sm font-semibold text-gray-800">
-              {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(subtotal)}
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(subtotal)}
             </span>
           </div>
           <div className="flex items-center justify-between mt-1">
             <span className="text-sm text-gray-600">Shipping</span>
             <span className="text-sm font-semibold text-gray-800">
-              {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(selectedShippingCost)}
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(selectedShippingCost)}
             </span>
           </div>
         </div>
@@ -69,39 +87,46 @@ const OrderSummary = ({ cartItems, selectedShippingCost }) => {
           <div className="flex items-center justify-between">
             <span className="text-md font-semibold text-gray-800">Total</span>
             <span className="text-md font-bold text-indigo-600">
-              {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(total)}
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(total)}
             </span>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 function ShoppingCard_CheckOut() {
   // const location = useLocation()
-  const navigate = useNavigate()
-  const cartItems = useSelector((state) => state.cart.carts)
-  const [selectedShippingOption, setSelectedShippingOption] = useState("standard")
-  const { user } = useContext(UserContext) // Lấy thông tin user từ UserContext
-
+  const navigate = useNavigate();
+  const cartItems = useSelector((state) => state.cart.carts);
+  const [selectedShippingOption, setSelectedShippingOption] =
+    useState("standard");
+  const { user } = useContext(UserContext); // Lấy thông tin user từ UserContext
 
   console.log("Checkout");
 
   // Tính toán phí vận chuyển dựa trên tùy chọn đã chọn
-  const shippingCost = selectedShippingOption === "standard" ? 20000 : 0
+  const shippingCost = selectedShippingOption === "standard" ? 20000 : 0;
 
   var id;
-  if(user){
+  if (user) {
     id = user.id;
-  }else{
+  } else {
     id = 0;
   }
-  const [email, setEmail] = useState(user?.email || "") // Sử dụng optional chaining
-  const [firstName, setFirstName] = useState(user?.fullName?.split(" ")[0] || "") // Sử dụng optional chaining
-  const [lastName, setLastName] = useState(user?.fullName?.split(" ").slice(1).join(" ") || "") // Sử dụng optional chaining
-  const [streetAddress, setStreetAddress] = useState(user?.address || "") // Sử dụng optional chaining
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "") // Sử dụng optional chaining
+  const [email, setEmail] = useState(user?.email || ""); // Sử dụng optional chaining
+  const [firstName, setFirstName] = useState(
+    user?.fullName?.split(" ")[0] || ""
+  ); // Sử dụng optional chaining
+  const [lastName, setLastName] = useState(
+    user?.fullName?.split(" ").slice(1).join(" ") || ""
+  ); // Sử dụng optional chaining
+  const [streetAddress, setStreetAddress] = useState(user?.address || ""); // Sử dụng optional chaining
+  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || ""); // Sử dụng optional chaining
 
   // State để lưu lỗi
   const [errors, setErrors] = useState({});
@@ -111,11 +136,11 @@ function ShoppingCard_CheckOut() {
     // Only check once when component mounts
     if (!user) {
       if (window.confirm("Vui lòng đăng nhập để xem giỏ hàng.")) {
-        navigate(path.login)
+        navigate(path.login);
         return;
       } else {
         // If user cancels the confirmation, navigate back to previous page
-        navigate(-1)
+        navigate(-1);
       }
     }
     // Empty dependency array so it only runs once
@@ -125,8 +150,10 @@ function ShoppingCard_CheckOut() {
     if (!email.trim()) newErrors.email = "Email Address is required.";
     if (!firstName.trim()) newErrors.firstName = "First Name is required.";
     if (!lastName.trim()) newErrors.lastName = "Last Name is required.";
-    if (!streetAddress.trim()) newErrors.streetAddress = "Shipping Address is required.";
-    if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone Number is required.";
+    if (!streetAddress.trim())
+      newErrors.streetAddress = "Shipping Address is required.";
+    if (!phoneNumber.trim())
+      newErrors.phoneNumber = "Phone Number is required.";
 
     // Nếu có lỗi, đặt lỗi vào state và focus vào ô đầu tiên bị lỗi
     if (Object.keys(newErrors).length > 0) {
@@ -153,8 +180,8 @@ function ShoppingCard_CheckOut() {
   };
 
   const handleShippingChange = (event) => {
-    setSelectedShippingOption(event.target.value)
-  }
+    setSelectedShippingOption(event.target.value);
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen font-sans py-10">
@@ -175,7 +202,8 @@ function ShoppingCard_CheckOut() {
           <div className="flex items-center">
             {" "}
             {/* Sử dụng flex để xếp hàng ngang và căn chỉnh dọc */}
-            <h1 className="text-2xl font-bold mb-4 mr-4 mt-4">Checkout</h1> {/* Thêm margin-right */}
+            <h1 className="text-2xl font-bold mb-4 mr-4 mt-4">Checkout</h1>{" "}
+            {/* Thêm margin-right */}
             {/* Nút Sign In */}
             {/* <Link to={path.login}>
               <button className="bg-white border border-blue-500 text-blue-500 font-semibold py-2 px-4 rounded-full hover:bg-blue-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
@@ -195,17 +223,26 @@ function ShoppingCard_CheckOut() {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <span className="ml-2 text-sm font-semibold text-indigo-600">Shipping</span>
+                <span className="ml-2 text-sm font-semibold text-indigo-600">
+                  Shipping
+                </span>
               </div>
               <div className="border-t-2 border-gray-300 w-24"></div>
               <div className="flex items-center">
                 <div className="w-6 h-6 rounded-full border-2 border-gray-300 text-gray-500 flex items-center justify-center text-xs font-semibold">
                   2
                 </div>
-                <span className="ml-2 text-sm text-gray-500">Payment & Review</span>
+                <span className="ml-2 text-sm text-gray-500">
+                  Payment & Review
+                </span>
               </div>
             </div>
           </div>
@@ -215,10 +252,15 @@ function ShoppingCard_CheckOut() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Shipping Address Form */}
           <div className="bg-white rounded-md shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Shipping Infomation</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">
+              Shipping Infomation
+            </h2>
             <form className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Email Address *
                 </label>
                 <input
@@ -226,13 +268,19 @@ function ShoppingCard_CheckOut() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.email ? "border-red-500" : ""
-                    }`}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.email ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                )}
               </div>
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   First Name *
                 </label>
                 <input
@@ -240,13 +288,21 @@ function ShoppingCard_CheckOut() {
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.firstName ? "border-red-500" : ""
-                    }`}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.firstName ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.firstName && <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>}
+                {errors.firstName && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.firstName}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Last Name *
                 </label>
                 <input
@@ -254,13 +310,19 @@ function ShoppingCard_CheckOut() {
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.lastName ? "border-red-500" : ""
-                    }`}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.lastName ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.lastName && <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>}
+                {errors.lastName && (
+                  <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>
+                )}
               </div>
               <div>
-                <label htmlFor="company" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="company"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Company
                 </label>
                 <input
@@ -270,7 +332,10 @@ function ShoppingCard_CheckOut() {
                 />
               </div>
               <div>
-                <label htmlFor="streetAddress" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="streetAddress"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Shipping Address *
                 </label>
                 <input
@@ -278,13 +343,21 @@ function ShoppingCard_CheckOut() {
                   id="streetAddress"
                   value={streetAddress}
                   onChange={(e) => setStreetAddress(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.streetAddress ? "border-red-500" : ""
-                    }`}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.streetAddress ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.streetAddress && <p className="text-sm text-red-500 mt-1">{errors.streetAddress}</p>}
+                {errors.streetAddress && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.streetAddress}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="city"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   City *
                 </label>
                 <input
@@ -294,14 +367,19 @@ function ShoppingCard_CheckOut() {
                 />
               </div>
               <div>
-                <label htmlFor="stateProvince" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="stateProvince"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   State/Province
                 </label>
                 <select
                   id="stateProvince"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
-                  <option value="">Please select a region, state or province</option>
+                  <option value="">
+                    Please select a region, state or province
+                  </option>
                   <option value="hanoi">Hà Nội</option>
                   <option value="hochiminh">Hồ Chí Minh</option>
                   <option value="haiphong">Hải Phòng</option>
@@ -367,7 +445,10 @@ function ShoppingCard_CheckOut() {
                 </select>
               </div>
               <div>
-                <label htmlFor="zipPostalCode" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="zipPostalCode"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Zip/Postal Code
                 </label>
                 <input
@@ -377,7 +458,10 @@ function ShoppingCard_CheckOut() {
                 />
               </div>
               <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="country"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Country *
                 </label>
                 <select
@@ -407,7 +491,10 @@ function ShoppingCard_CheckOut() {
                 </select>
               </div>
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Phone Number *
                 </label>
                 <input
@@ -415,21 +502,31 @@ function ShoppingCard_CheckOut() {
                   id="phone"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.phoneNumber ? "border-red-500" : ""
-                    }`}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.phoneNumber ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.phoneNumber && <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>}
+                {errors.phoneNumber && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.phoneNumber}
+                  </p>
+                )}
               </div>
             </form>
           </div>
 
           {/* Order Summary */}
           <div>
-            <OrderSummary cartItems={cartItems} selectedShippingCost={shippingCost} />
+            <OrderSummary
+              cartItems={cartItems}
+              selectedShippingCost={shippingCost}
+            />
 
             {/* Shipping Options */}
             <div className="bg-white rounded-md shadow-md p-4 mt-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-3">Shipping Options</h2>
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">
+                Shipping Options
+              </h2>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -442,16 +539,23 @@ function ShoppingCard_CheckOut() {
                       checked={selectedShippingOption === "standard"}
                       onChange={handleShippingChange}
                     />
-                    <label htmlFor="standard" className="ml-2 text-sm text-gray-700">
+                    <label
+                      htmlFor="standard"
+                      className="ml-2 text-sm text-gray-700"
+                    >
                       Standard Shipping
                     </label>
                   </div>
                   <span className="text-sm text-gray-700">
-                    {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(20000)}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(20000)}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 ml-6">
-                  Price may vary depending on the item/destination. Shop Staff will contact you.
+                  Price may vary depending on the item/destination. Shop Staff
+                  will contact you.
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -464,15 +568,23 @@ function ShoppingCard_CheckOut() {
                       checked={selectedShippingOption === "pickup"}
                       onChange={handleShippingChange}
                     />
-                    <label htmlFor="pickup" className="ml-2 text-sm text-gray-700">
+                    <label
+                      htmlFor="pickup"
+                      className="ml-2 text-sm text-gray-700"
+                    >
                       Pickup from store
                     </label>
                   </div>
                   <span className="text-sm text-gray-700">
-                    {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(0)}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(0)}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 ml-6">123 Hung Vuong street, Tuy Hoa City, Phu Yen</p>
+                <p className="text-xs text-gray-500 ml-6">
+                  123 Hung Vuong street, Tuy Hoa City, Phu Yen
+                </p>
               </div>
             </div>
           </div>
@@ -492,7 +604,7 @@ function ShoppingCard_CheckOut() {
       </div>
       <Support></Support>
     </div>
-  )
+  );
 }
 
-export default ShoppingCard_CheckOut
+export default ShoppingCard_CheckOut;
