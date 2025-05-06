@@ -10,7 +10,7 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
 
   const handleApplyManual = async () => {
     if (!enteredCode) {
-      setManualApplyError("Vui lòng nhập mã giảm giá.");
+      setManualApplyError("Please apply voucher.");
       setFoundVoucher(null);
       setIsExpiredVoucher(false);
       return;
@@ -35,7 +35,7 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
         setFoundVoucher(data.DT);
         setIsExpiredVoucher(new Date(data.DT.expirationDate) < new Date());
       } else {
-        setManualApplyError(data?.EM || "Mã giảm giá không hợp lệ.");
+        setManualApplyError(data?.EM || "Invalid voucher code.");
         setFoundVoucher(data?.DT || null); // Vẫn set foundVoucher nếu có data trả về
         setIsExpiredVoucher(data?.DT ? new Date(data.DT.expirationDate) < new Date() : false);
       }
@@ -57,15 +57,16 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md overflow-y-auto max-h-screen">
-        <h2 className="text-xl font-semibold mb-4">Chọn hoặc Nhập Mã Giảm Giá</h2>
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.2)] flex justify-center items-center z-50">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md overflow-y-auto max-h-[90vh]">
+        {/* Nội dung modal */}
+        <h2 className="text-xl font-semibold mb-4">Select or enter the discount code</h2>
 
         {/* Input nhập mã giảm giá */}
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Nhập mã giảm giá (nếu có)"
+            placeholder="Enter the discount code (if any)"
             className="w-full border p-2 rounded mb-2"
             value={enteredCode}
             onChange={(e) => setEnteredCode(e.target.value)}
@@ -76,27 +77,27 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
             disabled={checkingVoucher}
           >
-            {checkingVoucher ? "Đang kiểm tra..." : "Tìm"}
+            {checkingVoucher ? "Checking..." : "Find Voucher"}
           </button>
           {manualApplyError && <p className="text-red-500 text-sm mt-1">{manualApplyError}</p>}
           {foundVoucher && (
             <div className={`mt-2 p-3 border rounded-md ${isExpiredVoucher ? 'bg-red-100' : 'bg-green-100'}`}>
               <p className={`font-semibold ${isExpiredVoucher ? 'text-red-700' : 'text-green-700'}`}>
-                {isExpiredVoucher ? 'Mã đã hết hạn!' : 'Mã hợp lệ!'}
+                {isExpiredVoucher ? 'Expired code!' : 'Valid code!'}
               </p>
-              <p className={isExpiredVoucher ? 'text-red-700' : ''}>Mã: {foundVoucher.code}</p>
-              <p className={isExpiredVoucher ? 'text-red-700' : ''}>Giảm: {foundVoucher.discount}%</p>
+              <p className={isExpiredVoucher ? 'text-red-700' : ''}>Code: {foundVoucher.code}</p>
+              <p className={isExpiredVoucher ? 'text-red-700' : ''}>Discount: {foundVoucher.discount}%</p>
               <p className={isExpiredVoucher ? 'text-red-700' : ''}>
-                Hết hạn: {new Date(foundVoucher.expirationDate).toLocaleDateString()}
+                Expired Date: {new Date(foundVoucher.expirationDate).toLocaleDateString()}
               </p>
               {isExpiredVoucher ? (
-                <p className="text-red-500 text-sm mt-2">Voucher này đã hết hạn và không thể áp dụng.</p>
+                <p className="text-red-500 text-sm mt-2">Expired - Can't apply this voucher.</p>
               ) : (
                 <button
                   onClick={handleSelectFoundVoucher}
                   className="w-full py-2 px-4 rounded-md text-sm mt-2 bg-green-500 text-white hover:bg-green-600"
                 >
-                  Áp dụng mã này
+                  Aplly this Voucher
                 </button>
               )}
             </div>
@@ -106,10 +107,10 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
         <hr className="my-4" />
 
         {/* Danh sách các voucher hiện có */}
-        <h3 className="text-lg font-semibold mb-2">Các Mã Giảm Giá Hiện Có</h3>
+        <h3 className="text-lg font-semibold mb-2">Valid Vouchers</h3>
         <div className="max-h-96 overflow-y-auto">
           {vouchers.length === 0 ? (
-            <p className="text-gray-500">Không có mã giảm giá nào.</p>
+            <p className="text-gray-500">There are no Vouchers.</p>
           ) : (
             <ul className="space-y-2">
               {vouchers.map((voucher) => (
@@ -121,11 +122,11 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
                   <div>
                     <div className="font-semibold">{voucher.code}</div>
                     <div className="text-sm text-gray-600">
-                      Giảm {voucher.discount}% - Hết hạn: {new Date(voucher.expirationDate).toLocaleDateString()}
+                      Discount {voucher.discount}% - Expired Date: {new Date(voucher.expirationDate).toLocaleDateString()}
                     </div>
                   </div>
                   <button className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 text-sm">
-                    Chọn
+                    Apply
                   </button>
                 </li>
               ))}
@@ -139,11 +140,12 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
             onClick={onClose}
             className="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
           >
-            Đóng
+            Close
           </button>
         </div>
       </div>
     </div>
+
   );
 }
 

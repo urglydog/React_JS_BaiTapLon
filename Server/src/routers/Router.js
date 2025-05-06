@@ -8,6 +8,8 @@ import {
 import {
   handleGetOrdersWithDetails,
   handleGetAllAppointments,
+  handleGetAllOrders,
+  handleAddOrder
 } from "../controller/OrderController.js";
 import {
   handleUpdateCustomerInfo,
@@ -46,6 +48,8 @@ const initApiRoutes = (app) => {
   // orderController
   router.get("/order/getOrdersWithDetails", handleGetOrdersWithDetails);
   router.get("/order/getAllAppointments", handleGetAllAppointments);
+  router.get("/order/getAllOrders", handleGetAllOrders); // Thêm route mới
+  router.post("/order/add", handleAddOrder);
     // customerController
     router.put("/customer", handleUpdateCustomerInfo); // Route để cập nhật thông tin khách hàng (sử dụng PUT)
     router.get("/customer/:id", handleGetCustomerById); // Route để lấy thông tin khách hàng theo ID (sử dụng GET với tham số ID)

@@ -12,11 +12,11 @@ const ProductCard = ({ product }) => {
 
   return (
     <div
-      className="w-full max-w-[200px]  bg-white shadow rounded-lg p-3 mx-auto hover:shadow-lg transition cursor-pointer"
+      className="w-[200px] h-[340px] bg-white shadow rounded-lg p-3 hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
       onClick={handleClick}
     >
       {/* Tình trạng */}
-      <div className="text-xs font-semibold text-green-600 mb-1">
+      <div className="text-xs font-semibold text-green-600 mb-1 h-4">
         {product.inStock ? (
           <span className="text-green-600">🟢 in stock</span>
         ) : (
@@ -25,31 +25,41 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Ảnh sản phẩm */}
-      <img
-        src={product.image}
-        alt={product.productName}
-        className="w-full h-32 object-contain mb-2"
-      />
+      <div className="h-32 mb-2 flex justify-center items-center">
+        <img
+          src={product.image}
+          alt={product.productName}
+          className="max-h-full object-contain"
+        />
+      </div>
 
       {/* Đánh giá */}
-      <div className="flex items-center text-sm text-gray-600 mb-1">
+      <div className="flex items-center text-sm text-gray-600 mb-1 h-5">
         {[...Array(5)].map((_, index) => (
           <FaStar key={index} className="text-yellow-400 mr-1" size={12} />
         ))}
-        <span>Reviews ({product.reviews})</span>
+        {/* <span className="ml-1">({product.reviews})</span> */}
       </div>
 
       {/* Tên sản phẩm */}
-      <h3 className="text-xs font-semibold text-gray-800 mb-1 line-clamp-2 cursor-pointer">
+      <h3 className="text-xs font-semibold text-gray-800 mb-1 line-clamp-2 h-[2.5rem]">
         {product.productName}
       </h3>
 
       {/* Giá */}
       <div className="mt-1">
         <p className="line-through text-sm text-gray-400">
-          ${product.price * 0.25}
+          {new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          }).format(product.price * 1.25)}
         </p>
-        <p className="text-lg font-bold text-black">${product.price}</p>
+        <p className="text-lg font-bold text-black">
+          {new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          }).format(product.price)}
+        </p>
       </div>
     </div>
   );
