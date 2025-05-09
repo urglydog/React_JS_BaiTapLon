@@ -362,7 +362,7 @@ function AuthCard() {
               error={signInErrors.password}
             />
             
-            <a href="#" className="text-xs text-gray-600 mt-2">Quên Mật Khẩu?</a>
+            {/* <a href="#" className="text-xs text-gray-600 mt-2">Quên Mật Khẩu?</a> */}
             
             <FormButton 
               text={loading ? "Đang xử lý..." : "Đăng Nhập"} 

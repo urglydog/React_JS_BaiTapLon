@@ -113,7 +113,11 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex-1 flex justify-center">
-                <img src={product.image} alt={product.productName} className="mx-auto" />
+                <img
+                  src={product.image}
+                  alt={product.productName}
+                  className="mx-auto"
+                />
               </div>
             </div>
 
