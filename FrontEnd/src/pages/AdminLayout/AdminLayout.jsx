@@ -555,7 +555,7 @@ export default function ComputerStoreAdminLayout() {
             <ul className="space-y-1">
               {[
                 { name: "Dashboard", icon: FaChartPie },
-                { name: "Monitors", icon: FaDesktop },
+                { name: "Computers", icon: FaDesktop },
                 { name: "Processors", icon: FaMicrochip },
                 { name: "RAM", icon: FaMemory },
                 { name: "Storage", icon: FaHdd },

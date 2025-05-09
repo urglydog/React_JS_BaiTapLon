@@ -33,20 +33,33 @@ function VIPCalendar() {
   const calendarRef = useRef(null); // Ref to measure container height
   const navigate = useNavigate();
   const backendURL = import.meta.env.VITE_BACK_END_URL;
-
   // Fetch appointments
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await fetch(`${backendURL}/api/order/getAllAppointments`);
+        const response = await fetch(`${backendURL}/api/appointments/getAll`);
         const data = await response.json();
         const appointments = data.DT;
-
+        console.log(appointments);
         const mappedEvents = appointments.map((appointment) => {
           const startDateTime = new Date(appointment.appointmentDateTime);
-          const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60000);
-          const startTime = `${startDateTime.getUTCHours().toString().padStart(2, "0")}:${startDateTime.getUTCMinutes().toString().padStart(2, "0")}`;
-          const endTime = `${endDateTime.getUTCHours().toString().padStart(2, "0")}:${endDateTime.getUTCMinutes().toString().padStart(2, "0")}`;
+          const endDateTime = new Date(
+            startDateTime.getTime() + appointment.duration * 60000
+          );
+          const startTime = `${startDateTime
+            .getUTCHours()
+            .toString()
+            .padStart(2, "0")}:${startDateTime
+            .getUTCMinutes()
+            .toString()
+            .padStart(2, "0")}`;
+          const endTime = `${endDateTime
+            .getUTCHours()
+            .toString()
+            .padStart(2, "0")}:${endDateTime
+            .getUTCMinutes()
+            .toString()
+            .padStart(2, "0")}`;
           const dayOfWeek = startDateTime.getDay() + 1;
 
           return {
@@ -60,7 +73,10 @@ function VIPCalendar() {
             status: appointment.status,
             description: appointment.notes || "No notes provided",
             location: appointment.serviceLocation,
-            attendees: [appointment.customerName, appointment.employeeName].filter(Boolean),
+            attendees: [
+              appointment.customerName,
+              appointment.employeeName,
+            ].filter(Boolean),
             organizer: appointment.employeeName || "Unassigned",
             date: startDateTime,
           };
@@ -68,7 +84,9 @@ function VIPCalendar() {
 
         setEvents(mappedEvents);
         if (mappedEvents.length > 0) {
-          const firstAppointmentDate = new Date(Math.min(...mappedEvents.map((e) => new Date(e.date))));
+          const firstAppointmentDate = new Date(
+            Math.min(...mappedEvents.map((e) => new Date(e.date)))
+          );
           setCurrentWeekStart(firstAppointmentDate);
         } else {
           setCurrentWeekStart(new Date());
@@ -119,7 +137,7 @@ function VIPCalendar() {
   ];
 
   const [myCalendars, setMyCalendars] = useState(allStatuses);
-console.log(setMyCalendars);
+  console.log(setMyCalendars);
 
   // Update week dates and current month/date
   useEffect(() => {
@@ -135,10 +153,22 @@ console.log(setMyCalendars);
     setWeekDates(newWeekDates);
 
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
-    setCurrentMonth(`${monthNames[startOfWeek.getMonth()]} ${startOfWeek.getFullYear()}`);
+    setCurrentMonth(
+      `${monthNames[startOfWeek.getMonth()]} ${startOfWeek.getFullYear()}`
+    );
     setCurrentDate(`${monthNames[startOfWeek.getMonth()]} ${newWeekDates[0]}`);
   }, [currentWeekStart]);
 
@@ -147,10 +177,10 @@ console.log(setMyCalendars);
     const updateHourHeight = () => {
       if (calendarRef.current) {
         const containerHeight = calendarRef.current.clientHeight;
-        const totalHours = 9; // 8 AM to 4 PM (9 hours)
-        const headerHeight = 80; // Approximate height of the calendar header (days row)
+        const totalHours = 24; // 24 giờ
+        const headerHeight = 80; // Chiều cao header
         const availableHeight = containerHeight - headerHeight;
-        const newHourHeight = Math.max(40, availableHeight / totalHours); // Minimum 40px per hour
+        const newHourHeight = Math.max(20, availableHeight / totalHours); // Giảm min height để phù hợp
         setHourHeight(newHourHeight);
       }
     };
@@ -182,7 +212,8 @@ console.log(setMyCalendars);
   // Handle AI popup typing animation
   useEffect(() => {
     if (showAIPopup) {
-      const text = "Looks like you don't have that many meetings today. Shall I play some Hans Zimmer essentials to help you get into your Flow State?";
+      const text =
+        "Looks like you don't have that many meetings today. Shall I play some Hans Zimmer essentials to help you get into your Flow State?";
       let i = 0;
       let isMounted = true;
 
@@ -228,8 +259,16 @@ console.log(setMyCalendars);
     });
   };
 
-  const daysInMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), 1).getDay();
+  const daysInMonth = new Date(
+    currentWeekStart.getFullYear(),
+    currentWeekStart.getMonth() + 1,
+    0
+  ).getDate();
+  const firstDayOfMonth = new Date(
+    currentWeekStart.getFullYear(),
+    currentWeekStart.getMonth(),
+    1
+  ).getDay();
   const miniCalendarDays = Array.from(
     { length: daysInMonth + firstDayOfMonth },
     (_, i) => (i < firstDayOfMonth ? null : i - firstDayOfMonth + 1)
@@ -247,7 +286,7 @@ console.log(setMyCalendars);
   }, new Set());
 
   const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  const timeSlots = Array.from({ length: 9 }, (_, i) => i + 8); // 8 AM to 4 PM
+  const timeSlots = Array.from({ length: 24 }, (_, i) => i); // 0-23 (24 giờ)
 
   const calculateEventStyle = (startTime, endTime) => {
     const startHour = parseInt(startTime.split(":")[0]);
@@ -258,26 +297,26 @@ console.log(setMyCalendars);
     const start = startHour + startMinute / 60;
     const end = endHour + endMinute / 60;
 
-    if (start < 8 || start > 16 || end < 8 || end > 16) return { display: "none" };
-
-    const top = (start - 8) * hourHeight; // Use dynamic hourHeight
+    const top = start * hourHeight; // Bắt đầu từ 0h
     const height = (end - start) * hourHeight;
 
     return { top: `${top}px`, height: `${height}px` };
   };
-
   const togglePlay = () => setIsPlaying(!isPlaying);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const fadeInClass = isLoaded ? "opacity-100 transition-opacity duration-500 ease-out" : "opacity-0";
+  const fadeInClass = isLoaded
+    ? "opacity-100 transition-opacity duration-500 ease-out"
+    : "opacity-0";
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop')",
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop')",
         }}
       />
 
@@ -314,14 +353,18 @@ console.log(setMyCalendars);
         {/* Sidebar */}
         <div
           className={`fixed sm:static top-0 left-0 h-full w-64 sm:w-[20%] max-w-[250px] bg-white/10 backdrop-blur-lg p-4 shadow-xl border-r border-white/20 rounded-tr-3xl ${fadeInClass} transition-transform duration-300 ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
+            isSidebarOpen
+              ? "translate-x-0"
+              : "-translate-x-full sm:translate-x-0"
           } flex flex-col justify-between z-20`}
           style={{ transitionDelay: "0.4s" }}
         >
           <div>
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-medium text-sm sm:text-base">{currentMonth}</h3>
+                <h3 className="text-white font-medium text-sm sm:text-base">
+                  {currentMonth}
+                </h3>
                 <div className="flex gap-1">
                   <button
                     onClick={() => {
@@ -347,7 +390,10 @@ console.log(setMyCalendars);
               </div>
               <div className="grid grid-cols-7 gap-1 text-center">
                 {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
-                  <div key={i} className="text-xs text-white/70 font-medium py-1">
+                  <div
+                    key={i}
+                    className="text-xs text-white/70 font-medium py-1"
+                  >
                     {day}
                   </div>
                 ))}
@@ -358,8 +404,10 @@ console.log(setMyCalendars);
                       day && daysWithAppointments.has(day)
                         ? "bg-blue-500 text-white"
                         : day === new Date().getDate() &&
-                          new Date().getMonth() === currentWeekStart.getMonth() &&
-                          new Date().getFullYear() === currentWeekStart.getFullYear()
+                          new Date().getMonth() ===
+                            currentWeekStart.getMonth() &&
+                          new Date().getFullYear() ===
+                            currentWeekStart.getFullYear()
                         ? "bg-gray-500 text-white"
                         : "text-white hover:bg-white/20"
                     } ${!day ? "invisible" : ""}`}
@@ -371,12 +419,16 @@ console.log(setMyCalendars);
             </div>
 
             <div>
-              <h3 className="text-white font-medium mb-3 text-sm sm:text-base">My calendars</h3>
+              <h3 className="text-white font-medium mb-3 text-sm sm:text-base">
+                My calendars
+              </h3>
               <div className="space-y-2">
                 {myCalendars.map((cal, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-sm ${cal.color}`}></div>
-                    <span className="text-white text-xs sm:text-sm">{cal.name}</span>
+                    <span className="text-white text-xs sm:text-sm">
+                      {cal.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -385,7 +437,10 @@ console.log(setMyCalendars);
         </div>
 
         {/* Main Content */}
-        <div className={`flex-1 flex flex-col ${fadeInClass}`} style={{ transitionDelay: "0.6s" }}>
+        <div
+          className={`flex-1 flex flex-col ${fadeInClass}`}
+          style={{ transitionDelay: "0.6s" }}
+        >
           <div className="flex items-center justify-between p-4 border-b border-white/20">
             <div className="flex items-center gap-2 sm:gap-4">
               <button
@@ -408,7 +463,9 @@ console.log(setMyCalendars);
                   <ChevronRight className="h-4 sm:h-5 w-4 sm:w-5" />
                 </button>
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold text-white">{currentDate}</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-white">
+                {currentDate}
+              </h2>
             </div>
             <div className="flex items-center gap-2 rounded-md p-1">
               <button
@@ -422,19 +479,26 @@ console.log(setMyCalendars);
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto p-4" ref={calendarRef}>
+          <div className="flex-1 overflow-auto p-4" ref={calendarRef} style={{ maxHeight: 'calc(100vh - 200px)' }}>
             {currentView === "week" && (
-              <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full">
+              <div className="">
                 <div className="grid grid-cols-8 border-b border-white/20">
                   <div className="p-2 text-center text-white/50 text-xs"></div>
                   {weekDays.map((day, i) => (
-                    <div key={i} className="p-2 text-center border-l border-white/20">
-                      <div className="text-xs text-white/70 font-medium">{day}</div>
+                    <div
+                      key={i}
+                      className="p-2 text-center border-l border-white/20"
+                    >
+                      <div className="text-xs text-white/70 font-medium">
+                        {day}
+                      </div>
                       <div
                         className={`text-base sm:text-lg font-medium mt-1 text-white ${
                           weekDates[i] === new Date().getDate() &&
-                          new Date().getMonth() === currentWeekStart.getMonth() &&
-                          new Date().getFullYear() === currentWeekStart.getFullYear()
+                          new Date().getMonth() ===
+                            currentWeekStart.getMonth() &&
+                          new Date().getFullYear() ===
+                            currentWeekStart.getFullYear()
                             ? "bg-blue-500 rounded-full w-6 sm:w-8 h-6 sm:h-8 flex items-center justify-center mx-auto"
                             : ""
                         }`}
@@ -453,13 +517,22 @@ console.log(setMyCalendars);
                         className="border-b border-white/10 pr-2 text-right text-xs"
                         style={{ height: `${hourHeight}px` }}
                       >
-                        {time > 12 ? `${time - 12} PM` : time === 12 ? `12 PM` : `${time} AM`}
+                        {time === 0
+                          ? "12 AM"
+                          : time < 12
+                          ? `${time} AM`
+                          : time === 12
+                          ? "12 PM"
+                          : `${time - 12} PM`}
                       </div>
                     ))}
                   </div>
 
                   {Array.from({ length: 7 }).map((_, dayIndex) => (
-                    <div key={dayIndex} className="border-l border-white/20 relative">
+                    <div
+                      key={dayIndex}
+                      className="border-l border-white/20 relative"
+                    >
                       {timeSlots.map((_, timeIndex) => (
                         <div
                           key={timeIndex}
@@ -471,15 +544,24 @@ console.log(setMyCalendars);
                       {getEventsForCurrentWeek()
                         .filter((event) => event.day === dayIndex + 1)
                         .map((event, i) => {
-                          const eventStyle = calculateEventStyle(event.startTime, event.endTime);
+                          const eventStyle = calculateEventStyle(
+                            event.startTime,
+                            event.endTime
+                          );
                           return (
                             <div
                               key={i}
                               className={`absolute ${event.statusColor} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg`}
-                              style={{ ...eventStyle, left: "4px", right: "4px" }}
+                              style={{
+                                ...eventStyle,
+                                left: "4px",
+                                right: "4px",
+                              }}
                               onClick={() => handleEventClick(event)}
                             >
-                              <div className="font-medium truncate">{event.title}</div>
+                              <div className="font-medium truncate">
+                                {event.title}
+                              </div>
                               <div className="opacity-80 text-[10px] mt-1">{`${event.startTime} - ${event.endTime}`}</div>
                               <div className="text-[10px] opacity-70">{`Status: ${event.status}`}</div>
                             </div>
@@ -497,7 +579,8 @@ console.log(setMyCalendars);
             )}
             {currentView === "month" && (
               <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full text-white text-center p-4">
-                Month view not fully implemented yet. Click "Week" to see events.
+                Month view not fully implemented yet. Click "Week" to see
+                events.
               </div>
             )}
           </div>
@@ -556,7 +639,9 @@ console.log(setMyCalendars);
             <div
               className={`${selectedEvent.statusColor} p-4 sm:p-6 rounded-lg shadow-xl max-w-[90vw] sm:max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto`}
             >
-              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-white">{selectedEvent.title}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-white">
+                {selectedEvent.title}
+              </h3>
               <div className="space-y-3 text-white text-sm sm:text-base">
                 <p className="flex items-center">
                   <Clock className="mr-2 h-4 sm:h-5 w-4 sm:w-5" />
@@ -568,7 +653,9 @@ console.log(setMyCalendars);
                 </p>
                 <p className="flex items-center">
                   <Calendar className="mr-2 h-4 sm:h-5 w-4 sm:w-5" />
-                  {`${weekDays[selectedEvent.day - 1]}, ${new Date(selectedEvent.date).getDate()} ${currentMonth}`}
+                  {`${weekDays[selectedEvent.day - 1]}, ${new Date(
+                    selectedEvent.date
+                  ).getDate()} ${currentMonth}`}
                 </p>
                 <p className="flex items-start">
                   <Users className="mr-2 h-4 sm:h-5 w-4 sm:w-5 mt-1" />

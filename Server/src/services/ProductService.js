@@ -93,10 +93,12 @@ const getProductDetailById = async (productID) => {
   p2.categoryName, 
   p2.brandName, 
   p2.seriesName,
+  s.supplierName,
   GROUP_CONCAT(p3.attributeName SEPARATOR ' | ') AS attributeList
 FROM products p
 JOIN productcategories p2 ON p.categoryID = p2.categoryID
 JOIN productattributes p3 ON p2.categoryID = p3.categoryID
+JOIN suppliers s ON p.supplierID = s.supplierID
 WHERE p.productID = ?
 GROUP BY p.productID`,
       [productID]
