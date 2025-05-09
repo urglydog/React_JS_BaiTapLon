@@ -1,0 +1,1131 @@
+CREATE TABLE Customers (
+    customerID INT PRIMARY KEY AUTO_INCREMENT,
+    fullName VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phoneNumber VARCHAR(15) NOT NULL,
+    address TEXT NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    registrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng Nhân Viên
+CREATE TABLE Employees (
+    employeeID INT PRIMARY KEY AUTO_INCREMENT,
+    fullName VARCHAR(100) NOT NULL,
+    position VARCHAR(50) NOT NULL,
+    phoneNumber VARCHAR(15) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+);
+
+-- Bảng Nhà Cung Cấp
+CREATE TABLE Suppliers (
+    supplierID INT PRIMARY KEY AUTO_INCREMENT,
+    supplierName VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL,
+    phoneNumber VARCHAR(15) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+
+-- Bảng Danh Mục Sản Phẩm
+CREATE TABLE ProductCategories (
+    categoryID INT PRIMARY KEY AUTO_INCREMENT,
+    categoryName VARCHAR(100) ,
+    brandName VARCHAR(100) NOT NULL,
+    seriesName VARCHAR(100),
+    description TEXT
+);
+
+-- Bảng Sản Phẩm
+CREATE TABLE Products (
+    productID INT PRIMARY KEY AUTO_INCREMENT,
+    productName VARCHAR(255) NOT NULL,
+    categoryID INT,
+    supplierID INT,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    stockQuantity INT NOT NULL,
+    availability ENUM('In Stock', 'Out of Stock') DEFAULT 'In Stock' NOT NULL,
+    image VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (categoryID) REFERENCES ProductCategories(categoryID),
+ 	 FOREIGN KEY (supplierID) REFERENCES Suppliers(supplierID)
+);
+
+-- Bảng Thuộc Tính Sản Phẩm (Attribute-Value Model)
+CREATE TABLE ProductAttributes (
+    attributeID INT PRIMARY KEY AUTO_INCREMENT,
+    categoryID INT, 
+    attributeName VARCHAR(100) NOT NULL,
+    FOREIGN KEY (categoryID) REFERENCES ProductCategories(categoryID) ON DELETE CASCADE
+);
+
+-- Bảng Voucher (Giảm giá)
+CREATE TABLE Vouchers (
+    voucherID INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    discount DECIMAL(5,2),
+    expirationDate DATE
+);
+
+-- Bảng Đơn Hàng
+CREATE TABLE Orders (
+    orderID INT PRIMARY KEY AUTO_INCREMENT,
+    customerID INT,
+    employeeID INT,
+    voucherID INT NULL,
+    orderDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    totalAmount DECIMAL(10,2) NOT NULL,
+    status ENUM('Pending', 'Shipping', 'Completed', 'Canceled') DEFAULT 'Pending',
+    FOREIGN KEY (customerID) REFERENCES Customers(customerID),
+    FOREIGN KEY (employeeID) REFERENCES Employees(employeeID),
+    FOREIGN KEY (voucherID) REFERENCES Vouchers(voucherID) 
+);
+
+-- Bảng Chi Tiết Đơn Hàng
+CREATE TABLE OrderDetails (
+    orderDetailID INT PRIMARY KEY AUTO_INCREMENT,
+    orderID INT,
+    productID INT,
+    quantity INT NOT NULL,
+    unitPrice DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (orderID) REFERENCES Orders(orderID) ON DELETE CASCADE,
+    FOREIGN KEY (productID) REFERENCES Products(productID)
+);
+
+
+
+-- Bảng Phương Thức Thanh Toán
+CREATE TABLE PaymentMethods (
+    paymentID INT PRIMARY KEY AUTO_INCREMENT,
+    methodName VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Bảng Thanh Toán
+CREATE TABLE Payments (
+    paymentID INT PRIMARY KEY AUTO_INCREMENT,
+    orderID INT,
+    paymentMethodID INT,
+    paymentStatus ENUM('Pending', 'Completed', 'Failed') DEFAULT 'Pending',
+    paymentDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (orderID) REFERENCES Orders(orderID) ON DELETE CASCADE,
+    FOREIGN KEY (paymentMethodID) REFERENCES PaymentMethods(paymentID)
+);
+
+-- Bảng Đánh Giá Sản Phẩm
+CREATE TABLE Reviews (
+    reviewID INT PRIMARY KEY AUTO_INCREMENT,
+    productID INT,
+    customerID INT,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    reviewDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (productID) REFERENCES Products(productID) ON DELETE CASCADE,
+    FOREIGN KEY (customerID) REFERENCES Customers(customerID) ON DELETE CASCADE
+);
+
+
+
+
+-- Insert data into ProductCategories table
+INSERT INTO ProductCategories (categoryID, categoryName, brandName, seriesName, description) VALUES
+
+(1, 'BanPhim', 'Daeru', 'Gaming', 'Bàn phím gaming Daeru'),
+(2, 'BanPhim', 'Aula', 'Gaming', 'Bàn phím gaming Aula'),
+(3, 'BanPhim', 'Rapoo', 'Gaming', 'Bàn phím gaming Rapoo'),
+(4, 'BanPhim', 'Asus', 'ROG', 'Bàn phím gaming Asus ROG'),
+(5, 'BanPhim', 'Logitech', 'G Series', 'Bàn phím gaming Logitech G Series'),
+
+-- Chuột (Chuot)
+(6, 'Mouse', 'Daeru', 'Gaming', 'Chuột gaming Daeru'),
+(7, 'Mouse', 'MSI', 'Gaming', 'Chuột gaming MSI'),
+(8, 'Mouse', 'Logitech', 'G Series', 'Chuột gaming Logitech G Series'),
+(9, 'Mouse', 'Rapoo', 'Gaming', 'Chuột gaming Rapoo'),
+(10, 'Mouse', 'Razer', 'DeathAdder', 'Chuột gaming Razer DeathAdder'),
+
+-- Pad chuột (PadChuot)
+(11, 'Mousepad', 'Daeru', 'Gaming', 'Pad chuột gaming Daeru'),
+(12, 'Mousepad', 'Asus', 'ROG', 'Pad chuột gaming Asus ROG'),
+(13, 'Mousepad', 'Razer', 'Goliathus', 'Pad chuột gaming Razer Goliathus'),
+
+-- Gaming Gear
+(14, 'GamingGear', 'Sony', 'PlayStation', 'Phụ kiện gaming Sony PlayStation'),
+(15, 'GamingGear', 'Lenovo', 'Legion', 'Phụ kiện gaming Lenovo Legion'),
+(16, 'GamingGear', 'Daeru', 'Pro', 'Phụ kiện gaming Daeru Pro'),
+
+-- Linh kiện máy tính
+-- Case
+(17, 'Case', 'T01', 'Standard', 'Vỏ case máy tính T01'),
+
+-- CPU
+(18, 'CPU', 'AMD', 'Ryzen', 'Bộ xử lý AMD Ryzen'),
+(19, 'CPU', 'Intel', 'Core', 'Bộ xử lý Intel Core'),
+
+-- Mainboard
+(20, 'Main', 'Asus', 'ROG', 'Bo mạch chủ Asus ROG'),
+(21, 'Main', 'Gigabyte', 'Aorus', 'Bo mạch chủ Gigabyte Aorus'),
+(22, 'Main', 'MSI', 'MPG', 'Bo mạch chủ MSI MPG'),
+
+-- Nguồn
+(23, 'PSU', 'Asus', 'ROG', 'Nguồn máy tính Asus ROG'),
+(24, 'PSU', 'Corsair', 'RM Series', 'Nguồn máy tính Corsair RM Series'),
+(25, 'PSU', 'Deepcool', 'PQ Series', 'Nguồn máy tính Deepcool PQ Series'),
+(26, 'PSU', 'MSI', 'MPG', 'Nguồn máy tính MSI MPG'),
+
+-- Ổ cứng
+(27, 'HDD', 'Kingston', 'SSD', 'Ổ cứng thể rắn Kingston SSD'),
+(28, 'HDD', 'Samsung', 'EVO', 'Ổ cứng thể rắn Samsung EVO'),
+(29, 'HDD', 'Western Digital', 'Blue', 'Ổ cứng Western Digital Blue'),
+
+-- RAM
+(30, 'RAM', 'Kingston', 'Fury', 'Bộ nhớ RAM Kingston Fury'),
+(31, 'RAM', 'Corsair', 'Vengeance', 'Bộ nhớ RAM Corsair Vengeance'),
+(32, 'RAM', 'PNY', 'XLR8', 'Bộ nhớ RAM PNY XLR8'),
+
+-- VGA
+(33, 'VGA', 'Asus', 'ROG Strix', 'Card đồ họa Asus ROG Strix'),
+(34, 'VGA', 'MSI', 'Gaming X', 'Card đồ họa MSI Gaming X'),
+(35, 'VGA', 'Gigabyte', 'Aorus', 'Card đồ họa Gigabyte Aorus'),
+
+-- Màn hình
+(36, 'screen', 'Asus', 'TUF Gaming', 'Màn hình gaming Asus TUF Gaming'),
+(37, 'screen', 'Acer', 'Predator', 'Màn hình gaming Acer Predator'),
+(38, 'screen', 'LG', 'UltraGear', 'Màn hình gaming LG UltraGear'),
+(39, 'screen', 'MSI', 'Optix', 'Màn hình gaming MSI Optix'),
+
+-- PC
+(40, 'PC', 'MSI', 'Gaming', 'PC gaming MSI'),
+(41, 'PC', 'Asus', 'ROG', 'PC gaming Asus ROG'),
+
+-- Tai nghe
+(42, 'Headphone', 'Asus', 'ROG', 'Tai nghe gaming Asus ROG'),
+(43, 'Headphone', 'Razer', 'Kraken', 'Tai nghe gaming Razer Kraken'),
+
+-- iPad
+(44, 'iPad', 'Apple', 'iPad', 'Máy tính bảng Apple iPad'),
+
+-- Laptop
+(45, 'Laptop', 'Acer', 'Nitro', 'Laptop Acer Nitro'),
+(46, 'Laptop', 'Asus', 'ROG', 'Laptop gaming Asus ROG'),
+(47, 'Laptop', 'Dell', 'XPS', 'Laptop Dell XPS'),
+(48, 'Laptop', 'Gigabyte', 'Aorus', 'Laptop gaming Gigabyte Aorus'),
+(49, 'Laptop', 'Lenovo', 'Legion', 'Laptop gaming Lenovo Legion'),
+(50, 'Laptop', 'Apple', 'MacBook', 'Laptop Apple MacBook'),
+(51, 'Laptop', 'MSI', 'Stealth', 'Laptop gaming MSI Stealth'),
+
+-- Điện thoại
+(52, 'Phone', 'Apple', 'iPhone', 'Điện thoại Apple iPhone'),
+(53, 'Phone', 'Samsung', 'Galaxy', 'Điện thoại Samsung Galaxy'),
+(54, 'Phone', 'Xiaomi', 'Redmi', 'Điện thoại Xiaomi Redmi');
+
+-- Insert data into Suppliers table
+INSERT INTO Suppliers (supplierName, address, phoneNumber, email) VALUES
+('Công ty TNHH Thế Giới Số', '125 Nguyễn Trãi, Quận 1, TP.HCM', '028-38123456', 'contact@thegioiso.vn'),
+('Mai Hoàng Computer', '78 Lê Thanh Nghị, Quận Hai Bà Trưng, Hà Nội', '024-36417892', 'sales@maihoangcomp.vn'),
+('Phong Vũ Computer', '264A Nguyễn Thị Minh Khai, Quận 3, TP.HCM', '028-73001234', 'info@phongvu.vn'),
+('Hanoicomputer', '129 Thái Hà, Quận Đống Đa, Hà Nội', '024-35380636', 'support@hanoicomputer.vn'),
+('An Phát Computer', '49 Thái Hà, Quận Đống Đa, Hà Nội', '024-35380119', 'orders@anphatpc.com.vn'),
+('FPT Shop', '261-263 Khánh Hội, Quận 4, TP.HCM', '028-73000880', 'fptshop@fpt.com.vn'),
+('Gearvn', '78-80-82 Hoàng Hoa Thám, Quận Tân Bình, TP.HCM', '028-73006200', 'sales@gearvn.com'),
+('Tân Doanh Computer', '154 Thái Hà, Quận Đống Đa, Hà Nội', '024-35641111', 'info@tandoanh.vn'),
+('Memoryzone', '95 Trần Đăng Ninh, Quận Cầu Giấy, Hà Nội', '024-35599588', 'global@memoryzone.com.vn'),
+('Thiết bị số HACOM', '131 Lê Thanh Nghị, Quận Hai Bà Trưng, Hà Nội', '024-35689939', 'components@hacom.vn'),
+('Công ty Tin học Ngôi sao', '262 Bà Triệu, Quận Hai Bà Trưng, Hà Nội', '024-36285551', 'contact@ngoisao.net'),
+('Công ty TNHH Công nghệ Máy tính Vĩnh Xuân', '42 Thái Hà, Quận Đống Đa, Hà Nội', '024-38574589', 'info@vinaxuantech.com');
+
+-- Insert data into Employees table
+INSERT INTO Employees (fullName, position, phoneNumber, email, password) VALUES
+('Tống Phan Kim Thạch', 'Quản lý cửa hàng', '0901234567', 'tong.thach@company.com', SHA2('password123', 256)),
+('Phan Kim Thạch', 'Nhân viên bán hàng', '0912345678', 'kim.thach@company.com', SHA2('password456', 256)),
+('Nguyễn Văn An', 'Nhân viên bán hàng', '0923456789', 'van.an@company.com', SHA2('password789', 256)),
+('Trần Thị Bích', 'Nhân viên bán hàng', '0934567890', 'thi.bich@company.com', SHA2('passwordabc', 256)),
+('Lê Minh Đức', 'Nhân viên bán hàng', '0945678901', 'minh.duc@company.com', SHA2('passworddef', 256)),
+('Phạm Thị Hương', 'Nhân viên bán hàng', '0956789012', 'thi.huong@company.com', SHA2('passwordghi', 256)),
+('Đỗ Quang Huy', 'Nhân viên bán hàng', '0967890123', 'quang.huy@company.com', SHA2('passwordjkl', 256)),
+('Vũ Thanh Mai', 'Kế toán', '0978901234', 'thanh.mai@company.com', SHA2('passwordmno', 256)),
+('Hoàng Minh Tú', 'Nhân viên bán hàng', '0989012345', 'minh.tu@company.com', SHA2('passwordpqr', 256)),
+('Ngô Thị Lan', 'Nhân viên bán hàng', '0990123456', 'thi.lan@company.com', SHA2('passwordstu', 256));
+
+
+-- Insert data into Customers table
+INSERT INTO Customers (fullName, email, phoneNumber, address, password, registrationDate) VALUES
+('Văn Công Thạch', 'thachtaro123@gmail.com', '0901234567', '123 Đường Mai, Quận Hoàn Kiếm, Hà Nội', SHA2('matkhau123', 256), '2023-01-15 10:30:00'),
+('Nguyễn Thị Mai', 'mai.nguyen@email.com', '0912345678', '456 Đường Láng, Quận Đống Đa, Hà Nội', SHA2('matkhau456', 256), '2023-02-20 14:45:00'),
+('Trần Văn Long', 'long.tran@email.com', '0923456789', '789 Trường Sa, Quận 3, TP. Hồ Chí Minh', SHA2('matkhau789', 256), '2023-03-10 09:15:00'),
+('Lê Thị Hằng', 'hang.le@email.com', '0934567890', '101 Nguyễn Văn Cừ, Quận Ninh Kiều, Cần Thơ', SHA2('matkhauabc', 256), '2023-04-05 16:20:00'),
+('Phạm Quốc Huy', 'huy.pham@email.com', '0945678901', '202 Điện Biên Phủ, Quận Bình Thạnh, TP. Hồ Chí Minh', SHA2('matkhaudef', 256), '2023-05-12 11:05:00'),
+('Đặng Thị Lan', 'lan.dang@email.com', '0956789012', '303 Lê Duẩn, Quận Hải Châu, Đà Nẵng', SHA2('matkhaughi', 256), '2023-06-18 13:30:00'),
+('Hoàng Minh Tú', 'tu.hoang@email.com', '0967890123', '404 Nguyễn Huệ, TP. Huế', SHA2('matkhaujkl', 256), '2023-07-22 15:10:00'),
+('Vũ Thị Bích', 'bich.vu@email.com', '0978901234', '505 Trần Phú, TP. Vũng Tàu', SHA2('matkhaumno', 256), '2023-08-30 10:45:00'),
+('Ngô Văn Thành', 'thanh.ngo@email.com', '0989012345', '606 Phạm Văn Đồng, TP. Thủ Đức', SHA2('matkhaupqr', 256), '2023-09-14 12:20:00'),
+('Lý Hồng Nhung', 'nhung.ly@email.com', '0990123456', '707 Quang Trung, TP. Bắc Ninh', SHA2('matkhaustu', 256), '2023-10-25 09:50:00');
+
+
+-- Insert data into PaymentMethods table
+INSERT INTO PaymentMethods (methodName) VALUES
+('Credit Card'),
+('PayPal'),
+('Google Pay'),
+('Apple Pay'),
+('Cryptocurrency'),
+('Gift Card'),
+('cash'),
+('Store Credit');
+
+-- Insert data into Vouchers table
+INSERT INTO Vouchers (code, discount, expirationDate) VALUES
+('WELCOME10', 10.00, '2025-12-31'),
+('SUMMER25', 25.00, '2025-06-30'),
+('FLASH15', 15.00, '2025-05-15'),
+('HOLIDAY20', 20.00, '2025-12-25'),
+('NEWUSER', 5.00, '2025-12-31'),
+('LOYALTY50', 50.00, '2025-08-31'),
+('WEEKEND30', 30.00, '2025-07-31'),
+('BIRTHDAY', 15.00, '2025-12-31'),
+('CLEARANCE', 40.00, '2025-04-30'),
+('BLACKFRIDAY', 35.00, '2025-11-30');
+
+
+-- Insert data into ProductAttributes table
+INSERT INTO ProductAttributes (categoryID, attributeName) VALUES
+-- Bàn phím (BanPhim) - categoryID 1-5
+(1, 'Switch: Cherry MX Red, Blue, Brown'),
+(1, 'Kết nối: USB-C, Bluetooth 5.0, Wireless 2.4GHz'),
+(1, 'Đèn LED: RGB, Rainbow, Đơn sắc'),
+(1, 'Số phím: 104, 87, 61'),
+(1, 'Chất liệu: Nhựa ABS, Nhôm, PBT'),
+(2, 'Switch: Gateron Red, Blue, Yellow'),
+(2, 'Kết nối: USB-A, Bluetooth 5.1'),
+(2, 'Đèn LED: RGB Chroma, 16.8 triệu màu'),
+(3, 'Switch: Optical Red, Blue, Silver'),
+(3, 'Kết nối: USB-C, Bluetooth 5.2'),
+(4, 'Switch: Razer Green, Orange, Yellow'),
+(4, 'Đèn RGB: 16.8 triệu màu, 11 chế độ'),
+(5, 'Switch: Kailh Box White, Red, Black'),
+(5, 'Độ bền: 50 triệu lần nhấn, 100 triệu lần nhấn'),
+
+-- Chuột (Mouse) - categoryID 6-10
+(6, 'DPI: 800-12000, 5 mức điều chỉnh'),
+(6, 'Kết nối: USB, Bluetooth 5.0, Wireless'),
+(6, 'Số nút: 6 nút, 11 nút lập trình'),
+(7, 'DPI: 1000-16000, 8 mức tùy chỉnh'),
+(7, 'Đèn LED: RGB 16.8 triệu màu, 4 vùng'),
+(8, 'DPI: 100-25600, Công nghệ HERO 25K'),
+(8, 'Cảm biến: Optical, Laser, PWM 3389'),
+(9, 'DPI: 400-20000, 7 mức điều chỉnh'),
+(9, 'Thời gian phản hồi: 1ms, 0.5ms, 0.2ms'),
+(10, 'DPI: 800-8000, 3 mức tùy chỉnh'),
+(10, 'Độ bền: 20 triệu lần nhấn, 60 triệu lần nhấn'),
+
+-- Pad chuột (Mousepad) - categoryID 11-13
+(11, 'Kích thước: 30x25cm, 45x40cm, 90x40cm'),
+(11, 'Chất liệu: Vải mềm, Microfiber, Cao su tự nhiên'),
+(12, 'Kích thước: 35x30cm, 80x30cm, 120x60cm'),
+(12, 'Đèn LED: RGB viền, RGB toàn bộ, 10 chế độ'),
+(13, 'Kích thước: 32x27cm, 70x30cm, 90x45cm'),
+(13, 'Độ dày: 3mm, 4mm, 5mm chống trượt'),
+
+-- Gaming Gear - categoryID 14-16
+(14, 'Loại thiết bị: Tay cầm gaming, Flight stick, Racing wheel'),
+(14, 'Tương thích: PC/PS5/Xbox, Nintendo Switch'),
+(15, 'Loại thiết bị: Webcam, Microphone, Stream Deck'),
+(15, 'Kết nối: USB 3.0, USB-C, 3.5mm jack'),
+(16, 'Loại thiết bị: Giá đỡ tai nghe, Bungee chuột, Đế tản nhiệt'),
+(16, 'Chức năng: RGB tích hợp, USB Hub 3.0, Điều khiển âm lượng'),
+
+-- Case - categoryID 17
+(17, 'Kích thước: Mid Tower, Full Tower, Mini-ITX'),
+(17, 'Số quạt: 3 quạt RGB, 6 quạt 120mm, 4 quạt 140mm'),
+(17, 'Chất liệu: Nhôm, Kính cường lực, Thép SPCC'),
+
+-- CPU - categoryID 18-19
+(18, 'Số nhân: 6 nhân 12 luồng, 8 nhân 16 luồng'),
+(18, 'Tần số: 3.6GHz, 4.2GHz Turbo, 5.0GHz Max'),
+(18, 'Cache: 32MB L3, 20MB L3, 16MB L3'),
+(19, 'Số nhân: 12 nhân 24 luồng, 16 nhân 32 luồng'),
+(19, 'Tần số: 3.4GHz, 4.6GHz Boost, 5.2GHz Max'),
+(19, 'Socket: AM4, AM5, LGA 1700'),
+
+-- Mainboard - categoryID 20-22
+(20, 'Chipset: Z690, Z790, B760'),
+(20, 'Socket: LGA 1700, LGA 1200'),
+(20, 'Kích thước: ATX, Micro-ATX, Mini-ITX'),
+(21, 'Chipset: X570, B550, A520'),
+(21, 'Socket: AM5, AM4'),
+(22, 'Chipset: H610, B660, Z690'),
+(22, 'Khe cắm RAM: 4 DIMM DDR4, 2 DIMM DDR5'),
+
+-- PSU - categoryID 23-26
+(23, 'Công suất: 650W, 750W, 850W'),
+(23, 'Chứng nhận: 80 Plus Gold, 80 Plus Platinum'),
+(24, 'Công suất: 1000W, 1200W, 1600W'),
+(24, 'Hiệu suất: 92%, 94%, 96%'),
+(25, 'Công suất: 500W, 600W, 700W'),
+(25, 'Loại cáp: Modular, Semi-modular, Non-modular'),
+(26, 'Công suất: 450W, 550W, 750W SFX'),
+
+-- HDD/SSD - categoryID 27-29
+(27, 'Dung lượng: 500GB, 1TB, 2TB'),
+(27, 'Tốc độ đọc: 550MB/s, 3500MB/s, 7000MB/s'),
+(28, 'Dung lượng: 1TB, 2TB, 4TB'),
+(28, 'Công nghệ: NVMe PCIe 4.0, SATA III, PCIe 5.0'),
+(29, 'Dung lượng: 2TB, 4TB, 8TB'),
+(29, 'Loại ổ cứng: HDD 7200rpm, SSD 2.5", M.2 2280'),
+
+-- RAM - categoryID 30-32
+(30, 'Dung lượng: 8GB, 16GB, 32GB'),
+(30, 'Tần số: 3200MHz, 3600MHz, 4800MHz'),
+(31, 'Dung lượng: 16GB, 32GB, 64GB Kit'),
+(31, 'Thế hệ: DDR4, DDR5, LPDDR5'),
+(32, 'Dung lượng: 8GB x2, 16GB x2, 32GB x2'),
+(32, 'Timing: CL16, CL18, CL40'),
+
+-- VGA - categoryID 33-35
+(33, 'VRAM: 8GB GDDR6, 12GB GDDR6X, 16GB GDDR6'),
+(33, 'Xung nhịp: 1410MHz Base, 1800MHz Boost'),
+(34, 'VRAM: 10GB GDDR6X, 24GB GDDR6X'),
+(34, 'Công nghệ làm mát: 3 quạt, Hybrid, Tản nhiệt nước'),
+(35, 'VRAM: 6GB GDDR6, 8GB GDDR6, 10GB GDDR6X'),
+(35, 'Bus: 128-bit, 192-bit, 256-bit, 320-bit'),
+
+-- Màn hình - categoryID 36-39
+(36, 'Kích thước: 24", 27", 32"'),
+(36, 'Tần số quét: 144Hz, 165Hz, 240Hz, 360Hz'),
+(37, 'Kích thước: 27", 32", 34" Ultrawide'),
+(37, 'Độ phân giải: FHD, 2K QHD, 4K UHD'),
+(38, 'Kích thước: 24.5", 27", 32" Curved'),
+(38, 'Tấm nền: IPS, VA, OLED, Mini-LED'),
+(39, 'Kích thước: 27", 34" Ultrawide, 49" Super Ultrawide'),
+(39, 'Thời gian phản hồi: 1ms GTG, 0.5ms MPRT'),
+
+-- PC - categoryID 40-41
+(40, 'CPU: Intel Core i5-13600K, i7-13700K, i9-13900K'),
+(40, 'VGA: RTX 4060 Ti, RTX 4070, RTX 4080, RTX 4090'),
+(40, 'RAM: 16GB DDR5, 32GB DDR5, 64GB DDR5'),
+(40, 'SSD: 1TB NVMe, 2TB NVMe PCIe 4.0'),
+(41, 'CPU: Ryzen 5 7600X, Ryzen 7 7700X, Ryzen 9 7950X'),
+(41, 'VGA: RX 7600, RX 7700 XT, RX 7800 XT, RX 7900 XTX'),
+(41, 'RAM: 16GB DDR5, 32GB DDR5, 64GB DDR5'),
+(41, 'SSD: 1TB PCIe 4.0, 2TB PCIe 4.0'),
+
+-- Tai nghe - categoryID 42-43
+(42, 'Kết nối: 3.5mm, USB, Bluetooth 5.2, Wireless 2.4GHz'),
+(42, 'Microphone: Tháo rời, Noise Cancelling, Flip-to-mute'),
+(43, 'Công nghệ âm thanh: 7.1 Surround, Dolby Atmos, THX Spatial'),
+(43, 'Đệm tai: Memory Foam, Vải Mesh, Da tổng hợp'),
+
+-- iPad - categoryID 44
+(44, 'Màn hình: 8.3", 10.9", 11", 12.9" Liquid Retina XDR'),
+(44, 'Dung lượng: 64GB, 128GB, 256GB, 512GB, 1TB, 2TB'),
+(44, 'Kết nối: Wi-Fi, Wi-Fi + Cellular, 5G'),
+(44, 'Chip: A15 Bionic, M1, M2, M3'),
+
+-- Laptop - categoryID 45-51
+(45, 'CPU: Intel Core i5-13500H, i7-13700H, i9-13980HX'),
+(45, 'RAM: 8GB DDR5, 16GB DDR5, 32GB DDR5'),
+(45, 'SSD: 512GB PCIe 4.0, 1TB PCIe 4.0, 2TB PCIe 4.0'),
+(45, 'Màn hình: 14" FHD, 15.6" QHD, 16" UHD'),
+(46, 'CPU: Intel Core i7-13700H, i9-13900H'),
+(46, 'VGA: RTX 4050, RTX 4060, RTX 4070, RTX 4080, RTX 4090'),
+(46, 'RAM: 16GB DDR5, 32GB DDR5, 64GB DDR5'),
+(46, 'SSD: 1TB PCIe 4.0, 2TB PCIe 4.0'),
+(47, 'CPU: Ryzen 5 7640U, Ryzen 7 7840U, Ryzen 9 7940HS'),
+(47, 'RAM: 16GB LPDDR5, 32GB LPDDR5'),
+(47, 'Màn hình: FHD 1920x1080, QHD 2560x1440, UHD 3840x2160'),
+(48, 'CPU: Intel Core i5-13500H, i7-13700H'),
+(48, 'VGA: RTX 4050 6GB, RTX 4060 8GB'),
+(48, 'RAM: 16GB DDR5, 32GB DDR5'),
+(49, 'CPU: Ryzen 7 7735HS, Ryzen 9 7945HX'),
+(49, 'VGA: RX 7600M XT, RX 7700S, RX 7900M'),
+(49, 'RAM: 16GB DDR5, 32GB DDR5, 64GB DDR5'),
+(50, 'Chip: M1, M2, M2 Pro, M2 Max, M3, M3 Pro, M3 Max'),
+(50, 'RAM: 8GB Unified, 16GB Unified, 32GB Unified, 64GB Unified'),
+(50, 'SSD: 256GB, 512GB, 1TB, 2TB, 4TB, 8TB'),
+(51, 'CPU: Intel Core i5-1240P, i7-1260P, i9-13900H'),
+(51, 'VGA: Intel Iris Xe, Arc A370M, Arc A550M'),
+(51, 'RAM: 8GB LPDDR5, 16GB LPDDR5, 32GB LPDDR5'),
+
+-- Điện thoại - categoryID 52-54
+(52, 'Màn hình: 6.1" Super Retina XDR, 6.7" ProMotion 120Hz'),
+(52, 'Dung lượng: 128GB, 256GB, 512GB, 1TB'),
+(52, 'Camera: 48MP Main, 12MP Ultra Wide, 12MP 5x Telephoto'),
+(52, 'Chip: A16 Bionic, A17 Pro'),
+(53, 'Màn hình: 6.4" Dynamic AMOLED 2X, 6.8" QHD+ 120Hz'),
+(53, 'RAM: 8GB, 12GB, 16GB'),
+(53, 'Camera: 200MP Main, 12MP Ultra Wide, 10MP 3x, 10MP 10x'),
+(54, 'Màn hình: 6.56" AMOLED, 6.78" LTPO AMOLED 144Hz'),
+(54, 'RAM: 8GB, 12GB, 16GB, 18GB'),
+(54, 'Camera: 50MP Main, 50MP Ultra Wide, 64MP Telephoto');
+
+-- First, we'll insert smartphones (20 products)
+INSERT INTO Products (productName, categoryID, supplierID, description, price, stockQuantity, image) VALUES
+-- Bàn phím (categoryID: 1-5)
+('Bàn phím Daeru Gaming RGB', 1, 1, 'Bàn phím cơ Daeru với đèn LED RGB, thiết kế gaming hiện đại và chất lượng cao', 1200000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/BanPhim/hktgvgk8h3oddq1nzb1l.webp'),
+('Bàn phím Daeru Rainbow', 1, 1, 'Bàn phím cơ Daeru với đèn LED Rainbow đa sắc, switch độ nhạy cao', 1350000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033645/ReactNew/anh/Computer/BanPhim/sp4ysnpymi6aeyp8wc3z.webp'),
+('Bàn phím Daeru Pro RGB', 1, 1, 'Bàn phím cơ Daeru Pro với LED RGB có thể tùy chỉnh, keycap bền bỉ', 1500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033645/ReactNew/anh/Computer/BanPhim/xqruaklz4sd1eqaspbqc.webp'),
+('Bàn phím Daeru Black RGB', 1, 1, 'Bàn phím cơ Daeru màu đen với đèn LED RGB, thiết kế tối giản', 1250000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033645/ReactNew/anh/Computer/BanPhim/jytz4fq7addsb27xzydq.webp'),
+('Bàn phím Daeru Pink', 1, 1, 'Bàn phím cơ Daeru màu hồng với đèn LED, thiết kế dễ thương cho game thủ', 1450000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033644/ReactNew/anh/Computer/BanPhim/d57uf4sgnkd2cq8wzxvn.webp'),
+
+('Bàn phím Aula Gaming RGB', 2, 2, 'Bàn phím cơ Aula với đèn LED RGB, thiết kế chuyên gaming', 1100000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033644/ReactNew/anh/Computer/BanPhim/icx2san06sjczdixkrz7.webp'),
+('Bàn phím Aula Rainbow', 2, 2, 'Bàn phím cơ Aula với đèn LED Rainbow, switch độ bền cao', 1300000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033644/ReactNew/anh/Computer/BanPhim/fupzj3gudn0d79c4z5di.webp'),
+('Bàn phím Aula RGB Pro', 2, 2, 'Bàn phím cơ Aula RGB Pro với đèn LED RGB full, keycap độ bền cao', 1550000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033644/ReactNew/anh/Computer/BanPhim/bjuydgkhls5kqzrbfafj.webp'),
+('Bàn phím Aula RGB Compact', 2, 2, 'Bàn phím cơ Aula thiết kế nhỏ gọn với đèn LED RGB', 950000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033644/ReactNew/anh/Computer/BanPhim/p3dbsxoqhdzgtxov9pfr.webp'),
+
+('Bàn phím Rapoo Gaming RGB', 3, 3, 'Bàn phím cơ Rapoo với đèn LED RGB, thiết kế chuyên gaming', 1650000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033642/ReactNew/anh/Computer/BanPhim/jpvjynv6bisdtye12bjw.webp'),
+('Bàn phím Rapoo White RGB', 3, 3, 'Bàn phím cơ Rapoo màu trắng với đèn LED RGB đa sắc', 1700000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033642/ReactNew/anh/Computer/BanPhim/v1ts1gbfratxz3lnr3rx.webp'),
+('Bàn phím Rapoo Blue LED', 3, 3, 'Bàn phím cơ Rapoo với đèn LED màu xanh, switch độ bền cao', 1600000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033642/ReactNew/anh/Computer/BanPhim/yq2v6lo7nbrqturnyjht.webp'),
+('Bàn phím Rapoo Red Gaming', 3, 3, 'Bàn phím cơ Rapoo với đèn LED màu đỏ, thiết kế gaming', 1550000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033642/ReactNew/anh/Computer/BanPhim/sgrslom19uwdowpyidmg.webp'),
+
+('Bàn phím Asus ROG RGB', 4, 4, 'Bàn phím cơ Asus ROG với đèn LED RGB, thiết kế gaming cao cấp', 2500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033642/ReactNew/anh/Computer/BanPhim/uxotq94qlvic1mzubxec.webp'),
+('Bàn phím Asus ROG Azoth', 4, 4, 'Bàn phím cơ Asus ROG Azoth với đèn LED RGB, switch độ nhạy cao', 2700000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033641/ReactNew/anh/Computer/BanPhim/rzurz5rfkson9zqxva6p.webp'),
+('Bàn phím Asus ROG Falchion', 4, 4, 'Bàn phím cơ Asus ROG Falchion với đèn LED RGB, thiết kế nhỏ gọn', 2300000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033641/ReactNew/anh/Computer/BanPhim/z9rsgx3hwzpuhynnhflh.webp'),
+('Bàn phím Asus TUF Gaming', 4, 4, 'Bàn phím cơ Asus TUF Gaming với đèn LED RGB đa sắc', 1950000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033641/ReactNew/anh/Computer/BanPhim/bmo3r1l21qg6aiiqqdzj.webp'),
+
+('Bàn phím Logitech G Pro X', 5, 5, 'Bàn phím cơ Logitech G Pro X với đèn LED RGB, switch GX có thể thay đổi', 2800000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033641/ReactNew/anh/Computer/BanPhim/hcmg657jky6eb337r2fu.webp'),
+('Bàn phím Logitech G Pro', 5, 5, 'Bàn phím cơ Logitech G Pro với đèn LED RGB, thiết kế tối giản', 2600000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033641/ReactNew/anh/Computer/BanPhim/tcgkhamov7ipynakkmbz.webp'),
+
+-- Chuột (categoryID: 6-10)
+('Chuột Daeru EM911X RGB', 6, 1, 'Chuột gaming Daeru EM911X với đèn LED RGB, DPI cao và thiết kế công thái học', 450000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/Chuot/vmzavsboqsjxifkn0tb7.webp'),
+('Chuột Daeru EM901X', 6, 1, 'Chuột gaming Daeru EM901X không dây với cảm biến độ nhạy cao', 550000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/Chuot/ucreeq2lgahsaoqibw9o.webp'),
+('Chuột Daeru EM908', 6, 1, 'Chuột gaming Daeru EM908 với đèn LED RGB và cảm biến PAW3335', 650000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/Chuot/jmpent3xk2qmtb7i3jtj.webp'),
+('Chuột Daeru A918', 6, 1, 'Chuột gaming Daeru A918 không dây với thời lượng pin dài', 750000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/Chuot/y7aysyypgg3yaoaz8vdq.webp'),
+('Chuột Daeru EM945', 6, 1, 'Chuột gaming Daeru EM945 với DPI 16000 và thiết kế công thái học', 850000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/Chuot/dsytqioymkjiizul3iux.webp'),
+
+('Chuột MSI Clutch GM08', 7, 7, 'Chuột gaming MSI Clutch GM08 với đèn LED RGB và cảm biến chuẩn xác', 750000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/Chuot/dkfauy5feeg2kfx5cp91.webp'),
+('Chuột MSI Clutch GM30', 7, 7, 'Chuột gaming MSI Clutch GM30 với đèn LED RGB và Switch OMRON', 850000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/qq6ww7rnxnr2c9fgrasr.webp'),
+('Chuột MSI Clutch GM31', 7, 7, 'Chuột gaming MSI Clutch GM31 không dây với thời lượng pin dài', 1200000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/fspyzozdotyivvadrb9w.webp'),
+
+('Chuột Logitech G Pro X Superlight', 8, 5, 'Chuột gaming Logitech G Pro X Superlight siêu nhẹ với cảm biến HERO', 2800000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/twz30ahpofrrjjhsfaoa.webp'),
+('Chuột Logitech G502 X', 8, 5, 'Chuột gaming Logitech G502 X với cảm biến HERO 25K và 11 nút có thể lập trình', 2200000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/xnrsjfyt53jyewiti75i.webp'),
+('Chuột Logitech G Pro', 8, 5, 'Chuột gaming Logitech G Pro có dây với cảm biến HERO và thiết kế nhẹ', 1500000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/v8oovejtdbrndm8ryyib.webp'),
+
+('Chuột Rapoo V16 Pro', 9, 3, 'Chuột gaming Rapoo V16 Pro với đèn LED RGB và cảm biến PixArt', 550000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/xnsrhzyp0iyhbyjxd2ch.webp'),
+('Chuột Rapoo VT200', 9, 3, 'Chuột gaming Rapoo VT200 không dây với Pin sạc và đèn RGB', 750000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033647/ReactNew/anh/Computer/Chuot/zkpnmfrimceqoaap7mrk.webp'),
+('Chuột Rapoo V280', 9, 3, 'Chuột gaming Rapoo V280 với cảm biến PMW3389 và DPI 16000', 650000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/geaowpussttntlrdau6e.webp'),
+('Chuột Rapoo V320', 9, 3, 'Chuột gaming Rapoo V320 với đèn LED RGB và 8 nút có thể lập trình', 850000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/sahkt7pfjcie460tfpn4.webp'),
+('Chuột Rapoo V330', 9, 3, 'Chuột gaming Rapoo V330 với thiết kế công thái học và cảm biến chuẩn xác', 950000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/nryegqzcq99mdekjlvkn.webp'),
+
+('Chuột Razer DeathAdder V3', 10, 10, 'Chuột gaming Razer DeathAdder V3 với công nghệ Razer Focus+ và công thái học tối ưu', 2500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/bpp4fcxxjvyb9asuxhv0.webp'),
+('Chuột Razer Basilisk V3', 10, 10, 'Chuột gaming Razer Basilisk V3 với 11 nút có thể lập trình và con lăn đa năng', 2200000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/nwn8won2m4zhnhavl1pq.webp'),
+('Chuột Razer Viper Ultimate', 10, 10, 'Chuột gaming Razer Viper Ultimate không dây với cảm biến Focus+ và công nghệ HyperSpeed', 3200000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/wgsnnqdkbsqueif1j8p4.webp'),
+('Chuột Razer Pink Edition', 10, 10, 'Chuột gaming Razer phiên bản màu hồng với đèn LED Chroma RGB', 1800000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033646/ReactNew/anh/Computer/Chuot/aaplofca4wvsb4xzj4le.webp'),
+('Chuột Razer Viper V2 Pro', 10, 10, 'Chuột gaming Razer Viper V2 Pro siêu nhẹ với cảm biến Focus Pro 30K', 3500000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033645/ReactNew/anh/Computer/Chuot/aykegymyxmkd1c965rja.webp'),
+
+-- Gaming Gear (categoryID: 14-16)
+('Tay cầm PS5 DualSense', 14, 4, 'Tay cầm Sony PS5 DualSense chính hãng với phản hồi xúc giác và cò adaptive', 1800000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/GamingGear/rrlich4vmblr5axo5fbi.webp'),
+('Máy PlayStation 5 Slim', 14, 4, 'Máy chơi game Sony PlayStation 5 Slim chính hãng với bộ nhớ 825GB SSD', 13500000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/GamingGear/eoyrjvoqwji5gussw0e6.webp'),
+('Tay cầm Daeru H105', 16, 1, 'Tay cầm chơi game Daeru H105 không dây với Pin sạc và chức năng rung', 850000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/GamingGear/lto5zmqmw49m1pqei7iw.webp'),
+('Lenovo Legion Go', 15, 5, 'Máy chơi game cầm tay Lenovo Legion Go với màn hình 8.8 inch và chip AMD Ryzen Z1 Extreme', 18500000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033648/ReactNew/anh/Computer/GamingGear/em5os06uzlphfay6xbaq.webp'),
+
+-- PC Cases (categoryID: 17)
+('Case Xigmatek Alpha M-3GF', 17, 7, 'Vỏ case máy tính Xigmatek Alpha M-3GF với thiết kế gaming, hỗ trợ đèn RGB và tản nhiệt tốt', 1500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033650/ReactNew/anh/Computer/LinhKien/Case/l8kfs8rhrqthunxwsxub.webp'),
+('Case Cougar MX410', 17, 7, 'Vỏ case máy tính Cougar MX410 với mặt trước trong suốt, hỗ trợ LED RGB', 1650000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033650/ReactNew/anh/Computer/LinhKien/Case/ymda33bgpssfhtl189lm.webp'),
+('Case Corsair 4000D', 17, 7, 'Vỏ case máy tính Corsair 4000D Airflow với thiết kế tối ưu luồng không khí', 2200000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/LinhKien/Case/kcfkzyeqsqk1e3xklzzn.webp'),
+('Case Cooler Master TD500', 17, 7, 'Vỏ case máy tính Cooler Master TD500 Mesh với mặt trước lưới tản nhiệt', 1950000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/LinhKien/Case/ogxdejjongtvyefptg8p.webp'),
+('Case NZXT H510', 17, 7, 'Vỏ case máy tính NZXT H510 với thiết kế tối giản, chất lượng cao', 2100000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/LinhKien/Case/ctjv5o4o4nrgipfius5k.webp'),
+('Case Thermaltake H350', 17, 7, 'Vỏ case máy tính Thermaltake H350 TG RGB với mặt hông kính cường lực', 1850000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/LinhKien/Case/nejc4dcao1mwhuyuktvd.webp'),
+('Case Thermaltake V250', 17, 7, 'Vỏ case máy tính Thermaltake V250 TG ARGB với đèn LED RGB mặt trước', 1750000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033649/ReactNew/anh/Computer/LinhKien/Case/rjutgnjzqlqvohajry3m.webp'),
+
+-- CPU (categoryID: 18-19)
+('CPU AMD Ryzen 7 7800X3D', 18, 8, 'Bộ vi xử lý AMD Ryzen 7 7800X3D với 8 nhân 16 luồng, 96MB cache và xung nhịp tối đa 5.0GHz', 12500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/CPU/r0msi67zz5aimg9wao9n.webp'),
+('CPU AMD Ryzen 7 7800X', 18, 8, 'Bộ vi xử lý AMD Ryzen 7 7800X với 8 nhân 16 luồng và xung nhịp tối đa 5.4GHz', 11200000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033651/ReactNew/anh/Computer/LinhKien/CPU/i4jxhq9fmt6xn6zmcfmw.webp'),
+('CPU AMD Ryzen 9', 18, 8, 'Bộ vi xử lý AMD Ryzen 9 với nhiều nhân cao và hiệu năng mạnh mẽ', 15500000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033651/ReactNew/anh/Computer/LinhKien/CPU/t9ayccnt0pa9j6lpnwmc.webp'),
+('CPU AMD Ryzen 5', 18, 8, 'Bộ vi xử lý AMD Ryzen 5 với hiệu năng tốt cho gaming và đa nhiệm', 8500000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033651/ReactNew/anh/Computer/LinhKien/CPU/rcn4ouazsz0hij0m1v5x.webp'),
+
+('CPU Intel Core i9-14900K', 19, 9, 'Bộ vi xử lý Intel Core i9-14900K với 24 nhân (8P+16E), 32 luồng và xung nhịp tối đa 6.0GHz', 16500000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033651/ReactNew/anh/Computer/LinhKien/CPU/pwe01hmscvia0stwdh1v.webp'),
+('CPU Intel Core i7', 19, 9, 'Bộ vi xử lý Intel Core i7 với hiệu năng cao cho gaming và công việc chuyên nghiệp', 12500000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033651/ReactNew/anh/Computer/LinhKien/CPU/gidkd0quxcaoogtiurxx.webp'),
+('CPU Intel Core i5', 19, 9, 'Bộ vi xử lý Intel Core i5 với hiệu năng tốt cho gaming và công việc hàng ngày', 8900000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033650/ReactNew/anh/Computer/LinhKien/CPU/wwd9lkd0ycpgiqmxquww.webp'),
+
+-- Mainboard (categoryID: 20-22)
+('Bo mạch chủ Asus ROG Strix Z790-E', 20, 4, 'Bo mạch chủ Asus ROG Strix Z790-E Gaming WiFi với chipset Intel Z790, hỗ trợ DDR5 và PCIe 5.0', 12500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Main/qkrji5vtwlhfyrovjf9k.webp'),
+('Bo mạch chủ Asus ROG Strix B760', 20, 4, 'Bo mạch chủ Asus ROG Strix B760 với chipset Intel B760 và hỗ trợ CPU Intel thế hệ 13', 7500000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Main/ip2i5abglayzokyq35tw.webp'),
+('Bo mạch chủ Asus ROG Strix X670E', 20, 4, 'Bo mạch chủ Asus ROG Strix X670E với chipset AMD X670 và hỗ trợ CPU AMD Ryzen thế hệ mới', 11500000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Main/sq11u5xydhsypycxqokh.webp'),
+('Bo mạch chủ Asus TUF Gaming B650', 20, 4, 'Bo mạch chủ Asus TUF Gaming B650 với chipset AMD B650 và thiết kế bền bỉ', 6500000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033653/ReactNew/anh/Computer/LinhKien/Main/zfhiuh46smpgi8ml6hpr.webp'),
+('Bo mạch chủ Asus Prime Z790', 20, 4, 'Bo mạch chủ Asus Prime Z790 với chipset Intel Z790 và thiết kế tối giản', 8500000, 14, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033653/ReactNew/anh/Computer/LinhKien/Main/vviwe4ni23bbno91niwo.webp'),
+
+('Bo mạch chủ Gigabyte Z790 Aorus Elite', 21, 11, 'Bo mạch chủ Gigabyte Z790 Aorus Elite với chipset Intel Z790, hỗ trợ DDR5 và PCIe 5.0', 9500000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033653/ReactNew/anh/Computer/LinhKien/Main/m12qsqdecuiooi614ohb.webp'),
+('Bo mạch chủ Gigabyte B650 Aorus Elite', 21, 11, 'Bo mạch chủ Gigabyte B650 Aorus Elite với chipset AMD B650 và hỗ trợ CPU AMD Ryzen', 6800000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033653/ReactNew/anh/Computer/LinhKien/Main/zx3rbakwhjq4r2zosjca.webp'),
+('Bo mạch chủ Gigabyte Z790 Aorus Master', 21, 11, 'Bo mạch chủ Gigabyte Z790 Aorus Master với thiết kế cao cấp và nhiều tính năng', 14500000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033653/ReactNew/anh/Computer/LinhKien/Main/ywghx08nrdibqpoequr0.webp'),
+('Bo mạch chủ Gigabyte B760 Aorus Elite', 21, 11, 'Bo mạch chủ Gigabyte B760 Aorus Elite với chipset Intel B760', 5800000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/Main/b3t5xq17hz1bkvay05js.webp'),
+('Bo mạch chủ Gigabyte X670E Aorus Master', 21, 11, 'Bo mạch chủ Gigabyte X670E Aorus Master với chipset AMD X670E cao cấp', 13500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/Main/bkcvchcftxzbgl3wh4yi.webp'),
+
+('Bo mạch chủ MSI MPG Z790 Carbon', 22, 7, 'Bo mạch chủ MSI MPG Z790 Carbon WiFi với chipset Intel Z790, hỗ trợ DDR5 và PCIe 5.0', 11500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/Main/jdjuds7quen49i0nhrev.webp'),
+('Bo mạch chủ MSI MPG B650 Carbon', 22, 7, 'Bo mạch chủ MSI MPG B650 Carbon WiFi với chipset AMD B650', 8500000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/Main/sat5ripbukeocpdubfah.jpg'),
+('Bo mạch chủ MSI MEG Z790 Ace', 22, 7, 'Bo mạch chủ MSI MEG Z790 Ace với thiết kế cao cấp và nhiều tính năng', 18500000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/Main/phjmtres4dtg5p2ekl5y.webp'),
+('Bo mạch chủ MSI MAG B760 Tomahawk', 22, 7, 'Bo mạch chủ MSI MAG B760 Tomahawk WiFi với chipset Intel B760', 6500000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033652/ReactNew/anh/Computer/LinhKien/Main/xfld5wxegrlcffne5t4i.webp'),
+
+-- Nguồn (PSU) (categoryID: 23-26)
+('Nguồn Asus ROG Strix 850W', 23, 4, 'Nguồn máy tính Asus ROG Strix 850W 80 Plus Gold với hiệu suất cao và hoạt động êm ái', 3500000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/Nguon/kkvxrpe87rir1pa4qurt.webp'),
+('Nguồn Asus ROG Thor 1000W', 23, 4, 'Nguồn máy tính Asus ROG Thor 1000W 80 Plus Platinum với màn hình OLED hiển thị công suất', 5500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033656/ReactNew/anh/Computer/LinhKien/Nguon/xbkuougm3kmqdk5wabyi.webp'),
+('Nguồn Asus TUF Gaming 750W', 23, 4, 'Nguồn máy tính Asus TUF Gaming 750W 80 Plus Bronze với độ bền cao', 2500000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033656/ReactNew/anh/Computer/LinhKien/Nguon/v6rboryzpwloyaarwblr.webp'),
+('Nguồn Asus ROG Strix 1000W', 23, 4, 'Nguồn máy tính Asus ROG Strix 1000W 80 Plus Gold với dây cáp có thể tháo rời', 4800000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033656/ReactNew/anh/Computer/LinhKien/Nguon/i8bg9cfccqds1k47vuit.webp'),
+('Nguồn Asus TUF Gaming 650W', 23, 4, 'Nguồn máy tính Asus TUF Gaming 650W 80 Plus Bronze với giá thành hợp lý', 2200000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033656/ReactNew/anh/Computer/LinhKien/Nguon/ylzo86jgqkfaqqqsnla5.webp'),
+
+('Nguồn Corsair RM750x', 24, 4, 'Nguồn máy tính Corsair RM750x 80 Plus Gold với dây cáp đen nguyên khối và hoạt động êm ái', 3200000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/crmitbpyirxgck4t80qf.webp'),
+('Nguồn Corsair RM850x', 24, 4, 'Nguồn máy tính Corsair RM850x 80 Plus Gold với hiệu suất cao và tụ nhôm chất lượng Nhật Bản', 3800000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/deyzmiprrfvuetz90zzh.webp'),
+('Nguồn Corsair CX650M', 24, 4, 'Nguồn máy tính Corsair CX650M 80 Plus Bronze với giá thành hợp lý', 2000000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/qxoo2zotyroajtbbpkyg.webp'),
+('Nguồn Corsair HX1000', 24, 4, 'Nguồn máy tính Corsair HX1000 80 Plus Platinum với hiệu suất cực cao', 5200000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/aqmqshnq5fgqcdophuw2.webp'),
+
+('Nguồn Deepcool PQ650M', 25, 5, 'Nguồn máy tính Deepcool PQ650M 80 Plus Gold với thiết kế nhỏ gọn', 1800000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/uuppd9fi8xdusqomhors.webp'),
+('Nguồn Deepcool DQ850-M', 25, 5, 'Nguồn máy tính Deepcool DQ850-M 80 Plus Gold với dây cáp có thể tháo rời', 2500000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/rc1zcm9iaxurqgxrwk3w.webp'),
+('Nguồn Deepcool PF650', 25, 5, 'Nguồn máy tính Deepcool PF650 80 Plus Platinum với hiệu suất cao', 3200000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/siecbrg2wnut7calyivv.jpg'),
+('Nguồn Deepcool PQ750M', 25, 5, 'Nguồn máy tính Deepcool PQ750M 80 Plus Gold với quạt 120mm', 2200000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033655/ReactNew/anh/Computer/LinhKien/Nguon/enp86kvowbpnygsktz3f.webp'),
+
+('Nguồn MSI MPG A750GF', 26, 7, 'Nguồn máy tính MSI MPG A750GF 80 Plus Gold với dây cáp đen nguyên khối', 2800000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Nguon/fg68t0bomljyueiamh4x.webp'),
+('Nguồn MSI MPG A850GF', 26, 7, 'Nguồn máy tính MSI MPG A850GF 80 Plus Gold với hiệu suất chuyển đổi cao', 3500000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Nguon/zylmpbgvdgiwh8cb63e8.webp'),
+('Nguồn MSI MAG A650BN', 26, 7, 'Nguồn máy tính MSI MAG A650BN 80 Plus Bronze với giá thành hợp lý', 1500000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Nguon/dlrskfg1qalbuhyvozzm.webp'),
+('Nguồn MSI MPG A1000G', 26, 7, 'Nguồn máy tính MSI MPG A1000G 80 Plus Gold với công suất cao', 4500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Nguon/y3iyijfdvl2mezbkuwwo.webp'),
+('Nguồn MSI MAG A550BN', 26, 7, 'Nguồn máy tính MSI MAG A550BN 80 Plus Bronze cho hệ thống entry level', 1300000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033654/ReactNew/anh/Computer/LinhKien/Nguon/ihwx9gqo5qzt7j5ysiit.webp'),
+
+-- Ổ cứng (categoryID: 27-29)
+('SSD Kingston NV2 1TB', 27, 7, 'Ổ cứng SSD Kingston NV2 1TB PCIe 4.0 NVMe với tốc độ đọc/ghi cao', 1950000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033658/ReactNew/anh/Computer/LinhKien/OCung/bt2fc8mmzuzvgmzmjzcm.webp'),
+('SSD Kingston KC3000 2TB', 27, 7, 'Ổ cứng SSD Kingston KC3000 2TB PCIe 4.0 NVMe với hiệu năng cực cao', 4500000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033658/ReactNew/anh/Computer/LinhKien/OCung/klrjb5lfsuloqoawzjfv.webp'),
+('SSD Kingston A400 480GB', 27, 7, 'Ổ cứng SSD Kingston A400 480GB SATA 3 với giá thành hợp lý', 950000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033658/ReactNew/anh/Computer/LinhKien/OCung/c0ykaerwlbndzgaztlmh.webp'),
+('SSD Kingston NV1 500GB', 27, 7, 'Ổ cứng SSD Kingston NV1 500GB PCIe 3.0 NVMe với tốc độ cao', 1200000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033658/ReactNew/anh/Computer/LinhKien/OCung/ssjqlcakrlixaisi0hry.webp'),
+('SSD Kingston KC3000 1TB', 27, 7, 'Ổ cứng SSD Kingston KC3000 1TB PCIe 4.0 NVMe với tản nhiệt aluminum', 2500000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033658/ReactNew/anh/Computer/LinhKien/OCung/oyicez8tmysp5xzwpcs6.webp'),
+
+('SSD Samsung 990 PRO 2TB', 28, 8, 'Ổ cứng SSD Samsung 990 PRO 2TB PCIe 4.0 NVMe với tốc độ đọc/ghi lên đến 7450/6900 MB/s', 5500000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033658/ReactNew/anh/Computer/LinhKien/OCung/twrjrv2llt5uwf7jxlpe.webp'),
+('SSD Samsung 990 PRO 1TB', 28, 8, 'Ổ cứng SSD Samsung 990 PRO 1TB PCIe 4.0 NVMe với controller Samsung Elpis', 3200000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/ijyhgygmhk656orspdhg.webp'),
+('SSD Samsung 870 EVO 1TB', 28, 8, 'Ổ cứng SSD Samsung 870 EVO 1TB SATA 3 với độ bền cao', 2300000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/nhj6wfhycpi9yxuv0laj.webp'),
+('SSD Samsung 980 PRO 2TB', 28, 8, 'Ổ cứng SSD Samsung 980 PRO 2TB PCIe 4.0 NVMe với tản nhiệt', 4800000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/sklgycvnkgc8bfunxrat.webp'),
+('SSD Samsung 980 1TB', 28, 8, 'Ổ cứng SSD Samsung 980 1TB PCIe 3.0 NVMe với giá thành hợp lý', 2200000, 22, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/qin79lsktocivcchlk3j.webp'),
+
+('SSD WD Blue SN570 1TB', 29, 9, 'Ổ cứng SSD Western Digital Blue SN570 1TB PCIe 3.0 NVMe với tốc độ đọc lên đến 3500MB/s', 2100000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/gl8mkb7rzufkgwd5nnxs.webp'),
+('SSD WD Black SN850X 2TB', 29, 9, 'Ổ cứng SSD Western Digital Black SN850X 2TB PCIe 4.0 NVMe với hiệu năng cực cao', 5200000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/a64mf6z39ronxcdj0wvl.webp'),
+('SSD WD Green 480GB', 29, 9, 'Ổ cứng SSD Western Digital Green 480GB SATA 3 với giá thành hợp lý', 900000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/gcwfga6cdmgyrckka6s6.webp'),
+('SSD WD Black SN770 1TB', 29, 9, 'Ổ cứng SSD Western Digital Black SN770 1TB PCIe 4.0 NVMe', 2500000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033657/ReactNew/anh/Computer/LinhKien/OCung/mhw7t9d5g1zgqgjtpciv.webp'),
+('SSD WD Blue 3D NAND 1TB', 29, 9, 'Ổ cứng SSD Western Digital Blue 3D NAND 1TB SATA 3', 2000000, 22, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033656/ReactNew/anh/Computer/LinhKien/OCung/lrxkpljuvpfzlnywrqdg.webp'),
+-- RAM Products
+
+('Kingston Fury RGB DDR4 16GB 3200MHz', 30, 1, 'Bộ nhớ RAM Kingston Fury RGB DDR4 với hiệu suất cao và đèn LED RGB', 1290000, 50, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/mfgxfgfj2v7tt8y0d8at.webp'),
+('Kingston Fury Beast DDR4 16GB 3200MHz', 30, 1, 'Bộ nhớ RAM Kingston Fury Beast DDR4 với hiệu suất cao', 1250000, 45, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/vckdm9quka8gnm0xmcvo.webp'),
+('Kingston Fury Beast RGB DDR4 16GB 3200MHz', 30, 1, 'Bộ nhớ RAM Kingston Fury Beast RGB DDR4 với hiệu suất cao và đèn LED RGB', 1350000, 40, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/ou4susdzt37pd7al2ttc.webp'),
+('Corsair Vengeance RGB Pro DDR4 16GB 3200MHz', 31, 2, 'Bộ nhớ RAM Corsair Vengeance RGB Pro DDR4 với hiệu suất cao và đèn LED RGB', 1490000, 35, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/eytep1zxuzkuq4aykfzp.webp'),
+('Corsair Vengeance RGB Pro DDR4 32GB 3200MHz', 31, 2, 'Bộ nhớ RAM Corsair Vengeance RGB Pro DDR4 với hiệu suất cao và đèn LED RGB', 2490000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/jm0xhdwf7uzlqfaiwzxu.webp'),
+('Corsair Vengeance RGB RT DDR4 16GB 3600MHz', 31, 2, 'Bộ nhớ RAM Corsair Vengeance RGB RT DDR4 với hiệu suất cao và đèn LED RGB', 1590000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/yfbqnolnesyyy0ycvzwl.webp'),
+('Corsair Vengeance LPX DDR4 16GB 3200MHz', 31, 2, 'Bộ nhớ RAM Corsair Vengeance LPX DDR4 với hiệu suất cao', 1390000, 40, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/fwcho5igliejgh26kv6p.webp'),
+('Corsair Vengeance RGB Pro SL DDR4 32GB 3600MHz', 31, 2, 'Bộ nhớ RAM Corsair Vengeance RGB Pro SL DDR4 với hiệu suất cao và đèn LED RGB', 2690000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033660/ReactNew/anh/Computer/LinhKien/Ram/tncot2rl6oliaaxs5fjy.webp'),
+('Corsair Dominator Platinum RGB DDR4 32GB 3600MHz', 31, 2, 'Bộ nhớ RAM Corsair Dominator Platinum RGB DDR4 với hiệu suất cao và đèn LED RGB', 3290000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033659/ReactNew/anh/Computer/LinhKien/Ram/ehzpigdgypx08xfahwua.webp'),
+('PNY XLR8 Gaming RGB DDR4 16GB 3200MHz', 32, 3, 'Bộ nhớ RAM PNY XLR8 Gaming RGB DDR4 với hiệu suất cao và đèn LED RGB', 1290000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033659/ReactNew/anh/Computer/LinhKien/Ram/iz3uetg6oyhxdwwav0gm.webp'),
+('PNY XLR8 Gaming EPIC-X RGB DDR4 16GB 3200MHz', 32, 3, 'Bộ nhớ RAM PNY XLR8 Gaming EPIC-X RGB DDR4 với hiệu suất cao và đèn LED RGB', 1350000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033659/ReactNew/anh/Computer/LinhKien/Ram/qsf4ojcdutmmwmso6zg1.webp'),
+('PNY XLR8 Gaming DDR4 16GB 3200MHz', 32, 3, 'Bộ nhớ RAM PNY XLR8 Gaming DDR4 với hiệu suất cao', 1190000, 35, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033659/ReactNew/anh/Computer/LinhKien/Ram/xzx2ydvttvbdsqjm9yuh.webp'),
+('PNY Performance DDR4 16GB 3200MHz', 32, 3, 'Bộ nhớ RAM PNY Performance DDR4 với hiệu suất ổn định', 1090000, 40, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033659/ReactNew/anh/Computer/LinhKien/Ram/zashtnn8rimiaxmskmcb.webp'),
+('PNY XLR8 Gaming MAKO DDR4 32GB 3600MHz', 32, 3, 'Bộ nhớ RAM PNY XLR8 Gaming MAKO DDR4 với hiệu suất cao và đèn LED RGB', 2490000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033659/ReactNew/anh/Computer/LinhKien/Ram/cwsymdnehr6v2shyqnt1.webp'),
+
+-- Screen/Monitor Products
+
+('ASUS TUF Gaming VG24VQE 24 inch Curved 165Hz', 36, 4, 'Màn hình gaming ASUS TUF 24 inch cong, tần số quét 165Hz, Full HD', 4990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033666/ReactNew/anh/Computer/ManHinh/gao5vwzpqvvqomcfyhmn.webp'),
+('ASUS ROG Strix XG27UQ 27 inch 4K 144Hz', 36, 4, 'Màn hình gaming ASUS ROG Strix 27 inch, 4K, tần số quét 144Hz', 17990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033666/ReactNew/anh/Computer/ManHinh/senlzywxpnonsl3yapdp.webp'),
+('ASUS TUF Gaming VG27AQ 27 inch 165Hz', 36, 4, 'Màn hình gaming ASUS TUF 27 inch, tần số quét 165Hz, IPS, HDR10', 7990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033666/ReactNew/anh/Computer/ManHinh/px73f2mo6n6fmhmydsbv.webp'),
+('ASUS ProArt PA278CV 27 inch QHD Professional', 36, 4, 'Màn hình ASUS ProArt 27 inch, QHD, dành cho đồ họa chuyên nghiệp', 9990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033666/ReactNew/anh/Computer/ManHinh/cu4zovmwf5xnejdosxtd.webp'),
+('ASUS TUF Gaming VG259QM 24.5 inch 280Hz', 36, 4, 'Màn hình gaming ASUS TUF 24.5 inch, tần số quét 280Hz, Full HD', 6990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033666/ReactNew/anh/Computer/ManHinh/nf6mzjggy0za44qlrlpl.webp'),
+('ASUS ROG Swift PG279QM 27 inch 240Hz', 36, 4, 'Màn hình gaming ASUS ROG Swift 27 inch, tần số quét 240Hz, QHD', 14990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033666/ReactNew/anh/Computer/ManHinh/q7ytea1wufglyydi043s.webp'),
+('Acer Nitro VG240Y 23.8 inch 165Hz', 37, 5, 'Màn hình gaming Acer Nitro 23.8 inch, tần số quét 165Hz, Full HD', 3990000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/hu8xzt1rl5cnclt40ffk.webp'),
+('Acer EK241Y 23.8 inch 75Hz', 37, 5, 'Màn hình Acer 23.8 inch, tần số quét 75Hz, Full HD', 2990000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/l644mww0po1pibcehnis.webp'),
+('Acer Nitro VG270 27 inch 165Hz', 37, 5, 'Màn hình gaming Acer Nitro 27 inch, tần số quét 165Hz, Full HD', 4990000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/q92c1lfvquc7afn2ejga.webp'),
+('Acer Predator XB273U 27 inch 170Hz', 37, 5, 'Màn hình gaming Acer Predator 27 inch, tần số quét 170Hz, QHD', 10990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/pfxz79jtym1ntrjasazb.png'),
+('Acer Predator X38 38 inch Curved 175Hz', 37, 5, 'Màn hình gaming Acer Predator 38 inch cong, tần số quét 175Hz, UltraWide', 27990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/rxsqxymtk7iij9qazdnh.webp'),
+('LG UltraGear 27GP850-B 27 inch 180Hz', 38, 6, 'Màn hình gaming LG UltraGear 27 inch, tần số quét 180Hz, QHD', 8990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/c1psvfws4uuemsuxesfx.webp'),
+('LG UltraGear 32GN600-B 32 inch 165Hz', 38, 6, 'Màn hình gaming LG UltraGear 32 inch, tần số quét 165Hz, QHD', 7990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/va652xyln8hkog49g3jf.webp'),
+('LG UltraGear 27GN800-B 27 inch 144Hz', 38, 6, 'Màn hình gaming LG UltraGear 27 inch, tần số quét 144Hz, QHD', 6990000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/i30hfmtemhuos3fhdncn.webp'),
+('MSI Optix G241 24 inch 144Hz', 39, 7, 'Màn hình gaming MSI Optix 24 inch, tần số quét 144Hz, Full HD', 4990000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033665/ReactNew/anh/Computer/ManHinh/gyaiect1z1qah33uomoo.webp'),
+('MSI Optix G27C4 27 inch Curved 165Hz', 39, 7, 'Màn hình gaming MSI Optix 27 inch cong, tần số quét 165Hz, Full HD', 5990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033664/ReactNew/anh/Computer/ManHinh/iw7dnyeekg2d0rrnntyk.webp'),
+('MSI MPG Artymis 343CQR 34 inch Curved 165Hz', 39, 7, 'Màn hình gaming MSI MPG Artymis 34 inch cong, tần số quét 165Hz, UltraWide', 14990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033664/ReactNew/anh/Computer/ManHinh/v5tdi0kqnsxdfpyd1gez.webp'),
+('MSI MAG274QRF-QD 27 inch 165Hz', 39, 7, 'Màn hình gaming MSI MAG 27 inch, tần số quét 165Hz, QHD', 10990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033664/ReactNew/anh/Computer/ManHinh/yxhomgp5c1uwi0jgmqra.webp'),
+
+-- Mousepad Products
+
+('ASUS ROG Sheath XXL Gaming Mousepad', 12, 4, 'Pad chuột gaming ASUS ROG Sheath XXL kích thước lớn, bề mặt vải cao cấp', 790000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033668/ReactNew/anh/Computer/PadChuot/u9xg0bjhdsod4ipil6xn.webp'),
+('ASUS ROG Strix Edge Gaming Mousepad', 12, 4, 'Pad chuột gaming ASUS ROG Strix Edge kích thước lớn, thiết kế đặc biệt', 590000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033668/ReactNew/anh/Computer/PadChuot/xrquqz2q2aq7qumfcn1y.webp'),
+('Daeru Gaming Mousepad XL', 11, 8, 'Pad chuột gaming Daeru XL kích thước lớn, bề mặt vải mịn', 290000, 50, 'daeru1.jpg'),
+('Razer Goliathus Chroma Extended', 13, 9, 'Pad chuột gaming Razer Goliathus Chroma Extended, LED RGB, kích thước lớn', 1290000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033668/ReactNew/anh/Computer/PadChuot/lqwyjz4e0ni73ykvz2f6.webp'),
+('Razer Sphex V3 Ultra-thin Gaming Surface', 13, 9, 'Pad chuột gaming Razer Sphex V3 siêu mỏng, bề mặt polymer', 490000, 30, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033667/ReactNew/anh/Computer/PadChuot/hpfdi3pujb4lynxt6vnq.webp'),
+('Razer Gigantus V2 XXL', 13, 9, 'Pad chuột gaming Razer Gigantus V2 XXL kích thước cực lớn, bề mặt vải cao cấp', 890000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033667/ReactNew/anh/Computer/PadChuot/or8uiwmsie04fevmgfnn.webp'),
+
+-- PC Products
+
+('MSI MAG Infinite S3 11th i5-11400F RTX 3060', 40, 7, 'PC Gaming MSI MAG Infinite S3, Core i5-11400F, RTX 3060, RAM 16GB, SSD 512GB, HDD 1TB', 25990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033671/ReactNew/anh/Computer/PC/k39mcz2f5hs3wag3x3sp.webp'),
+('MSI MAG Codex 5 11th i7-11700 RTX 3060', 40, 7, 'PC Gaming MSI MAG Codex 5, Core i7-11700, RTX 3060, RAM 16GB, SSD 512GB, HDD 1TB', 29990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033670/ReactNew/anh/Computer/PC/s2cuciuymkajq87wh2rl.webp'),
+('MSI MEG Aegis Ti5 11th i9-11900K RTX 3080', 40, 7, 'PC Gaming MSI MEG Aegis Ti5, Core i9-11900K, RTX 3080, RAM 32GB, SSD 1TB, HDD 2TB', 62990000, 3, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033669/ReactNew/anh/Computer/PC/wyj9p38ygcqsqkecakbr.webp'),
+('MSI MPG Trident 3 10th i7-10700 RTX 3060', 40, 7, 'PC Gaming MSI MPG Trident 3, Core i7-10700, RTX 3060, RAM 16GB, SSD 512GB', 27990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033669/ReactNew/anh/Computer/PC/am0cv3vwtxefqo6nn1c0.webp'),
+('ASUS TUF Gaming GT501 i7-11700 RTX 3060', 41, 4, 'PC Gaming ASUS TUF GT501, Core i7-11700, RTX 3060, RAM 16GB, SSD 512GB, HDD 1TB', 29990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033669/ReactNew/anh/Computer/PC/ebi67xaejw2khdpl8pfn.webp'),
+('ASUS ROG Strix G15DK R7-5800X RTX 3060', 41, 4, 'PC Gaming ASUS ROG Strix G15DK, Ryzen 7 5800X, RTX 3060, RAM 16GB, SSD 512GB, HDD 1TB', 32990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033669/ReactNew/anh/Computer/PC/b45t1ubq4qakgbwh27ka.webp'),
+('ASUS ROG Strix G35DX R9-5900X RTX 3080', 41, 4, 'PC Gaming ASUS ROG Strix G35DX, Ryzen 9 5900X, RTX 3080, RAM 32GB, SSD 1TB, HDD 2TB', 59990000, 3, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033669/ReactNew/anh/Computer/PC/oqi6uoj8pskaemtjvclh.webp'),
+('Intel NUC 11 Enthusiast Kit i7-1165G7', 40, 10, 'Mini PC Intel NUC 11 Enthusiast Kit, Core i7-1165G7, RAM 16GB, SSD 512GB', 19990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033669/ReactNew/anh/Computer/PC/ce7lniof76ormgvmtrrw.webp'),
+('Intel NUC 11 Pro Kit i5-1135G7', 40, 10, 'Mini PC Intel NUC 11 Pro Kit, Core i5-1135G7, RAM 8GB, SSD 256GB', 14990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033668/ReactNew/anh/Computer/PC/edc3xoxqel2rofpgp8wq.webp'),
+('Intel NUC 11 Performance Kit i3-1115G4', 40, 10, 'Mini PC Intel NUC 11 Performance Kit, Core i3-1115G4, RAM 8GB, SSD 256GB', 11990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033668/ReactNew/anh/Computer/PC/db2gkdx20qb3mve7ptdl.webp'),
+
+-- Headphone Products
+
+('ASUS ROG Cetra True Wireless Gaming Earbuds', 42, 4, 'Tai nghe gaming không dây ASUS ROG Cetra True Wireless, âm thanh nổi', 2990000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033671/ReactNew/anh/Computer/Tainghe/tnwcxla3v6mahbsumoyw.webp'),
+('ASUS ROG Cetra II Core In-ear Gaming Headphones', 42, 4, 'Tai nghe gaming có dây ASUS ROG Cetra II Core, âm thanh nổi', 1290000, 25, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033671/ReactNew/anh/Computer/Tainghe/ponl5rjbymkklk9yhgpy.webp'),
+('ASUS ROG Delta S Gaming Headset', 42, 4, 'Tai nghe gaming ASUS ROG Delta S, âm thanh vòm 7.1, đèn LED RGB', 4990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033670/ReactNew/anh/Computer/Tainghe/pgkomxybbzlfo7lpujjq.webp'),
+('ASUS ROG Strix Go 2.4 Wireless Gaming Headset', 42, 4, 'Tai nghe gaming không dây ASUS ROG Strix Go 2.4, âm thanh vòm, mic có khả năng khử tiếng ồn AI', 3990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033670/ReactNew/anh/Computer/Tainghe/ljpfbdeu3gvszwaudpj8.webp'),
+('Razer Kraken Kitty Edition', 43, 9, 'Tai nghe gaming Razer Kraken Kitty Edition, tai mèo LED RGB, âm thanh vòm 7.1', 3790000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033670/ReactNew/anh/Computer/Tainghe/txqoctk7fi1xbeajydce.webp'),
+('Razer BlackShark V2 Pro Wireless', 43, 9, 'Tai nghe gaming không dây Razer BlackShark V2 Pro, âm thanh vòm THX Spatial Audio', 4990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033670/ReactNew/anh/Computer/Tainghe/t7eq9fgk5j70gogcpdtm.webp'),
+('Razer Kraken V3 X', 43, 9, 'Tai nghe gaming Razer Kraken V3 X, âm thanh vòm 7.1, đèn LED RGB', 1990000, 20, 'zxvmb0ljobsiwkij9kllx'),
+-- Acer Laptops (categoryID 45)
+
+('Acer Nitro 5 AN515-57', 45, 1, 'Laptop Acer Nitro 5 AN515-57, i5-12450H, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 17990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Acer/mhsaa51acmzmiusghtw8.webp'),
+('Acer Nitro 5 AN515-58', 45, 1, 'Laptop Acer Nitro 5 AN515-58, i5-12450H, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 18990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Acer/qhubkznkymfbwxydlagn.webp'),
+('Acer Nitro 5 AN515-57', 45, 1, 'Laptop Acer Nitro 5 AN515-57, i7-12700H, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 21990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Acer/uxftzz17pc3psndcq7ik.webp'),
+('Acer Nitro 5 AN515-58', 45, 1, 'Laptop Acer Nitro 5 AN515-58, i7-12650H, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 22990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Acer/akf7msuk1kmog5kilzvb.webp'),
+('Acer Nitro 7 AN715-51', 45, 1, 'Laptop Acer Nitro 7 AN715-51, i7-12650H, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 23990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033672/ReactNew/anh/Laptop/Acer/o6fctgnqkxq25yhknxmz.webp'),
+('Acer Nitro 5 AN515-58', 45, 1, 'Laptop Acer Nitro 5 AN515-58, i5-12450H, RTX 3050Ti, 16GB RAM, 512GB SSD, 15.6" Full HD', 19990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033672/ReactNew/anh/Laptop/Acer/y39pxvgcnccbonsdqt4o.webp'),
+('Acer Nitro 7 AN715-51', 45, 1, 'Laptop Acer Nitro 7 AN715-51, i7-12700H, RTX 4060, 16GB RAM, 512GB SSD, 15.6" Full HD', 25990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033672/ReactNew/anh/Laptop/Acer/bwaxvr5cli7vbiusma7h.webp'),
+('Acer Nitro 5 AN515-58', 45, 1, 'Laptop Acer Nitro 5 AN515-58, i5-12500H, RTX 3060, 16GB RAM, 512GB SSD, 15.6" Full HD', 20990000, 9, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033672/ReactNew/anh/Laptop/Acer/zxkklstmbbutnek2nxst.webp'),
+('Acer Aspire 5', 45, 1, 'Laptop Acer Aspire 5, Intel Core i5-1235U, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 15.6" Full HD', 15990000, 14, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033672/ReactNew/anh/Laptop/Acer/bjtlzvsm7jvajrhbf83o.webp'),
+
+-- Asus Laptops (categoryID 46)
+
+('Asus VivoBook 15', 46, 2, 'Laptop Asus VivoBook 15, i5-12500H, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 15.6" Full HD', 16990000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Asus/w2sywl5ntkzkvxddvxqh.webp'),
+('Asus TUF Gaming F15', 46, 2, 'Laptop Asus TUF Gaming F15, i5-12500H, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 19990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Asus/ihyssrabnjickp1arak6.webp'),
+('Asus Zenbook 14', 46, 2, 'Laptop Asus Zenbook 14, Core Ultra 5, Intel Arc Graphics, 16GB RAM, 512GB SSD, 14" 3K', 22990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Asus/j8dddaipstgr5auy1a6e.webp'),
+('Asus ROG Strix G16', 46, 2, 'Laptop Asus ROG Strix G16, i7-13650HX, RTX 4060, 16GB RAM, 1TB SSD, 16" Full HD', 32990000, 6, 'group_802_1.jpg'),
+('Asus VivoBook 14 OLED', 46, 2, 'Laptop Asus VivoBook 14 OLED, i5-13500H, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 14" 2.8K OLED', 18990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Asus/mo9ovdjujk1xvcmqjfyi.webp'),
+('Asus VivoBook 14', 46, 2, 'Laptop Asus VivoBook 14, i5-13500H, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 14" 2.8K', 17990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Asus/dwkg9yys5e75f7icy8kt.webp'),
+('Asus TUF Gaming A15', 46, 2, 'Laptop Asus TUF Gaming A15, R7-7435HS, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 19990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Asus/sey7jnzdurzbcqr1aoyy.webp'),
+('Asus VivoBook Pro', 46, 2, 'Laptop Asus VivoBook Pro, i7-12700H, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 15.6" 2.8K', 21990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Asus/wlnnqb2oydnvcl5nfecv.webp'),
+('Asus Zenbook S13', 46, 2, 'Laptop Asus Zenbook S13, i7-1355U, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 13.3" 2.8K OLED', 27990000, 4, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033673/ReactNew/anh/Laptop/Asus/bwmq1zvkuc4hu3cnhzux.webp'),
+
+-- Dell Laptops (categoryID 47)
+-- toi nay
+('Dell Inspiron 15', 47, 3, 'Laptop Dell Inspiron 15, i5-1235U, Intel UHD Graphics, 16GB RAM, 512GB SSD, 15.6" Full HD', 16990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Dell/gqpbqlztio8wklft7fly.webp'),
+('Dell Inspiron 14', 47, 3, 'Laptop Dell Inspiron 14, i5-1335U, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 14" Full HD', 17990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Dell/qvnr6zxr4tp9ns1nplqe.webp'),
+('Dell Inspiron 15', 47, 3, 'Laptop Dell Inspiron 15, i5-1335U, Intel Graphics, 16GB RAM, 512GB SSD, 15.6" Full HD', 18490000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Dell/rp8ef81iaejhqe4paxm0.webp'),
+('Dell Vostro 3520', 47, 3, 'Laptop Dell Vostro 3520, i3-1215U, Intel UHD Graphics, 8GB RAM, 512GB SSD, 15.6" Full HD', 13990000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Dell/wb6fuucyduvrfzzv8b92.webp'),
+('Dell Inspiron 15', 47, 3, 'Laptop Dell Inspiron 15, i7-1355U, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 15.6" Full HD', 19990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Dell/am1jfodapjnc9sb4sbr5.webp'),
+('Dell XPS 13', 47, 3, 'Laptop Dell XPS 13, i7-1360P, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 13.4" 3K', 29990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Dell/c5kuzbuysosvqxp94aqw.webp'),
+('Dell Inspiron 14', 47, 3, 'Laptop Dell Inspiron 14 2-in-1, i7-1355U, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 14" Full HD Touch', 21990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Dell/cyo7diqes2dw9jsgtouz.webp'),
+('Dell Inspiron 16', 47, 3, 'Laptop Dell Inspiron 16, i5-13500H, Intel Iris Xe Graphics, 8GB RAM, 256GB SSD, 16" Full HD', 18990000, 9, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Dell/egxxxfkm6ljqdxkyxcrr.webp'),
+('Dell Inspiron 15', 47, 3, 'Laptop Dell Inspiron 15, i5-1235U, Intel UHD Graphics, 8GB RAM, 512GB SSD, 15.6" Full HD', 15990000, 11, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033674/ReactNew/anh/Laptop/Dell/wesm8x9xw7rpjdgwrxhy.webp'),
+
+-- Gigabyte Laptops (categoryID 48)
+
+('Gigabyte AORUS 17', 48, 4, 'Laptop Gigabyte AORUS 17, i9-11980HK, RTX 3080Ti, 16GB RAM, 512GB SSD, 17.3" Full HD', 49990000, 3, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/sdc6xwpczklaastwly8j.webp'),
+('Gigabyte G5', 48, 4, 'Laptop Gigabyte G5, i5-13500H, RTX 4050, 8GB RAM, 512GB SSD, 15.6" Full HD', 21990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/fx2n260iflhwla3wlcao.webp'),
+('Gigabyte G5', 48, 4, 'Laptop Gigabyte G5, i5-12500H, RTX 4060, 8GB RAM, 512GB SSD, 15.6" Full HD', 23990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/ff12l8hxvqyqjjr5thro.webp'),
+('Gigabyte AORUS 15', 48, 4, 'Laptop Gigabyte AORUS 15, i5-12400H, RTX 4050, 8GB RAM, 512GB SSD, 15.6" Full HD', 24990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/pnm2blyk4hbcdecihugd.webp'),
+('Gigabyte AORUS 17', 48, 4, 'Laptop Gigabyte AORUS 17, i7-14650HX, RTX 4070, 16GB RAM, 1TB SSD, 17" QHD+', 39990000, 4, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/lz4ogm4ashpmrh5owdsf.webp'),
+('Gigabyte G5', 48, 4, 'Laptop Gigabyte G5, i5-13420H, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 22990000, 9, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/yyiyydnmouncn6i95hxo.webp'),
+('Gigabyte AORUS 16', 48, 4, 'Laptop Gigabyte AORUS 16, i7-13620H, RTX 4050, 16GB RAM, 1TB SSD, 16" Full HD+', 28990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Gigabyte/o6sggghll8enia2cuz1o.webp'),
+('Gigabyte AORUS 17', 48, 4, 'Laptop Gigabyte AORUS 17, i7-13620H, RTX 4060, 16GB RAM, 1TB SSD, 17" Full HD+', 32990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033675/ReactNew/anh/Laptop/Gigabyte/vvsipl9lijpzzg1car1n.webp'),
+
+-- Lenovo Laptops (categoryID 49)
+
+('Lenovo Legion 5', 49, 5, 'Laptop Lenovo Legion 5, i5-12450HX, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 19990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033678/ReactNew/anh/Laptop/Lenovo/jcnjwfhshduyw3ivamc0.webp'),
+('Lenovo Legion 5', 49, 5, 'Laptop Lenovo Legion 5, R7-7635HS, RTX 4060, 16GB RAM, 512GB SSD, 15.6" Full HD', 25990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/cnlyhvbbvq3efofy65ue.webp'),
+('Lenovo Legion 5 Pro', 49, 5, 'Laptop Lenovo Legion 5 Pro, R7-7645HX, RTX 4060, 24GB RAM, 512GB SSD, 16" Full HD', 29990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/nyuipkuqcfv4kg3qp5dn.webp'),
+('Lenovo Legion 5i', 49, 5, 'Laptop Lenovo Legion 5i, i5-12450HX, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 22990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/q3ruhdlv45zozx6dgbrj.webp'),
+('Lenovo Legion 7', 49, 5, 'Laptop Lenovo Legion 7, i9-13900HX, RTX 4070, 32GB RAM, 1TB SSD, 16" WQXGA', 49990000, 3, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/elwu5kx7pegwjpdaf4ww.webp'),
+('Lenovo IdeaPad Slim 5', 49, 5, 'Laptop Lenovo IdeaPad Slim 5, AMD Ryzen 7 7730U, AMD Radeon Graphics, 16GB RAM, 512GB SSD, 14" WUXGA', 17990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/yyimanllpnev5erkqjjq.webp'),
+('Lenovo IdeaPad 1', 49, 5, 'Laptop Lenovo IdeaPad 1, R5-7520U, AMD Radeon Graphics, 16GB RAM, 512GB SSD, 14" WUXGA', 14990000, 18, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/livhhz7xoqrdxoxfmnlj.webp'),
+('Lenovo ThinkPad X1 Carbon', 49, 5, 'Laptop Lenovo ThinkPad X1 Carbon, i7-1270P, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 14" Full HD', 32990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033677/ReactNew/anh/Laptop/Lenovo/qze42qb7ertplnjoh37y.webp'),
+('Lenovo IdeaPad 3', 49, 5, 'Laptop Lenovo IdeaPad 3, i5-1235U, Intel UHD Graphics, 16GB RAM, 512GB SSD, 14" Full HD', 15990000, 14, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Lenovo/rfa4r3veowevtkflxyl7.webp'),
+('Lenovo Legion 5', 49, 5, 'Laptop Lenovo Legion 5, R5-7535HS, RTX 3050, 12GB RAM, 512GB SSD, 15.6" Full HD', 18990000, 11, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033676/ReactNew/anh/Laptop/Lenovo/irh0ls4rnk2kfzvscasv.webp'),
+
+-- Apple MacBook Laptops (categoryID 50)
+
+('Apple MacBook Air M2', 50, 6, 'Laptop Apple MacBook Air M2, 8 CPU cores, 8 GPU cores, 8GB RAM, 512GB SSD, 13.6" Retina', 28990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/Mac/lupdjxold3ex9w0vf0ej.webp'),
+('Apple MacBook Air M2', 50, 6, 'Laptop Apple MacBook Air M2, 8 CPU cores, 10 GPU cores, 16GB RAM, 512GB SSD, 13.6" Retina', 31990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/pbb2cpno5ov609jrtymm.webp'),
+('Apple MacBook Air M3', 50, 6, 'Laptop Apple MacBook Air M3, 8 CPU cores, 8 GPU cores, 16GB RAM, 256GB SSD, 13.6" Retina', 29990000, 9, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/qbxgkcujr7wa3lb6rgwy.webp'),
+('Apple MacBook Pro M3', 50, 6, 'Laptop Apple MacBook Pro M3, 8 CPU cores, 10 GPU cores, 16GB RAM, 1TB SSD, 16" Retina', 44990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/ni4tyix0jh1ewpkwljyw.webp'),
+('Apple MacBook Pro M3', 50, 6, 'Laptop Apple MacBook Pro M3, 8 CPU cores, 10 GPU cores, 16GB RAM, 256GB SSD, 13.3" Retina', 31990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/f7l9fzw31m79euxi2s8w.webp'),
+('Apple MacBook Air M3', 50, 6, 'Laptop Apple MacBook Air M3, 8 CPU cores, 10 GPU cores, 16GB RAM, 512GB SSD, 13.3" Retina', 32990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/wpwgtstokjic8lldula1.webp'),
+('Apple MacBook Pro M3', 50, 6, 'Laptop Apple MacBook Pro M3, 12 CPU cores, 18 GPU cores, 16GB RAM, 512GB SSD, 14.2" Retina', 49990000, 4, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/esbfzldqmqmffmcgjaop.webp'),
+('Apple MacBook Pro M2', 50, 6, 'Laptop Apple MacBook Pro M2, 10 CPU cores, 16 GPU cores, 16GB RAM, 256GB SSD, 13.3" Retina', 33990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033679/ReactNew/anh/Laptop/Mac/wowjujnbhkhvvmm34rf8.webp'),
+('Apple MacBook Air M3', 50, 6, 'Laptop Apple MacBook Air M3, 8 CPU cores, 8 GPU cores, 16GB RAM, 256GB SSD, 13.3" Retina', 28990000, 9, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033678/ReactNew/anh/Laptop/Mac/yv5gyq6ppxu6kurfgphv.webp'),
+('Apple MacBook Pro M3', 50, 6, 'Laptop Apple MacBook Pro M3, 12 CPU cores, 18 GPU cores, 24GB RAM, 512GB SSD, 14.2" Retina', 54990000, 3, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033678/ReactNew/anh/Laptop/Mac/s9xi9j1kr8e78shyryp0.webp'),
+('Apple MacBook Pro M3 Max', 50, 6, 'Laptop Apple MacBook Pro M3 Max, 16 CPU cores, 40 GPU cores, 32GB RAM, 512GB SSD, 14.2" Retina', 69990000, 2, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033678/ReactNew/anh/Laptop/Mac/bl6bwjx7ttw8ojv4fsna.webp'),
+('Apple MacBook Pro M3', 50, 6, 'Laptop Apple MacBook Pro M3, 8 CPU cores, 10 GPU cores, 16GB RAM, 512GB SSD, 13.3" Retina', 36990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033678/ReactNew/anh/Laptop/Mac/v5uq1bgqyrwxjn6w3wan.webp'),
+('Apple MacBook Pro M2', 50, 6, 'Laptop Apple MacBook Pro M2, 10 CPU cores, 16 GPU cores, 16GB RAM, 256GB SSD, 13.3" Retina', 32990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033678/ReactNew/anh/Laptop/Mac/ogpsxb8qluaskwrvcm41.webp'),
+
+-- MSI Laptops (categoryID 51)
+
+('MSI Vector GP76', 51, 7, 'Laptop MSI Vector GP76, i7-12650H, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 25990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033681/ReactNew/anh/Laptop/MSI/ric4hmho7k98el53chqd.webp'),
+('MSI Cyborg 15', 51, 7, 'Laptop MSI Cyborg 15, i7-13620H, RTX 4060, 16GB RAM, 1TB SSD, 15.6" Full HD', 29990000, 7, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033681/ReactNew/anh/Laptop/MSI/xsgpzlh6ugh1dcngxmqq.webp'),
+('MSI Pulse 15', 51, 7, 'Laptop MSI Pulse 15, i7-7735HS, RTX 4060, 16GB RAM, 512GB SSD, 15.6" Full HD', 28990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/uj6gmecsdwyovz3wd8qc.webp'),
+('MSI Katana 15', 51, 7, 'Laptop MSI Katana 15, i7-13620H, RTX 3050, 16GB RAM, 1TB SSD, 15.6" Full HD', 24990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/girlwkjormg5lmagbg3w.webp'),
+('MSI Cyborg 15', 51, 7, 'Laptop MSI Cyborg 15, i7-13620H, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 23990000, 9, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/xzhpky7u1vgc5043lyai.webp'),
+('MSI Stealth 15', 51, 7, 'Laptop MSI Stealth 15, i7-13620H, RTX 4050, 16GB RAM, 512GB SSD, 15.6" Full HD', 26990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/asi6uinip2pufooz6ckv.webp'),
+('MSI Thin 15', 51, 7, 'Laptop MSI Thin 15, i5-12450H, RTX 3050, 16GB RAM, 512GB SSD, 15.6" Full HD', 19990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/pdzb47kwodnkdqo6cto4.webp'),
+('MSI Raider GE77', 51, 7, 'Laptop MSI Raider GE77, UE-285VN, RTX 4090, 32GB RAM, 1TB SSD, 17" WQXGA', 79990000, 2, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/dwsbj7vylnjirsjsp7tk.webp'),
+('MSI Modern 15', 51, 7, 'Laptop MSI Modern 15, i5-1235U, Intel Iris Xe Graphics, 16GB RAM, 512GB SSD, 15.6" Full HD', 17990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033680/ReactNew/anh/Laptop/MSI/agopp3v34ynhxfarcohv.webp'),
+
+-- iPad products (categoryID 44)
+('iPad 10.9-inch', 44, 1, 'Apple iPad 10.9-inch 2022 model', 10990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033672/ReactNew/anh/Ipad/lijuygynyw3bjamn30vz.webp'),
+('iPad Air 11-inch', 44, 1, 'Apple iPad Air 11-inch WiFi', 16990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033671/ReactNew/anh/Ipad/hxzui51hftegjrx5kszu.webp'),
+('iPad Air 6 M2', 44, 1, 'Apple iPad Air 6 M2 11-inch 256GB', 19990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033671/ReactNew/anh/Ipad/myz5lv40ilb8ggqohvke.webp'),
+('iPad Pro 11-inch', 44, 1, 'Apple iPad Pro 11-inch with M-series chip', 22990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033671/ReactNew/anh/Ipad/rjljzzyznjvpclegirc0.webp'),
+
+-- iPhone products (categoryID 52)
+('iPhone 11', 52, 1, 'Apple iPhone 11 64GB', 9990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Iphone/jqf3lab7pp1v0knkndcy.webp'),
+('iPhone 11s', 52, 1, 'Apple iPhone 11s 128GB', 10990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Iphone/ikm1ku3lfo19tz9qmtwg.webp'),
+('iPhone 12', 52, 1, 'Apple iPhone 12 128GB', 14990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Iphone/gq8temqbzjgyeeldawjm.webp'),
+('iPhone 12 128GB', 52, 1, 'Apple iPhone 12 128GB', 15990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Iphone/luxhf0wexomvljrfz4bs.webp'),
+('iPhone 14', 52, 1, 'Apple iPhone 14 128GB', 19990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/x1wczgtg8jkfecccpi2g.webp'),
+('iPhone 14 Plus', 52, 1, 'Apple iPhone 14 Plus 128GB', 22990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/a0495rtgdudnjnup9xcn.webp'),
+('iPhone 14 Pro', 52, 1, 'Apple iPhone 14 Pro 256GB', 25990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/ruh3vvscnzq3a8saya74.webp'),
+('iPhone 14 Pro Max', 52, 1, 'Apple iPhone 14 Pro Max 256GB', 27990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/eymeu36lzhfzuvr10fbv.webp'),
+('iPhone 15 Plus', 52, 1, 'Apple iPhone 15 Plus 128GB', 24990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/gkcqox2lzm7kgybirj66.webp'),
+('iPhone 15 Pro', 52, 1, 'Apple iPhone 15 Pro 256GB', 28990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/rfweclgus5v5feyj0eux.webp'),
+('iPhone 15 Pro Max', 52, 1, 'Apple iPhone 15 Pro Max 512GB', 32990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033682/ReactNew/anh/Phone/Iphone/cdeqftd3so9jvawkjnde.webp'),
+('iPhone 16', 52, 1, 'Apple iPhone 16 128GB', 24990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033681/ReactNew/anh/Phone/Iphone/rqd1set3fezkux81ssvq.webp'),
+('iPhone 16 Plus', 52, 1, 'Apple iPhone 16 Plus 256GB', 27990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033681/ReactNew/anh/Phone/Iphone/vc7siyomtgjtapmlgucy.webp'), 
+('iPhone 16 Pro', 52, 1, 'Apple iPhone 16 Pro 256GB', 30990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033681/ReactNew/anh/Phone/Iphone/ilpe3n5b9jwyd8tjc9su.webp'),
+('iPhone 16 Pro Max', 52, 1, 'Apple iPhone 16 Pro Max 512GB', 34990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033681/ReactNew/anh/Phone/Iphone/pggh0epd7mou14rukych.webp'),
+
+-- Samsung Galaxy products (categoryID 53)
+('Samsung Galaxy A05s', 53, 2, 'Samsung Galaxy A05s 6GB 128GB', 3990000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/fp9jrcwdilgtnyr8t3t5.webp'),
+('Samsung Galaxy A16', 53, 2, 'Samsung Galaxy A16 128GB', 5990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/mvcgfp9gghrfdpkvzqrr.webp'),
+('Samsung Galaxy A26', 53, 2, 'Samsung Galaxy A26 6GB 128GB', 6990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/uzpyrqgujdihg8m80s4y.webp'),
+('Samsung Galaxy A36', 53, 2, 'Samsung Galaxy A36 8GB 128GB', 7990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/arsbhob7bhsylogigd0d.webp'),
+('Samsung Galaxy A56', 53, 2, 'Samsung Galaxy A56 8GB 256GB', 9990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/mttqkbx4ig4mkpykh55z.webp'),
+('Samsung Galaxy M55', 53, 2, 'Samsung Galaxy M55 5G 128GB', 8990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/eqvtkgp4xifqgoxaisih.webp'),
+('Samsung Galaxy S24 FE', 53, 2, 'Samsung Galaxy S24 FE 8GB 256GB', 14990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/kqcmwqekgzsxpdckutyg.webp'),
+('Samsung Galaxy S25', 53, 2, 'Samsung Galaxy S25 8GB 256GB', 20990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033684/ReactNew/anh/Phone/Samsum/feavcqcryzgfc9mn6i38.webp'),
+('Samsung Galaxy S25 Ultra', 53, 2, 'Samsung Galaxy S25 Ultra 12GB 512GB', 30990000, 4, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Samsum/i3lc1fiyk6xuerlxdsoz.webp'),
+('Samsung Galaxy A15', 53, 2, 'Samsung Galaxy A15 6GB 128GB', 4990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Samsum/zzosax7aruomvym4vngl.webp'),
+('Samsung Galaxy Z Fold 6', 53, 2, 'Samsung Galaxy Z Fold 6 12GB 512GB', 39990000, 3, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Samsum/c7z0dwzhuiiisfkjmzmq.webp'),
+('Samsung Galaxy S24 Ultra', 53, 2, 'Samsung Galaxy S24 Ultra 12GB 512GB', 29990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033683/ReactNew/anh/Phone/Samsum/c5tqzqoq9it0h2bzdf2q.webp'),
+
+-- Xiaomi products (categoryID 54)
+('Xiaomi Poco X7 Pro', 54, 3, 'Xiaomi Poco X7 Pro 5G 8GB 256GB', 7990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033686/ReactNew/anh/Phone/xiaomi/bmuzbggfjekb9qifii14.webp'),
+('Xiaomi Poco X7 Pro 5G', 54, 3, 'Xiaomi Poco X7 Pro 5G 12GB 256GB', 8990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033686/ReactNew/anh/Phone/xiaomi/t467qikdzglqkyhplbig.webp'),
+('Xiaomi 15', 54, 3, 'Xiaomi 15 8GB 256GB', 14990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033686/ReactNew/anh/Phone/xiaomi/pwctcfhwkq3jlfkxurtx.webp'),
+('Xiaomi 15 Ultra', 54, 3, 'Xiaomi 15 Ultra 12GB 512GB', 24990000, 5, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033686/ReactNew/anh/Phone/xiaomi/bf8hw4uog9ebhkhfsjvu.webp'),
+('Xiaomi Redmi Note 14', 54, 3, 'Xiaomi Redmi Note 14 8GB 128GB', 5990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033686/ReactNew/anh/Phone/xiaomi/pmglyqubglpxrduvcxob.webp'),
+('Xiaomi 14', 54, 3, 'Xiaomi 14 8GB 256GB', 16990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033686/ReactNew/anh/Phone/xiaomi/b6qdpmofpzr7lbitohvx.webp'),
+('Redmi Note 14 Pro Plus', 54, 3, 'Redmi Note 14 Pro Plus 12GB 256GB', 9990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/tqlbvhsym2rrjhgqdeoc.webp'),
+('Xiaomi 14T', 54, 3, 'Xiaomi 14T 8GB 256GB', 12990000, 8, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/fqlnqvfbwtmhebfzdvpf.webp'),
+('Xiaomi 14T Pro', 54, 3, 'Xiaomi 14T Pro 12GB 512GB', 15990000, 6, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/kzbadvexvuytatircxhd.webp'),
+('Xiaomi Redmi 14C', 54, 3, 'Xiaomi Redmi 14C 4GB 128GB', 3490000, 20, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/oirnuwyrtgs72ltnxdnh.webp'),
+('Xiaomi Redmi Note 13', 54, 3, 'Xiaomi Redmi Note 13 6GB 128GB', 4990000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/b013leet8euza9m4da3r.webp'),
+('Xiaomi Redmi Note 13 Pro', 54, 3, 'Xiaomi Redmi Note 13 Pro 8GB 256GB', 7990000, 12, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/w9cu2kw4xhzbeshrhqv3.webp'),
+('Xiaomi Redmi Note 13 Pro Plus', 54, 3, 'Xiaomi Redmi Note 13 Pro Plus 12GB 512GB', 9990000, 10, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/aygpwpfzedecxit3rx09.webp'),
+('Xiaomi Redmi Pad SE', 54, 3, 'Xiaomi Redmi Pad SE 4GB 128GB', 4490000, 15, 'https://res.cloudinary.com/ddd20pmdb/image/upload/v1745033685/ReactNew/anh/Phone/xiaomi/ayzbgx5n7elclnyx1jpa.webp');
+-- toi cho nay toi msi ---
+-- Insert data into ProductAttributeValues table
+-- Add attribute values for some sample products
+-- Smartphones attributes
+
+
+-- new toi cho nay --
+-- Insert data into Orders table
+INSERT INTO Orders (customerID, employeeID, voucherID, orderDate, totalAmount, status) VALUES
+(6, 1, NULL, '2025-01-15 11:25:00', 1299.99, 'Completed'),
+(7, 2, 4, '2025-01-22 15:40:00', 1599.99, 'Completed'),
+(8, 3, NULL, '2025-02-05 09:10:00', 2199.99, 'Completed'),
+(9, 4, 5, '2025-02-14 13:50:00', 474.99, 'Completed'),
+(10, 5, NULL, '2025-02-28 16:20:00', 899.99, 'Completed'),
+(1, 6, 6, '2025-03-05 10:30:00', 349.99, 'Completed'),
+(2, 7, NULL, '2025-03-15 14:45:00', 3699.99, 'Shipping'),
+(3, 8, 7, '2025-03-22 11:15:00', 1119.99, 'Shipping'),
+(4, 9, NULL, '2025-03-30 09:30:00', 1099.99, 'Pending'),
+(5, 10, 8, '2025-04-04 15:20:00', 849.99, 'Pending'),
+(6, 1, NULL, '2025-04-05 13:40:00', 399.99, 'Pending'),
+(7, 2, 9, '2025-04-06 10:15:00', 299.99, 'Pending'),
+(8, 3, NULL, '2025-04-07 16:30:00', 799.99, 'Pending');
+
+-- Insert data into OrderDetails table for each order
+-- Order 1 details (customerID: 1, order total: 1149.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(1, 1, 1, 1099.99, 1099.99),  -- iPhone 15 Pro
+(1, 82, 1, 50.00, 50.00);     -- Accessory
+
+-- Order 2 details (customerID: 2, order total: 2499.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(2, 21, 1, 2499.99, 2499.99); -- MacBook Pro 16" M3
+
+-- Order 3 details (customerID: 3, order total: 1349.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(3, 5, 1, 799.99, 799.99),    -- Xiaomi 14 Pro
+(3, 61, 1, 399.99, 399.99),   -- Sony WH-1000XM5
+(3, 83, 1, 150.01, 150.01);   -- Accessory
+
+-- Order 4 details (customerID: 4, order total: 799.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(4, 6, 1, 799.99, 799.99);    -- iPhone 15
+
+-- Order 5 details (customerID: 5, order total: 679.49)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(5, 65, 1, 349.99, 349.99),   -- Sennheiser Momentum 4
+(5, 85, 1, 329.50, 329.50);   -- Accessory
+
+-- Order 6 details (customerID: 6, order total: 1299.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(6, 27, 1, 1299.99, 1299.99); -- MacBook Air M3
+
+-- Order 7 details (customerID: 7, order total: 1599.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(7, 91, 1, 1599.99, 1599.99); -- Apple Studio Display
+
+-- Order 8 details (customerID: 8, order total: 2199.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(8, 40, 1, 699.99, 699.99),   -- ASUS ZenBook Pro 16X
+(8, 51, 1, 1500.00, 1500.00); -- Canon EOS R5
+
+-- Order 9 details (customerID: 9, order total: 474.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(9, 56, 1, 399.99, 399.99),   -- GoPro Hero12 Black
+(9, 84, 1, 75.00, 75.00);     -- Accessory
+
+-- Order 10 details (customerID: 10, order total: 899.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(10, 7, 1, 899.99, 899.99);   -- Samsung Galaxy S24
+
+-- Order 11 details (customerID: 1, order total: 349.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(11, 73, 1, 349.99, 349.99);  -- Google Pixel Watch 3
+
+-- Order 12 details (customerID: 2, order total: 3699.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(12, 51, 1, 3699.99, 3699.99); -- Canon EOS R5
+
+-- Order 13 details (customerID: 3, order total: 1119.99)
+INSERT INTO OrderDetails (orderID, productID, quantity, unitPrice, subtotal) VALUES
+(13, 2, 1, 1199.99, 1199.99),  -- Samsung Galaxy S24 Ultra
+(13, 5, -80.00, 1, -80.00);    -- Discount applied
+
+
+
+
+
+-- Insert data into Payments table for completed orders
+INSERT INTO Payments (orderID, paymentMethodID, paymentStatus, paymentDate, amount) VALUES
+(1, 1, 'Completed', '2023-11-10 14:35:00', 1149.99),  -- Credit Card
+(2, 1, 'Completed', '2023-11-15 10:25:00', 2499.99),  -- Credit Card
+(3, 2, 'Completed', '2023-12-01 16:50:00', 1349.99),  -- PayPal
+(4, 3, 'Completed', '2023-12-10 09:20:00', 799.99),   -- Bank Transfer
+(5, 1, 'Completed', '2024-01-05 13:35:00', 679.49),   -- Credit Card
+(6, 4, 'Completed', '2024-01-15 11:30:00', 1299.99),  -- Cash on Delivery
+(7, 5, 'Completed', '2024-01-22 15:45:00', 1599.99),  -- Google Pay
+(8, 2, 'Completed', '2024-02-05 09:15:00', 2199.99),  -- PayPal
+(9, 6, 'Completed', '2024-02-14 13:55:00', 474.99),   -- Apple Pay
+(10, 1, 'Completed', '2024-02-28 16:25:00', 899.99),  -- Credit Card
+(11, 2, 'Completed', '2024-03-05 10:35:00', 349.99),  -- PayPal
+(12, 1, 'Completed', '2024-03-15 14:50:00', 3699.99), -- Credit Card
+(13, 3, 'Completed', '2024-03-22 11:20:00', 1119.99); -- Bank Transfer
+
+-- Insert product reviews for completed orders
+INSERT INTO Reviews (productID, customerID, rating, comment, reviewDate) VALUES
+(1, 1, 5, 'Excellent phone! The camera quality is amazing and battery life is impressive.', '2023-11-20 09:30:00'),
+(21, 2, 5, 'The M3 chip is incredibly fast. Perfect for my video editing needs.', '2023-11-25 14:15:00'),
+(5, 3, 4, 'Great phone overall, though the UI takes some getting used to.', '2023-12-10 16:20:00'),
+(61, 3, 5, 'Best noise cancellation I\'ve ever experienced. Worth every penny!', '2023-12-11 10:45:00'),
+(6, 4, 4, 'Good upgrade from my previous iPhone. Camera and speed improvements are noticeable.', '2023-12-20 13:10:00'),
+(65, 5, 5, 'Incredible sound quality and very comfortable for long listening sessions.', '2024-01-15 11:25:00'),
+(27, 6, 5, 'Lightweight yet powerful. Perfect for students and professionals on the go.', '2024-01-25 15:40:00'),
+(91, 7, 4, 'Stunning display quality, though a bit pricey compared to alternatives.', '2024-02-05 09:50:00'),
+(40, 8, 5, 'The innovative design makes this laptop stand out. Performance is stellar.', '2024-02-15 14:30:00'),
+(51, 8, 5, 'Dream camera for any photographer. Image quality is outstanding!', '2024-02-16 16:45:00'),
+(56, 9, 4, 'Great action camera with excellent stabilization. Battery life could be better.', '2024-02-25 10:20:00'),
+(7, 10, 4, 'Beautiful display and smooth performance. Camera system is impressive.', '2024-03-10 12:35:00'),
+(73, 1, 5, 'Perfect smart watch with great health features and attractive design.', '2024-03-15 14:50:00');
+
+
+-- đặt lịch hẹn 
+CREATE TABLE appointments (
+    appointmentID INT PRIMARY KEY AUTO_INCREMENT,
+    customerID INT NULL,
+    employeeID INT NULL,
+    appointmentDateTime DATETIME NOT NULL,
+    estimatedArrivalTime DATETIME NOT NULL,
+    duration INT DEFAULT 60,
+    status ENUM('pending', 'confirmed', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
+    
+    serviceType ENUM(
+        'repair', 'assembly', 'installation', 'purchase', 
+        'consultation', 'maintenance', 'upgrade', 
+        'data_recovery', 'warranty_service', 'software_installation', 'other'
+    ) NOT NULL,
+    
+    serviceLocation ENUM('home', 'office', 'store') NOT NULL DEFAULT 'store',
+    
+    deviceCategory ENUM(
+        'BanPhim', 'Mouse', 'Mousepad', 'GamingGear', 'Headphone',
+        'Case', 'CPU', 'Main', 'PSU', 'HDD', 'RAM', 'VGA', 
+        'screen', 'PC', 'Laptop', 'iPad', 'Phone', 'other'
+    ) NOT NULL,
+    
+    isWarrantyService BOOLEAN DEFAULT FALSE,
+    warrantyPeriod INT NULL,
+    
+    address TEXT NULL,
+    notes TEXT,
+    estimatedCost DECIMAL(10,2) NULL,
+    diagnosisDetails TEXT NULL,
+    technicianNotes TEXT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    guestName VARCHAR(100) NULL,
+    guestEmail VARCHAR(100) NULL,
+    guestPhone VARCHAR(20) NULL,
+
+    FOREIGN KEY (customerID) REFERENCES customers(customerID) ON DELETE SET NULL,
+    FOREIGN KEY (employeeID) REFERENCES employees(employeeID) ON DELETE SET NULL
+);
+
+-- trigger 
+DELIMITER $$
+
+CREATE TRIGGER trg_appointments_check_insert
+BEFORE INSERT ON appointments
+FOR EACH ROW
+BEGIN
+    IF NEW.customerID IS NULL AND (NEW.guestName IS NULL OR NEW.guestPhone IS NULL) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Phải có customerID hoặc thông tin khách vãng lai (guestName và guestPhone)';
+    END IF;
+
+    IF NEW.serviceLocation <> 'store' AND NEW.address IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Phải có địa chỉ nếu serviceLocation không phải là "store"';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Trigger cho
+DELIMITER $$
+
+CREATE TRIGGER trg_appointments_check_update
+BEFORE UPDATE ON appointments
+FOR EACH ROW
+BEGIN
+    IF NEW.customerID IS NULL AND (NEW.guestName IS NULL OR NEW.guestPhone IS NULL) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Phải có customerID hoặc thông tin khách vãng lai (guestName và guestPhone)';
+    END IF;
+
+    IF NEW.serviceLocation <> 'store' AND NEW.address IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Phải có địa chỉ nếu serviceLocation không phải là "store"';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Trường status trong bảng appointment_parts là một ENUM (kiểu liệt kê) có 4 giá trị khả dụng:  'in_stock', 'ordered', với giá trị mặc định là 'requested'. Đây là trường theo dõi trạng thái của linh kiện/sản phẩm sử dụng trong một lịch hẹn.
+-- Chi tiết từng trạng thái:
+
+
+-- 'in_stock' (có sẵn trong kho): Sau khi kiểm tra, phát hiện linh kiện đã có sẵn trong kho của cửa hàng và đã được trích xuất để chuẩn bị sử dụng cho lịch hẹn.
+-- 'ordered' (đã đặt mua): Linh kiện không có sẵn trong kho và đã được đặt mua từ nhà cung cấp. Trạng thái này cho biết linh kiện đang trong quá trình vận chuyển hoặc chờ giao hàng.
+
+
+
+
+CREATE TABLE appointment_parts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    appointmentID INT NOT NULL,
+   
+    quantity INT NOT NULL DEFAULT 1,
+    unitPrice DECIMAL(10,2) NOT NULL,
+    isReplacement BOOLEAN DEFAULT TRUE, -- TRUE nếu là thay thế, FALSE nếu là lắp mới
+    status ENUM('in_stock', 'ordered') DEFAULT 'in_stock',
+    
+    FOREIGN KEY (appointmentID) REFERENCES appointments(appointmentID) ON DELETE CASCADE
+   
+);
+
+-- Insert data into appointments table
+INSERT INTO appointments (
+    customerID, employeeID, appointmentDateTime, estimatedArrivalTime, 
+    duration, status, serviceType, serviceLocation, deviceCategory, 
+    isWarrantyService, warrantyPeriod, address, notes, estimatedCost,
+    diagnosisDetails, technicianNotes, guestName, guestEmail, guestPhone
+) VALUES
+-- Appointments for registered customers
+(1, 2, '2025-04-26 10:00:00', '2025-04-26 10:15:00', 
+ 60, 'confirmed', 'repair', 'store', 'Laptop', 
+ TRUE, 12, NULL, 'Laptop không khởi động được', 400000,
+ NULL, NULL, NULL, NULL, NULL),
+
+(3, 4, '2025-04-27 14:00:00', '2025-04-27 14:15:00', 
+ 90, 'pending', 'assembly', 'store', 'PC', 
+ FALSE, NULL, NULL, 'Lắp ráp PC gaming mới', 250000,
+ NULL, NULL, NULL, NULL, NULL),
+
+(5, 7, '2025-04-28 09:30:00', '2025-04-28 09:45:00', 
+ 120, 'confirmed', 'installation', 'home', 'screen', 
+ FALSE, NULL, '202 Điện Biên Phủ, Quận Bình Thạnh, TP. Hồ Chí Minh', 'Lắp đặt màn hình và thiết lập tại nhà', 350000,
+ NULL, NULL, NULL, NULL, NULL),
+
+(2, 3, '2025-04-29 16:00:00', '2025-04-29 16:15:00', 
+ 45, 'pending', 'consultation', 'store', 'VGA', 
+ FALSE, NULL, NULL, 'Tư vấn nâng cấp card đồ họa', 0,
+ NULL, NULL, NULL, NULL, NULL),
+
+(4, 5, '2025-04-30 11:00:00', '2025-04-30 11:15:00', 
+ 60, 'confirmed', 'warranty_service', 'store', 'BanPhim', 
+ TRUE, 24, NULL, 'Bàn phím Logitech bị kẹt phím', 0,
+ NULL, NULL, NULL, NULL, NULL),
+
+-- Appointments for guest customers (without customerID)
+(NULL, 6, '2025-05-01 13:00:00', '2025-05-01 13:15:00', 
+ 75, 'pending', 'repair', 'store', 'Mouse', 
+ FALSE, NULL, NULL, 'Chuột không click được', 150000,
+ NULL, NULL, 'Nguyễn Văn Nam', 'nam.nguyen@email.com', '0912345678'),
+
+(NULL, 2, '2025-05-02 10:30:00', '2025-05-02 10:45:00', 
+ 90, 'confirmed', 'data_recovery', 'office', 'HDD', 
+ FALSE, NULL, '78 Lê Thanh Nghị, Quận Hai Bà Trưng, Hà Nội', 'Khôi phục dữ liệu từ ổ cứng hỏng', 1200000,
+ NULL, NULL, 'Trần Thị Hoa', 'hoa.tran@email.com', '0923456789'),
+
+(NULL, 3, '2025-05-03 15:00:00', '2025-05-03 15:15:00', 
+ 60, 'pending', 'maintenance', 'home', 'PC', 
+ FALSE, NULL, '123 Đường Mai, Quận Hoàn Kiếm, Hà Nội', 'Vệ sinh và bảo dưỡng PC', 500000,
+ NULL, NULL, 'Lê Minh Quân', 'quan.le@email.com', '0934567890'),
+
+(8, 4, '2025-05-04 11:00:00', '2025-05-04 11:15:00', 
+ 120, 'confirmed', 'upgrade', 'store', 'RAM', 
+ FALSE, NULL, NULL, 'Nâng cấp RAM cho laptop', 300000,
+ NULL, NULL, NULL, NULL, NULL),
+
+(10, 7, '2025-05-05 14:00:00', '2025-05-05 14:15:00', 
+ 60, 'pending', 'software_installation', 'store', 'Laptop', 
+ FALSE, NULL, NULL, 'Cài đặt phần mềm đồ họa', 200000,
+ NULL, NULL, NULL, NULL, NULL);
+ 
+-- Insert data into appointment_parts table
+INSERT INTO appointment_parts (
+    appointmentID, quantity, unitPrice, isReplacement, status
+) VALUES
+-- Parts for appointment ID 1 (Laptop repair)
+(1, 1, 1200000, TRUE, 'in_stock'),  -- SSD replacement
+(1, 1, 350000, TRUE, 'in_stock'),   -- Thermal paste application
+
+-- Parts for appointment ID 2 (PC assembly)
+(2, 1, 8500000, FALSE, 'in_stock'),  -- CPU
+(2, 1, 4200000, FALSE, 'in_stock'),  -- VGA
+(2, 1, 3500000, FALSE, 'in_stock'),  -- Mainboard
+(2, 2, 1800000, FALSE, 'in_stock'),  -- RAM
+(2, 1, 1950000, FALSE, 'in_stock'),  -- SSD
+(2, 1, 2200000, FALSE, 'in_stock'),  -- PSU
+(2, 1, 1500000, FALSE, 'in_stock'),  -- Case
+
+-- Parts for appointment ID 3 (Monitor installation)
+(3, 1, 4500000, FALSE, 'in_stock'),  -- New monitor
+(3, 1, 250000, FALSE, 'in_stock'),   -- HDMI cable
+
+-- Parts for appointment ID 5 (Keyboard warranty service)
+(5, 1, 0, TRUE, 'in_stock'),         -- Replacement keycaps under warranty
+
+-- Parts for appointment ID 6 (Mouse repair for guest)
+(6, 1, 120000, TRUE, 'in_stock'),    -- Mouse switch replacement
+
+-- Parts for appointment ID 8 (PC maintenance)
+(8, 1, 150000, FALSE, 'in_stock'),   -- Cleaning supplies
+
+-- Parts for appointment ID 9 (RAM upgrade)
+(9, 2, 1650000, FALSE, 'in_stock'),  -- New RAM sticks
+
+-- Order parts that aren't in stock
+(4, 1, 7500000, FALSE, 'ordered'),   -- High-end graphics card
+(7, 1, 3500000, FALSE, 'ordered');   -- Data recovery service equipment
+

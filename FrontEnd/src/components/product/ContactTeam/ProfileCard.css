@@ -1,0 +1,171 @@
+.profileCard {
+  position: relative;
+  width: 290px;
+  background: linear-gradient(180deg, hsl(178, 35%, 45%), hsl(178, 55%, 28%));
+  border-radius: 1rem 1rem 11rem 11rem;
+  padding: 2.5rem 1.5rem 3.5rem;
+  text-align: center;
+  box-shadow: 0 8px 32px hsla(178, 55%, 20%, 0.15);
+}
+
+.cardImg {
+  width: 120px;
+  border-radius: 20%;
+  margin-left: 2px;
+  object-fit: cover;
+}
+
+.cardBorder {
+  width: 124px;
+  height: 124px;
+  background-color: hsl(175, 30%, 48%);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+}
+
+.cardPerfil {
+  width: 104px;
+  height: 104px;
+  background-color: hsl(175, 40%, 62%);
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.cardName, .cardProfession {
+  color: #ffffff;
+}
+
+.cardName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.cardProfession {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* CARD INFO */
+.info {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  padding: 2.5rem 1.5rem 3.3rem;
+  border-radius: 1rem 1rem 11rem 11rem;
+  clip-path: circle(19px at 249px 51px);
+  transition: clip-path 0.4s ease-in-out;
+}
+
+.infoIcon {
+  position: absolute;
+  top: 1.93rem;
+  right: 1.3rem;
+  font-size: 2rem;
+  color: hsl(175, 55%, 40%);
+  display: inline-flex;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.infoImg {
+  width: 45px;
+  border-radius: 20%;
+  margin-left: 2px;
+  object-fit: cover; 
+}
+
+.infoBorder {
+  width: 64px;
+  height: 64px;
+  background-color: hsl(175, 30%, 48%);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  transform: translateX(-3rem);
+  transition: transform 0.8s;
+}
+
+.infoPerfil {
+  width: 52px;
+  height: 52px;
+  background-color: hsl(175, 40%, 62%);
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.infoData {
+  display: grid;
+  row-gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  transform: translateX(-4rem);
+  transition: transform 1s;
+}
+
+.infoName {
+  font-size: 0.938rem;
+  color: hsl(175, 40%, 16%);
+}
+
+.infoProfession, .infoLocation {
+  font-size: 0.75rem;
+  color: hsl(175, 8%, 50%);
+}
+
+.infoSocial {
+  display: flex;
+  justify-content: center;
+  column-gap: 1rem;
+  transform: translateX(-5rem);
+  transition: transform 1.2s;
+}
+
+.infoSocialLink {
+  width: 32px;
+  height: 32px;
+  background-color: hsl(175, 30%, 48%);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s;
+}
+
+.infoSocialLink:hover {
+  transform: translateY(-0.25rem);
+}
+
+.infoSocialIcon {
+  display: inline-flex;
+  background: linear-gradient(180deg, hsl(178, 35%, 45%), hsl(178, 55%, 28%));
+  padding: 0.25rem;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+/* Card info animation */
+.info:hover {
+  clip-path: circle(75%);
+}
+
+.info:hover .infoIcon {
+  opacity: 0;
+}
+
+.info:hover .infoBorder,
+.info:hover .infoData,
+.info:hover .infoSocial {
+  transform: translateX(0);
+}
