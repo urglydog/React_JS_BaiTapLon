@@ -1,10 +1,19 @@
 import { useState } from "react";
 
-function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode, setEnteredCode }) {
+function DiscountModal({
+  isOpen,
+  onClose,
+  vouchers,
+  onSelectVoucher,
+  enteredCode,
+  setEnteredCode,
+}) {
   const [manualApplyError, setManualApplyError] = useState("");
   const [checkingVoucher, setCheckingVoucher] = useState(false);
   const [foundVoucher, setFoundVoucher] = useState(null);
   const [isExpiredVoucher, setIsExpiredVoucher] = useState(false);
+
+  const backendUrl = import.meta.env.VITE_BACK_END_URL;
 
   if (!isOpen) return null;
 
@@ -21,7 +30,7 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
     setIsExpiredVoucher(false);
 
     try {
-      const response = await fetch("http://localhost:4000/api/voucher/check", {
+      const response = await fetch(`${backendUrl}/api/voucher/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,7 +46,9 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
       } else {
         setManualApplyError(data?.EM || "Invalid voucher code.");
         setFoundVoucher(data?.DT || null);
-        setIsExpiredVoucher(data?.DT ? new Date(data.DT.expirationDate) < new Date() : false);
+        setIsExpiredVoucher(
+          data?.DT ? new Date(data.DT.expirationDate) < new Date() : false
+        );
       }
     } catch (error) {
       console.error("Lỗi khi kiểm tra mã giảm giá:", error);
@@ -58,17 +69,33 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
 
   return (
     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4" style={{ maxHeight: "85vh", height: "600px" }}>
+      <div
+        className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
+        style={{ maxHeight: "85vh", height: "600px" }}
+      >
         {/* Header với nút Close rõ ràng */}
         <div className="flex justify-between items-center mb-4 pb-2 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">Discount Vouchers</h2>
-          <button 
-            onClick={onClose} 
+          <h2 className="text-xl font-semibold text-gray-800">
+            Discount Vouchers
+          </h2>
+          <button
+            onClick={onClose}
             className="text-gray-500 hover:text-gray-700 focus:outline-none"
             aria-label="Close"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -88,37 +115,64 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
               />
               <button
                 onClick={handleApplyManual}
-                className={`px-4 py-2 rounded-md ${checkingVoucher ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white transition-colors`}
+                className={`px-4 py-2 rounded-md ${
+                  checkingVoucher
+                    ? "bg-indigo-400"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                } text-white transition-colors`}
                 disabled={checkingVoucher}
               >
                 {checkingVoucher ? "Checking..." : "Apply"}
               </button>
             </div>
-            
+
             {manualApplyError && (
               <p className="text-red-500 text-sm mt-1">{manualApplyError}</p>
             )}
-            
+
             {foundVoucher && (
-              <div className={`mt-3 p-3 border rounded-md ${isExpiredVoucher ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}`}>
+              <div
+                className={`mt-3 p-3 border rounded-md ${
+                  isExpiredVoucher
+                    ? "border-red-200 bg-red-50"
+                    : "border-green-200 bg-green-50"
+                }`}
+              >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className={`font-semibold ${isExpiredVoucher ? 'text-red-700' : 'text-green-700'}`}>
+                    <p
+                      className={`font-semibold ${
+                        isExpiredVoucher ? "text-red-700" : "text-green-700"
+                      }`}
+                    >
                       {foundVoucher.code}
                     </p>
-                    <p className={`text-sm ${isExpiredVoucher ? 'text-red-600' : 'text-green-600'}`}>
-                      Discount: {foundVoucher.discount}% • Expires: {new Date(foundVoucher.expirationDate).toLocaleDateString()}
+                    <p
+                      className={`text-sm ${
+                        isExpiredVoucher ? "text-red-600" : "text-green-600"
+                      }`}
+                    >
+                      Discount: {foundVoucher.discount}% • Expires:{" "}
+                      {new Date(
+                        foundVoucher.expirationDate
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                   {isExpiredVoucher ? (
-                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Expired</span>
+                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                      Expired
+                    </span>
                   ) : (
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Valid</span>
+                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                      Valid
+                    </span>
                   )}
                 </div>
-                
+
                 {isExpiredVoucher ? (
-                  <p className="text-red-500 text-sm mt-2">This voucher has expired and cannot be applied.</p>
+                  <p className="text-red-500 text-sm mt-2">
+                    This voucher has expired and cannot be applied.
+                  </p>
                 ) : (
                   <button
                     onClick={handleSelectFoundVoucher}
@@ -133,33 +187,59 @@ function DiscountModal({ isOpen, onClose, vouchers, onSelectVoucher, enteredCode
 
           {/* Available Vouchers */}
           <div className="flex-1 overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Available Vouchers</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              Available Vouchers
+            </h3>
+
             {vouchers.length === 0 ? (
-              <p className="text-gray-500 py-4 text-center">No vouchers available</p>
+              <p className="text-gray-500 py-4 text-center">
+                No vouchers available
+              </p>
             ) : (
               <div className="space-y-3 pr-2">
                 {vouchers.map((voucher) => {
-                  const isExpired = new Date(voucher.expirationDate) < new Date();
+                  const isExpired =
+                    new Date(voucher.expirationDate) < new Date();
                   return (
-                    <div 
+                    <div
                       key={voucher.voucherId}
-                      className={`border rounded-md p-3 ${isExpired ? 'opacity-70' : 'hover:bg-gray-50 cursor-pointer'}`}
-                      onClick={!isExpired ? () => onSelectVoucher(voucher.code) : undefined}
+                      className={`border rounded-md p-3 ${
+                        isExpired
+                          ? "opacity-70"
+                          : "hover:bg-gray-50 cursor-pointer"
+                      }`}
+                      onClick={
+                        !isExpired
+                          ? () => onSelectVoucher(voucher.code)
+                          : undefined
+                      }
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className={`font-semibold ${isExpired ? 'text-gray-500' : 'text-indigo-600'}`}>
+                          <p
+                            className={`font-semibold ${
+                              isExpired ? "text-gray-500" : "text-indigo-600"
+                            }`}
+                          >
                             {voucher.code}
                           </p>
-                          <p className={`text-sm ${isExpired ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {voucher.discount}% discount • Expires: {new Date(voucher.expirationDate).toLocaleDateString()}
+                          <p
+                            className={`text-sm ${
+                              isExpired ? "text-gray-400" : "text-gray-600"
+                            }`}
+                          >
+                            {voucher.discount}% discount • Expires:{" "}
+                            {new Date(
+                              voucher.expirationDate
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                         {isExpired ? (
-                          <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Expired</span>
+                          <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                            Expired
+                          </span>
                         ) : (
-                          <button 
+                          <button
                             className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-1 px-3 rounded-md transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
