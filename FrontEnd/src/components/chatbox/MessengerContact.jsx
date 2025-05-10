@@ -15,14 +15,14 @@ const MessengerContact = () => {
     {
       name: "Trương Thanh Tùng",
       role: "FullStack Developer",
-      link: "#",
+      link: "https://www.facebook.com/ninh.cam.775",
       linkText: "Facebook Profile",
       icon: <Facebook size={18} />
     },
     {
       name: "Nguyễn Chí Thiện",
       role: "FullStack Developer",
-      link: "#",
+      link: "https://www.facebook.com/nguyen.thien.264593",
       linkText: "Facebook Profile",
       icon: <Facebook size={18} />
     }

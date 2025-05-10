@@ -2,6 +2,8 @@ import React from 'react';
 import ProfileCard from './ProfileCard';
 import './TeamProfiles.css';
 import taki from "../../../assets/taro.jpg";
+import tung from "../../../assets/images/member1.jpg";
+import thien from "../../../assets/images/member3.jpg";
 import { FaTools, FaUser, FaMoneyBillWave } from 'react-icons/fa';
 import { MdLocationOn, MdPhone, MdAccessTime, MdEmail } from 'react-icons/md';
 const TeamProfiles = () => {
@@ -9,7 +11,7 @@ const TeamProfiles = () => {
   const teamMembers = [
     {
       id: 1,
-      name: "Thach Taro",
+      name: "Thach",
       role: "Full stack developers",
       masterRole: "Master in Frontend Developer",
       location: "VietNam",
@@ -26,7 +28,7 @@ const TeamProfiles = () => {
       role: "Full stack developers",
       masterRole: "Master in Backend Architecture",
       location: "VietNam",
-      image: "/assets/img/member2.png",
+      image: tung,
       socialLinks: {
         linkedin: "https://www.linkedin.com/",
         dribbble: "https://dribbble.com/",
@@ -39,7 +41,7 @@ const TeamProfiles = () => {
       role: "Full stack developers",
       masterRole: "Master in User Experience",
       location: "VietNam",
-      image: "/assets/img/member3.png",
+      image: thien,
       socialLinks: {
         linkedin: "https://www.linkedin.com/",
         dribbble: "https://dribbble.com/",
